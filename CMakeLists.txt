@@ -10,8 +10,11 @@ set(CMAKE_CONFIGURATION_TYPES
     "Debug;Release;RelWithDebInfo;MinSizeRel"
     CACHE STRING "" FORCE)
 
-#lld
-set(CMAKE_EXE_LINKER_FLAGS -fuse-ld=mold)
+#mold
+find_program(MOLD_PROGRAM mold)
+if(MOLD_PROGRAM)
+ set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -fuse-ld=${MOLD_PROGRAM}")
+endif()
 #lto
 set(CMAKE_INTERPROCEDURAL_OPTIMIZATION_RELEASE TRUE)
 
@@ -44,6 +47,10 @@ add_subdirectory(lib)
 #debug
 if (CMAKE_BUILD_TYPE STREQUAL "Debug")
     target_compile_options(${PROJECT_NAME} PRIVATE -Wall -Wextra -fsanitize=address -fsanitize=undefined -fsanitize=thread -fsanitize=memory -fPIE -pie -fno-omit-frame-pointer -g)
+    #  /sdl for MSVC in debug mode
+    if(WIN32)
+        target_compile_options(${PROJECT_NAME} PRIVATE /sdl)
+    endif()
 endif()
 
 # release
@@ -55,6 +62,16 @@ if (CMAKE_BUILD_TYPE STREQUAL "Release")
   else()
     message(WARNING "IPO is not supported: ${result}")
   endif()
+endif()
+#windows 
+if(WIN32)
+ target_compile_options(
+  ${PROJECT_NAME}
+  PRIVATE /W3 
+      /utf-8 
+      /sdl
+      /nologo 
+ )
 endif()
 
 #  Functions
@@ -121,6 +138,16 @@ enable_testing()
 add_subdirectory(test)
 
 find_package(GTest REQUIRED)
+
+find_program(CLANG_FORMAT "clang-format")
+if(CLANG_FORMAT)
+ add_custom_target(format COMMAND ${CLANG_FORMAT} -i ${SOURCE_FILES})
+endif()
+
+find_program(CLANG_TIDY "clang-tidy")
+if(CLANG_TIDY)
+ set(CMAKE_CXX_CLANG_TIDY "${CLANG_TIDY}")
+endif()
 
 #Use in graphics projects
 ############## Build SHADERS #######################
