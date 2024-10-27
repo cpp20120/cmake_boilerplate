@@ -1,0 +1,25 @@
+{
+  "name": "testproject",
+  "version-string": "1.0.0",
+  "dependencies": [
+    "fmt",
+    "scnlib",
+    "boost",
+    "glfw3",
+    "glm",
+    "glew",
+    "glad",
+    "vulkan-headers",
+    "vulkan",
+    "stb",
+    "tinyobjloader",
+    "openal-soft",
+    "sdl2pp",
+    "sdl2-image",
+    "imgui",
+    "ctre",
+    "sfml",
+    "poco",
+    "gtest"
+  ]
+}
