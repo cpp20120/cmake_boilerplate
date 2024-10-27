@@ -31,7 +31,7 @@ Structure:
 ├── CMakeLists.txt
 ├── CMakePresets.json
 ├── compile_commands.json -> build/compile_commands.json(for clangd in nvim/vsc)
-├── conanfile.txt
+├── conanfile.txt/vcpkg.json
 ├── Dockerfile
 ├── LICENSE
 └── README.md
@@ -42,7 +42,7 @@ GTest for Unit Test and Ctest for running tests. It can be used for graphics pro
 ---
 This template contains everything you need:
 * Ready CMakeLists.txt with specific options for windows 
-* conanfile
+* conanfile/vcpkg.json
 * script for install all needed packages(for debain based, fedora, arch based & macos)
 * github.ci(ci drops in this repo because it used many packages and some conflicts, pick packages what you need)
 * .gitignore
