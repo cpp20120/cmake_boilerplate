@@ -77,18 +77,3 @@ cmake -DCMAKE_BUILD_TYPE=Release ../..
 cmake --build .
 ```
 
-### Build RelWithDebugInfo
-```sh
-mkdir -p build/relwithdebinfo
-cd build/relwithdebinfo
-cmake -DCMAKE_BUILD_TYPE=RelWithDebInfo ../..
-cmake --build .
-```
-
-### Build MinSizeRel
-```sh
-mkdir -p build/minsizerel
-cd build/minsizerel
-cmake -DCMAKE_BUILD_TYPE=MinSizeRel ../..
-cmake --build .
-```
