@@ -36,12 +36,16 @@ if(CCACHE_PROGRAM)
   set_property(GLOBAL PROPERTY RULE_LAUNCH_LINK ${CCACHE_PROGRAM})
 endif()
 
+add_subdirectory(src)
+
+
 #Target Configurations
-file(GLOB SOURCE_FILE src/*.cpp)
 add_executable(${PROJECT_NAME} ${SOURCE_FILE})
 # Include headers dir
 target_include_directories(${PROJECT_NAME} PRIVATE include)
 # add lib dir
+option(BUILD_SHARED_LIB "Build shared library (default: ON)" ON)
+option(BUILD_STATIC_LIB "Build static library (default: OFF)" OFF)
 add_subdirectory(lib)
 
 #debug
@@ -84,7 +88,23 @@ function(copy_after_build TARGET_NAME)
     POST_BUILD
     COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_FILE:${TARGET_NAME}> ${DESTDIR})
 endfunction()
+# Code coverage
+find_program(LLVM_COV llvm-cov)
+# Find GCOV
+find_program(GCOV gcov)
 
+if(LLVM_COV OR GCOV)
+ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g -fprofile-arcs -ftest-coverage")
+ add_custom_target(coverage
+  COMMAND ${LLVM_COV} gcov ${CMAKE_CURRENT_BINARY_DIR}/src/*.gcno
+  COMMAND ${LLVM_COV} report -output-type html -ignore-filename-regex ".*(test|third_party).*" -output-directory ${CMAKE_CURRENT_BINARY_DIR}/coverage ${CMAKE_CURRENT_BINARY_DIR}/src/*.gcda
+  DEPENDS ${PROJECT_NAME}
+ )
+ if(NOT LLVM_COV)
+  message(STATUS "LLVM-COV not found, using GCOV for coverage reports.")
+  set_target_properties(coverage PROPERTIES COMMAND ${GCOV} ${CMAKE_CURRENT_BINARY_DIR}/src/*.gcno)
+ endif()
+endif()
 
 # Find Packages conan
 #fmt until all compilers will support C++20 format and C++23 print
@@ -125,12 +145,12 @@ target_link_libraries(${PROJECT_NAME} Poco::Data Poco::Net Poco::Util Poco::XML)
 
 
 # boost
-#if(NOT WIN32)
+if(NOT WIN32)
   target_link_libraries(${PROJECT_NAME} boost::system pthread)
-#else()
+else()
 # Windows WIN32 API
  target_link_libraries(${PROJECT_NAME} boost::system)
-#endif()
+endif()
 
 #Test
 include(CTest)
@@ -138,10 +158,17 @@ enable_testing()
 add_subdirectory(test)
 
 find_package(GTest REQUIRED)
-
+file(GLOB ALL_SOURCE_FILES
+    "*.cpp"
+    "*.h"
+    "*.hpp"
+)
 find_program(CLANG_FORMAT "clang-format")
 if(CLANG_FORMAT)
- add_custom_target(format COMMAND ${CLANG_FORMAT} -i ${SOURCE_FILES})
+    add_custom_target(format
+        COMMAND ${CLANG_FORMAT} -i ${ALL_SOURCE_FILES}
+        COMMENT "Running clang-format on source files"
+    )
 endif()
 
 find_program(CLANG_TIDY "clang-tidy")
