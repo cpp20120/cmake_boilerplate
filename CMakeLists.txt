@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.26)
-project(${PROJECT_NAME} LANGUAGES CXX) #change ${PROJECT_NAME} to actual projet name only in project()
+project(TEST_PROJECT CXX) #change ${PROJECT_NAME} to actual projet name only in project()
 # standart
 set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -39,13 +39,18 @@ endif()
 add_subdirectory(src)
 
 #Target Configurations
-add_executable(${PROJECT_NAME} ${SOURCE_FILE})
+#add_executable(${PROJECT_NAME} ${SOURCE_FILES})
+target_link_libraries(${PROJECT_NAME} lib)
+  
+
 # Include headers dir
 target_include_directories(${PROJECT_NAME} PRIVATE include)
 # add lib dir
 option(BUILD_SHARED_LIB "Build shared library (default: ON)" ON)
 option(BUILD_STATIC_LIB "Build static library (default: OFF)" OFF)
+
 add_subdirectory(lib)
+target_link_libraries(lib)
 
 #debug
 if (CMAKE_BUILD_TYPE STREQUAL "Debug")
@@ -107,56 +112,55 @@ endif()
 
 # Find Packages conan
 #fmt until all compilers will support C++20 format and C++23 print
-find_package(fmt)
+#find_package(fmt)
 # alternative for cin(C++ streams) and scanf(C std non typesafe func)
-find_package(scnlib)
+#find_package(scnlib)
 #boost
-find_package(Boost)
+#find_package(Boost)
 #graphics
-find_package(glfw3)
-find_package(glm)
-find_package(glew)
-find_package(imgui)
+#find_package(glfw3 CONFIG REQUIRED)
+#find_package(glm CONFIG REQUIRED)
+#find_package(GLEW REQUIRED)
+#find_package(imgui CONFIG REQUIRED)
 #regex
-find_package(ctre REQUIRED)
+#find_package(ctre)
 #sfml
-find_package(SFML)
+#find_package(SFML COMPONENTS system window graphics CONFIG REQUIRED)
 #poco
-find_package(Poco REQUIRED Data Net Util XML)
+#find_package(Poco REQUIRED Data Net Util XML)
 
 
 # Link  main project with the library
 target_link_libraries(${PROJECT_NAME} lib)
 # Link libs with target glm
-target_link_libraries(${PROJECT_NAME} glm::glm)
+#target_link_libraries(${PROJECT_NAME} glm::glm)
 # glfw
-target_link_libraries(${PROJECT_NAME} glfw)
+#target_link_libraries(${PROJECT_NAME} PRIVATE glfw)
 # glew
-target_link_libraries(${PROJECT_NAME} GLEW::GLEW)
+#target_link_libraries(${PROJECT_NAME} GLEW::GLEW)
 # imgui
-target_link_libraries(${PROJECT_NAME} imgui::imgui)
+#target_link_libraries(${PROJECT_NAME} imgui::imgui)
 # crte
-target_link_libraries(${PROJECT_NAME} ctre::ctre)
+#target_link_libraries(${PROJECT_NAME} ctre::ctre)
 # sfml
-target_link_libraries(${PROJECT_NAME} sfml::sfml)
+#target_link_libraries(${PROJECT_NAME} sfml::sfml)
 # poco
-target_link_libraries(${PROJECT_NAME} Poco::Data Poco::Net Poco::Util Poco::XML)
+#target_link_libraries(${PROJECT_NAME} Poco::Data Poco::Net Poco::Util Poco::XML)
 
 
 # boost
-if(NOT WIN32)
-  target_link_libraries(${PROJECT_NAME} boost::system pthread)
-else()
+#if(NOT WIN32)
+#  target_link_libraries(${PROJECT_NAME} boost::system pthread)
+#else()
 # Windows WIN32 API
- target_link_libraries(${PROJECT_NAME} boost::system)
-endif()
+# target_link_libraries(${PROJECT_NAME} boost::system)
+#endif()
 
 #Test
 include(CTest)
 enable_testing()
-add_subdirectory(test)
+#add_subdirectory(test)
 
-find_package(GTest REQUIRED)
 file(GLOB ALL_SOURCE_FILES
     "*.cpp"
     "*.h"

@@ -1,5 +1,4 @@
 #include "../include/include.hpp"
+#include "../lib/include/include.hpp"
 
-#include <print>
-
-auto main() -> int { std::print("{}", "Hello world!"); }
+auto main() -> int { lib::print_hello(); }

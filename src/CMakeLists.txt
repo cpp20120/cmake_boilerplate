@@ -1,5 +1,1 @@
-add_executable(src
- main.cpp
-)
-
-target_include_directories(src PRIVATE include)
+add_executable(${CMAKE_PROJECT_NAME} main.cpp)
