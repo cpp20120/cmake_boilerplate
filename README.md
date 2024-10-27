@@ -48,6 +48,7 @@ This template contains everything you need:
 * .gitignore
 * clang-foramt
 * gcov, lcov
+* mold/lld linker(available for gcc/clang)
 * lib build flags
 * setuped doxygen
 * caching on ci
