@@ -1,0 +1,73 @@
+{
+    "version": 3,
+    "cmakeMinimumRequired": {
+        "major": 3,
+        "minor": 19
+    },
+    "configurePresets": [
+        {
+            "name": "release",
+            "generator": "Ninja",
+            "binaryDir": "${sourceDir}/build/release",
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "Release",
+                "CMAKE_CXX_STANDARD": "23"
+            }
+        },
+        {
+            "name": "debug",
+            "generator": "Ninja",
+            "binaryDir": "${sourceDir}/build/debug",
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "Debug",
+                "CMAKE_CXX_STANDARD": "23"
+            }
+        },
+        {
+            "name": "msvc-release",
+            "generator": "Visual Studio 17 2022", 
+            "binaryDir": "${sourceDir}/build/msvc/release",
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "Release",
+                "CMAKE_CXX_STANDARD": "23"
+            }
+        },
+        {
+            "name": "msvc-debug",
+            "generator": "Visual Studio 17 2022", 
+            "binaryDir": "${sourceDir}/build/msvc/debug",
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "Debug",
+                "CMAKE_CXX_STANDARD": "23"
+            }
+        }
+    ],
+    "buildPresets": [
+        {
+            "name": "build-release",
+            "configurePreset": "release"
+        },
+        {
+            "name": "build-debug",
+            "configurePreset": "debug"
+        },
+        {
+            "name": "build-msvc-release",
+            "configurePreset": "msvc-release"
+        },
+        {
+            "name": "build-msvc-debug",
+            "configurePreset": "msvc-debug"
+        }
+    ],
+    "testPresets": [
+        {
+            "name": "test-debug",
+            "configurePreset": "debug"
+        },
+        {
+            "name": "test-release",
+            "configurePreset": "release"
+        }
+    ]
+}

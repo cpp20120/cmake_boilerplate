@@ -2,16 +2,18 @@
 
 # Create and build Debug
 mkdir -p build/debug
+cp CMakePresets.json
 cd build/debug
-cmake -DCMAKE_BUILD_TYPE=Debug ../..
-cmake --build .
+cmake --preset debug
+cmake --build --preset build-debug
 cd ../..
 
 # Create and build Release
 mkdir -p build/release
-cd build/release
-cmake -DCMAKE_BUILD_TYPE=Release ../..
-cmake --build .
+cp CMakePresets.json
+cd build/debug
+cmake --preset release
+cmake --build --preset build-release
 cd ../..
 
 # Create and build RelWithDebInfo

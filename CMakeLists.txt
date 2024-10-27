@@ -38,7 +38,6 @@ endif()
 
 add_subdirectory(src)
 
-
 #Target Configurations
 add_executable(${PROJECT_NAME} ${SOURCE_FILE})
 # Include headers dir

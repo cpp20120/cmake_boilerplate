@@ -10,11 +10,13 @@
 |   ├── include
 │       └── *.hpp
 |   ├── src
+│       └── CMakeLists.txt
 |       └── *.cpp
 |   └── CMakeLists.txt
 │── shaders(for graphics project)
 │   └── *.frag/.vert
 ├── src
+│   └── CMakeLists.txt
 │   └── *.cpp
 ├── test
 │   └── CMakeLists.txt
