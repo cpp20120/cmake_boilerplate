@@ -44,6 +44,8 @@ This template contains everything you need:
 * github.ci(ci drops in this repo because it used many packages and some conflicts, pick packages what you need)
 * .gitignore
 * clang-foramt
+* gcov, lcov
+* lib build flags
 * setuped doxygen
 * caching on ci
 * basic setup for nvim zsh OMZ
