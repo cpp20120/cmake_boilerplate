@@ -15,11 +15,13 @@ Structure:
 |   ├── include
 │       └── *.hpp
 |   ├── src
+│       └── CMakeLists.txt
 |       └── *.cpp
 |   └── CMakeLists.txt
 │── shaders(for graphics project)
 │   └── *.frag/.vert
 ├── src
+│   └── CMakeLists.txt
 │   └── *.cpp
 ├── test
 │   └── CMakeLists.txt
@@ -27,6 +29,7 @@ Structure:
 ├── .clang-format
 ├── .gitignore
 ├── CMakeLists.txt
+├── CMakePresets.json
 ├── compile_commands.json -> build/compile_commands.json(for clangd in nvim/vsc)
 ├── conanfile.txt
 ├── Dockerfile

@@ -1,5 +1,6 @@
 ```sh
 ├── .github/workflows
+│   └── build_cmake.yml
 ├── build(contains generation from cmake(ninja.build) and also contains compile_commands.json
 ├── docs
 │   └── CMakeLists.txt
@@ -24,6 +25,7 @@
 ├── .clang-format
 ├── .gitignore
 ├── CMakeLists.txt
+├── CMakePresets.json
 ├── compile_commands.json -> build/compile_commands.json(for clangd in nvim/vsc)
 ├── conanfile.txt
 ├── Dockerfile
