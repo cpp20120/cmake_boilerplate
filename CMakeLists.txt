@@ -56,7 +56,7 @@ target_link_libraries(lib)
 if (CMAKE_BUILD_TYPE STREQUAL "Debug")
     target_compile_options(${PROJECT_NAME} PRIVATE -Wall -Wextra -fsanitize=address -fsanitize=undefined -fsanitize=thread -fsanitize=memory -fPIE -pie -fno-omit-frame-pointer -g)
     #  /sdl for MSVC in debug mode
-    if(WIN32)
+    if(MSVC)
         target_compile_options(${PROJECT_NAME} PRIVATE /sdl)
     endif()
 endif()
@@ -72,7 +72,7 @@ if (CMAKE_BUILD_TYPE STREQUAL "Release")
   endif()
 endif()
 #windows 
-if(WIN32)
+if(MSVC)
  target_compile_options(
   ${PROJECT_NAME}
   PRIVATE /W3 
