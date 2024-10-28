@@ -4,7 +4,7 @@ project(TEST_PROJECT CXX) #change ${PROJECT_NAME} to actual projet name only in 
 set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 #nvim/vscode
-set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+#set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 # configurations
 set(CMAKE_CONFIGURATION_TYPES
     "Debug;Release;RelWithDebInfo;MinSizeRel"
@@ -41,7 +41,6 @@ add_subdirectory(src)
 #Target Configurations
 #add_executable(${PROJECT_NAME} ${SOURCE_FILES})
 target_link_libraries(${PROJECT_NAME} lib)
-  
 
 # Include headers dir
 target_include_directories(${PROJECT_NAME} PRIVATE include)
@@ -56,7 +55,7 @@ target_link_libraries(lib)
 if (CMAKE_BUILD_TYPE STREQUAL "Debug")
     target_compile_options(${PROJECT_NAME} PRIVATE -Wall -Wextra -fsanitize=address -fsanitize=undefined -fsanitize=thread -fsanitize=memory -fPIE -pie -fno-omit-frame-pointer -g)
     #  /sdl for MSVC in debug mode
-    if(WIN32)
+    if(MSVC)
         target_compile_options(${PROJECT_NAME} PRIVATE /sdl)
     endif()
 endif()
@@ -72,7 +71,7 @@ if (CMAKE_BUILD_TYPE STREQUAL "Release")
   endif()
 endif()
 #windows 
-if(WIN32)
+if(MSVC)
  target_compile_options(
   ${PROJECT_NAME}
   PRIVATE /W3 
@@ -93,22 +92,22 @@ function(copy_after_build TARGET_NAME)
     COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_FILE:${TARGET_NAME}> ${DESTDIR})
 endfunction()
 # Code coverage
-find_program(LLVM_COV llvm-cov)
+#find_program(LLVM_COV llvm-cov)
 # Find GCOV
-find_program(GCOV gcov)
+#find_program(GCOV gcov)
 
-if(LLVM_COV OR GCOV)
- set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g -fprofile-arcs -ftest-coverage")
- add_custom_target(coverage
-  COMMAND ${LLVM_COV} gcov ${CMAKE_CURRENT_BINARY_DIR}/src/*.gcno
-  COMMAND ${LLVM_COV} report -output-type html -ignore-filename-regex ".*(test|third_party).*" -output-directory ${CMAKE_CURRENT_BINARY_DIR}/coverage ${CMAKE_CURRENT_BINARY_DIR}/src/*.gcda
-  DEPENDS ${PROJECT_NAME}
- )
- if(NOT LLVM_COV)
-  message(STATUS "LLVM-COV not found, using GCOV for coverage reports.")
-  set_target_properties(coverage PROPERTIES COMMAND ${GCOV} ${CMAKE_CURRENT_BINARY_DIR}/src/*.gcno)
- endif()
-endif()
+#if(LLVM_COV OR GCOV)
+# set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g -fprofile-arcs -ftest-coverage")
+# add_custom_target(coverage
+#  COMMAND ${LLVM_COV} gcov ${CMAKE_CURRENT_BINARY_DIR}/src/*.gcno
+#  COMMAND ${LLVM_COV} report -output-type html -ignore-filename-regex ".*(test|third_party).*" -output-directory ${CMAKE_CURRENT_BINARY_DIR}/coverage ${CMAKE_CURRENT_BINARY_DIR}/src/*.gcda
+#  DEPENDS ${PROJECT_NAME}
+# )
+# if(NOT LLVM_COV)
+#  message(STATUS "LLVM-COV not found, using GCOV for coverage reports.")
+#  set_target_properties(coverage PROPERTIES COMMAND ${GCOV} ${CMAKE_CURRENT_BINARY_DIR}/src/*.gcno)
+# endif()
+#endif()
 
 # Find Packages conan
 #fmt until all compilers will support C++20 format and C++23 print
@@ -157,9 +156,7 @@ target_link_libraries(${PROJECT_NAME} lib)
 #endif()
 
 #Test
-include(CTest)
-enable_testing()
-#add_subdirectory(test)
+add_subdirectory(test)
 
 file(GLOB ALL_SOURCE_FILES
     "*.cpp"
