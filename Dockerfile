@@ -1,25 +1,40 @@
-FROM fedora:latest
+# Используем многоэтапную сборку
+FROM fedora:latest AS builder
 
+# Устанавливаем зависимости
 RUN dnf install -y dnf5 && \
-    dnf5 install -y zsh @development-tools neofetch git clang clang-tools-extra mold gcc cmake ninja-build lld lldb valgrind python3 python3-pip gtest doxygen neovim SFML SFML-devel qt5-qtbase-devel qt5-qtbase qt6-qtbase qt6-qtbase-devel qt6-qtmultimedia glfw glm-devel glew vulkan-headers vulkan-loader vulkan-tools vulkan-volk-devel glslang spirv-tools spirv-llvm-translator && \
-    pip3 install conan && \
+    dnf5 install -y \
+    @development-tools \
+    clang clang-tools-extra \
+    cmake ninja-build \
+    mold lld \
+    gtest gtest-devel \
+    doxygen \
+    glslang spirv-tools && \
     dnf clean all
 
-COPY docker_devenv.sh /docker_devenv.sh
-
-RUN chmod +x /docker_devenv.sh && /docker_devenv.sh
-
-COPY . /project
-
+# Копируем исходники
 WORKDIR /project
+COPY . .
 
-RUN conan profile detect --force && \
-    conan install . --output-folder=build --build=missing
-
+# Собираем проект
 RUN mkdir -p build && cd build && \
     cmake .. -G Ninja -DCMAKE_BUILD_TYPE=Release && \
-    cmake --build .
+    cmake --build . --parallel $(nproc)
 
-CMD ["./build/test"]
+# Финальный образ
+FROM fedora:latest
 
-# CMD ["./build/test"]
+# Устанавливаем только необходимые для работы зависимости
+RUN dnf install -y \
+    libstdc++ \
+    glibc \
+    vulkan-loader && \
+    dnf clean all
+
+# Копируем собранные бинарники из builder-этапа
+COPY --from=builder /project/build/bin/ /usr/local/bin/
+COPY --from=builder /project/build/lib/ /usr/local/lib/
+
+# Указываем точку входа
+CMD ["/usr/local/bin/test"]
