@@ -44,3 +44,9 @@ build_ninja
 cmake_install.cmake
 cmake-*
 build/
+
+# ide code editors ignore
+checks.json
+.vscode/
+.idea/
+.vs/

@@ -2,6 +2,7 @@
 ├── .github/workflows
 │   └── build_cmake.yml
 ├── build(contains generation from cmake(ninja.build) and also contains compile_commands.json
+├── cmake (contains cmake scripts for project)
 ├── docs
 │   └── CMakeLists.txt
 │   └── Doxyfile.in  

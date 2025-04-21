@@ -1,31 +1,31 @@
+cmake_minimum_required(VERSION 3.26)
 project(lib LANGUAGES CXX)
 
-# Define the library target
 add_subdirectory(src)
-# Set properties for the shared library (if you want to build it)
-if (BUILD_SHARED_LIB)
- set_target_properties(${LIBRARY_OUTPUT_NAME} PROPERTIES OUTPUT_NAME lib_shared)
- set_target_properties(${LIBRARY_OUTPUT_NAME} PROPERTIES OUTPUT_NAME_DEBUG lib_shared_d)
- set_target_properties(${LIBRARY_OUTPUT_NAME} PROPERTIES OUTPUT_NAME_RELEASE lib_shared)
- set_target_properties(${LIBRARY_OUTPUT_NAME} PROPERTIES SUFFIX ".so")
- set_target_properties(${LIBRARY_OUTPUT_NAME} PROPERTIES PREFIX "")
- set_target_properties(${LIBRARY_OUTPUT_NAME} PROPERTIES IMPORTED_LOCATION lib_shared.so)
- set_target_properties(${LIBRARY_OUTPUT_NAME} PROPERTIES IMPORTED_IMPLIB lib_shared.so)
- set_target_properties(${LIBRARY_OUTPUT_NAME} PROPERTIES LINK_FLAGS "-Wl,-rpath,\${CMAKE_INSTALL_PREFIX}/lib")
- set_target_properties(${LIBRARY_OUTPUT_NAME} PROPERTIES BUILD_RPATH ${CMAKE_INSTALL_PREFIX}/lib)
- set_target_properties(${LIBRARY_OUTPUT_NAME} PROPERTIES SOVERSION 1.0)
- set_target_properties(${LIBRARY_OUTPUT_NAME} PROPERTIES VERSION 1.0)
-endif()
+add_subdirectory(test)
 
-# Set properties for the static library (if you want to build it)
-if (BUILD_STATIC_LIB)
- set_target_properties(${LIBRARY_OUTPUT_NAME} PROPERTIES OUTPUT_NAME lib_static)
- set_target_properties(${LIBRARY_OUTPUT_NAME} PROPERTIES OUTPUT_NAME_DEBUG lib_static_d)
- set_target_properties(${LIBRARY_OUTPUT_NAME} PROPERTIES OUTPUT_NAME_RELEASE lib_static)
- set_target_properties(${LIBRARY_OUTPUT_NAME} PROPERTIES SUFFIX ".a")
- set_target_properties(${LIBRARY_OUTPUT_NAME} PROPERTIES PREFIX "")
- set_target_properties(${LIBRARY_OUTPUT_NAME} PROPERTIES TYPE STATIC)
-endif()
+# Версионирование
+set_target_properties(lib PROPERTIES
+        VERSION ${LIB_VERSION}
+        SOVERSION 1
+)
 
-# Install the library
-install(TARGETS ${LIBRARY_OUTPUT_NAME} DESTINATION lib)
+include(cmake/LibraryPlatformSettings.cmake)
+include(cmake/LibraryCompilerSettings.cmake)
+include(cmake/LibraryExportSettings.cmake)
+
+include(cmake/LibraryCP.cmake)
+
+option(BUILD_SHARED_LIBS "Build as shared library" ON)
+option(BUILD_TESTING "Build tests" ON) 
+
+configure_library_type(lib)
+include(cmake/LibraryLinkageSettings.cmake) 
+
+target_include_directories(lib PUBLIC
+        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+        $<INSTALL_INTERFACE:include>
+)
+
+include(cmake/LibraryInstallSettings.cmake)
+target_compile_features(${LIBRARY_OUTPUT_NAME} PUBLIC cxx_std_23)

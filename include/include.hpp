@@ -3,7 +3,7 @@
 #include "../lib/include/include.hpp"
 namespace proj {
 
-int func(int a, int b) {
+static int func(const int a, const int b) {
   return a + b;
 }
 }
