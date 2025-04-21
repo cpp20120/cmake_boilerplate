@@ -9,12 +9,15 @@
 ├── include
 │   └── *.hpp
 ├── lib
+|   ├── cmake (contains cmake scripts for library)
 |   ├── include
 │       └── *.hpp
 |   ├── src
 │       └── CMakeLists.txt
 |       └── *.cpp
+|   ├── test (contains test for lib)
 |   └── CMakeLists.txt
+|   └── lib_test_*.cpp(name will changes to library component name)
 │── shaders(for graphics project)
 │   └── *.frag/.vert
 ├── src
@@ -25,10 +28,11 @@
 │   └── test_*.cpp
 ├── .clang-format
 ├── .gitignore
+├── build_all.(ps/sh) (build all script for unix and windows)
 ├── CMakeLists.txt
 ├── CMakePresets.json
 ├── compile_commands.json -> build/compile_commands.json(for clangd in nvim/vsc)
-├── conanfile.txt
+├── vcpkg.json
 ├── Dockerfile
 ├── LICENSE
 └── README.md

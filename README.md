@@ -1,23 +1,32 @@
 # My boilerplate for cmake projects with ci/cd
 
+[![CMake](https://img.shields.io/badge/CMake-3.26+-blue.svg)](https://cmake.org/)
+[![vcpkg](https://img.shields.io/badge/vcpkg-enabled-green.svg)](https://vcpkg.io/)
+[![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+
 Structure:
 
+```sh
 ```sh
 ├── .github/workflows
 │   └── build_cmake.yml
 ├── build(contains generation from cmake(ninja.build) and also contains compile_commands.json
+├── cmake (contains cmake scripts for project)
 ├── docs
 │   └── CMakeLists.txt
 │   └── Doxyfile.in  
 ├── include
 │   └── *.hpp
 ├── lib
+|   ├── cmake (contains cmake scripts for library)
 |   ├── include
 │       └── *.hpp
 |   ├── src
 │       └── CMakeLists.txt
 |       └── *.cpp
+|   ├── test (contains test for lib)
 |   └── CMakeLists.txt
+|   └── lib_test_*.cpp(name will changes to library component name)
 │── shaders(for graphics project)
 │   └── *.frag/.vert
 ├── src
@@ -28,16 +37,20 @@ Structure:
 │   └── test_*.cpp
 ├── .clang-format
 ├── .gitignore
+├── build_all.(ps/sh) (build all script for unix and windows)
 ├── CMakeLists.txt
 ├── CMakePresets.json
 ├── compile_commands.json -> build/compile_commands.json(for clangd in nvim/vsc)
-├── conanfile.txt/vcpkg.json
+├── vcpkg.json
 ├── Dockerfile
 ├── LICENSE
 └── README.md
 ```
-I use [conan](https://conan.io/) for pm(in [linux](https://github.com/cppshizoidS/cmake_boilerplate/tree/main)), [vcpkg](https://vcpkg.io/en/index.html) for pm(in [windows & linux](https://github.com/cppshizoidS/cmake_boilerplate/tree/vcpkg)), [cmake](https://cmake.org/) for generator files for [ninja-build](https://ninja-build.org/), [clang-format](https://clang.llvm.org/docs/ClangFormat.html) for format and [doxygen](https://www.doxygen.nl/manual/index.html) for generate docs.
+
+I use  [vcpkg](https://vcpkg.io/en/index.html) for pm(in [windows & linux](https://github.com/cppshizoidS/cmake_boilerplate/tree/vcpkg)), [cmake](https://cmake.org/) for generator files for [ninja-build](https://ninja-build.org/), [clang-format](https://clang.llvm.org/docs/ClangFormat.html) for format and [doxygen](https://www.doxygen.nl/manual/index.html) for generate docs.
 GTest for Unit Test and Ctest for running tests. It can be used for graphics project.
+Lcov/Gcov for test coverage. 
+
 
 ---
 This template contains everything you need:
@@ -50,15 +63,18 @@ This template contains everything you need:
 * gcov, lcov
 * mold/lld linker(available for gcc/clang)
 * lib build flags
+* library versioning
 * setuped doxygen
+* setuped installers for windows(NSIS) and packages for deb and rpm
 * caching on ci
 * basic setup for nvim zsh OMZ
 * IWYU
 * setuped CTest and GTest
 * shader build script
 * different configurations: debug, release...
-* debug configs enable flags for most checks for compilers (clang/gcc and msvc)
+* debug configs enable flags for most checks for compilers (clang/gcc and msvc)(some may confict need to pick what and when need)
 * docker setup
+* static analysis tools setuped
 
 ### Build Debug
 
@@ -77,3 +93,13 @@ cmake -DCMAKE_BUILD_TYPE=Release ../..
 cmake --build .
 ```
 
+or
+
+```sh
+
+# Debug build
+./build_all.sh --debug
+
+# Release build
+./build_all.sh --release
+```
