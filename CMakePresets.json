@@ -1,73 +1,98 @@
 {
-    "version": 3,
-    "cmakeMinimumRequired": {
-        "major": 3,
-        "minor": 19
+  "version": 3,
+  "cmakeMinimumRequired": {
+    "major": 3,
+    "minor": 19
+  },
+  "configurePresets": [
+    {
+      "name": "base",
+      "hidden": true,
+      "generator": "Ninja",
+      "binaryDir": "${sourceDir}/build/vcpkg-release",
+      "cacheVariables": {
+        "CMAKE_CXX_STANDARD": "23",
+        "BUILD_TESTING": "ON"
+      }
     },
-    "configurePresets": [
-        {
-            "name": "release",
-            "generator": "Ninja",
-            "binaryDir": "${sourceDir}/build/release",
-            "cacheVariables": {
-                "CMAKE_BUILD_TYPE": "Release",
-                "CMAKE_CXX_STANDARD": "23"
-            }
-        },
-        {
-            "name": "debug",
-            "generator": "Ninja",
-            "binaryDir": "${sourceDir}/build/debug",
-            "cacheVariables": {
-                "CMAKE_BUILD_TYPE": "Debug",
-                "CMAKE_CXX_STANDARD": "23"
-            }
-        },
-        {
-            "name": "msvc-release",
-            "generator": "Visual Studio 17 2022", 
-            "binaryDir": "${sourceDir}/build/msvc/release",
-            "cacheVariables": {
-                "CMAKE_BUILD_TYPE": "Release",
-                "CMAKE_CXX_STANDARD": "23"
-            }
-        },
-        {
-            "name": "msvc-debug",
-            "generator": "Visual Studio 17 2022", 
-            "binaryDir": "${sourceDir}/build/msvc/debug",
-            "cacheVariables": {
-                "CMAKE_BUILD_TYPE": "Debug",
-                "CMAKE_CXX_STANDARD": "23"
-            }
+    {
+      "name": "release",
+      "inherits": [ "base" ],
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Release"
+      }
+    },
+    {
+      "name": "debug",
+      "inherits": [ "base" ],
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Debug"
+      }
+    },
+    {
+      "name": "vcpkg-release",
+      "inherits": [ "release" ],
+      "cacheVariables": {
+        "CMAKE_TOOLCHAIN_FILE": "E:/vcpkg/scripts/buildsystems/vcpkg.cmake",
+        "VCPKG_TARGET_TRIPLET": "x64-windows",
+        "VCPKG_MANIFEST_DIR": "${sourceDir}",
+        "VCPKG_MANIFEST_MODE": "on"
+      }
+    },
+    {
+      "name": "vcpkg-debug",
+      "inherits": [ "debug" ],
+      "cacheVariables": {
+        "CMAKE_TOOLCHAIN_FILE": "E:/vcpkg/scripts/buildsystems/vcpkg.cmake",
+        "VCPKG_TARGET_TRIPLET": "x64-windows",
+        "VCPKG_MANIFEST_DIR": "${sourceDir}",
+        "VCPKG_MANIFEST_MODE": "on"
+      }
+    }
+  ],
+  "buildPresets": [
+    {
+      "name": "build-release",
+      "configurePreset": "release",
+      "targets": [ "all" ]
+    },
+    {
+      "name": "build-vcpkg-release",
+      "configurePreset": "vcpkg-release",
+      "targets": [ "all" ]
+    }
+  ],
+  "testPresets": [
+    {
+      "name": "test-all",
+      "configurePreset": "vcpkg-release",
+      "output": {
+        "outputOnFailure": true
+      }
+    },
+    {
+      "name": "test-library1",
+      "configurePreset": "vcpkg-release",
+      "output": {
+        "outputOnFailure": true
+      },
+      "filter": {
+        "include": {
+          "name": "^library1_tests"
         }
-    ],
-    "buildPresets": [
-        {
-            "name": "build-release",
-            "configurePreset": "release"
-        },
-        {
-            "name": "build-debug",
-            "configurePreset": "debug"
-        },
-        {
-            "name": "build-msvc-release",
-            "configurePreset": "msvc-release"
-        },
-        {
-            "name": "build-msvc-debug",
-            "configurePreset": "msvc-debug"
+      }
+    },
+    {
+      "name": "test-library2",
+      "configurePreset": "vcpkg-release",
+      "output": {
+        "outputOnFailure": true
+      },
+      "filter": {
+        "include": {
+          "name": "^library2_tests"
         }
-    ],
-    "testPresets": [
-        {
-            "name": "test-debug",
-            "configurePreset": "debug"
-        },
-        {
-            "name": "test-release",
-            "configurePreset": "release"
-        }
-    ]
+      }
+    }
+  ]
 }

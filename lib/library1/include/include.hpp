@@ -6,7 +6,7 @@
 namespace lib1 {
 
 void print_hello();
-void add_numbers(const int a,const int b) { std::print("Sum: {}", a + b); }
+inline void add_numbers(const int a,const int b) { std::print("Sum: {}", a + b); }
 
 }  // namespace lib1
 

@@ -4,10 +4,10 @@ if(NOT DEFINED PROJECT_VERSION)
 #    message(WARNING "PROJECT_VERSION not set, using default: ${PROJECT_VERSION}")
 endif()
 # Установка самой библиотеки и заголовков
-install(TARGETS lib1
+install(TARGETS library1
     EXPORT libTargets
-    ARCHIVE DESTINATION lib1
-    LIBRARY DESTINATION lib1
+    ARCHIVE DESTINATION library1
+    LIBRARY DESTINATION library1
     RUNTIME DESTINATION bin
     INCLUDES DESTINATION include
 )
@@ -21,7 +21,7 @@ include(CMakePackageConfigHelpers)
 configure_package_config_file(
     "${CMAKE_CURRENT_SOURCE_DIR}/cmake/libConfig.cmake.in"
     "${CMAKE_CURRENT_BINARY_DIR}/libConfig.cmake"
-    INSTALL_DESTINATION lib/cmake/lib1
+    INSTALL_DESTINATION lib/cmake/library1
 )
 
 write_basic_package_version_file(
@@ -34,5 +34,5 @@ write_basic_package_version_file(
 install(FILES
     "${CMAKE_CURRENT_BINARY_DIR}/libConfig.cmake"
     "${CMAKE_CURRENT_BINARY_DIR}/libConfigVersion.cmake"
-    DESTINATION lib/cmake/lib1
+    DESTINATION lib/cmake/library1
 )

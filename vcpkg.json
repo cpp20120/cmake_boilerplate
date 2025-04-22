@@ -1,7 +1,11 @@
 {
   "name": "testproject",
-  "version-string": "1.0.0",
+  "version": "1.0.0",
   "dependencies": [
-    "gtest"
-  ]
+    {
+      "name": "gtest",
+      "version>=": "1.10.0"
+    }
+  ],
+  "builtin-baseline": "3426db05b996481ca31e95fff3734cf23e0f51bc"
 }

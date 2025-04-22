@@ -1,11 +1,11 @@
 cmake_minimum_required(VERSION 3.26)
-project(lib1 LANGUAGES CXX)
+project(library1 LANGUAGES CXX)
 
 add_subdirectory(src)
-#add_subdirectory(test)
+add_subdirectory(lib1_test)
 
 # Версионирование
-set_target_properties(lib1 PROPERTIES
+set_target_properties(library1 PROPERTIES
         VERSION 1.0.0
         SOVERSION 1
 )
@@ -18,11 +18,11 @@ include(cmake/LibraryLinkageSettings.cmake)
 include(cmake/LibraryCP.cmake)
 
 option(BUILD_SHARED_LIBS "Build as shared library" ON)
-option(BUILD_TESTING "Build tests" OFF) 
+option(BUILD_TESTS "Build tests" ON)
 
-configure_library_type(lib1)
+configure_library_type(library1)
 
-target_include_directories(lib1 PUBLIC
+target_include_directories(library1 PUBLIC
         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
         $<INSTALL_INTERFACE:include>
 )

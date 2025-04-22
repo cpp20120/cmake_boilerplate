@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.26)
 project(lib2 LANGUAGES CXX)
 
 add_subdirectory(src)
-#add_subdirectory(test)
+add_subdirectory(lib2_test)
 
 # Версионирование
 set_target_properties(lib2 PROPERTIES
@@ -17,7 +17,7 @@ include(cmake/LibraryLinkageSettings.cmake)
 include(cmake/LibraryCP.cmake)
 
 option(BUILD_SHARED_LIBS "Build as shared library" ON)
-option(BUILD_TESTING "Build tests" OFF) 
+option(BUILD_TESTS "Build tests" ON)
 
 configure_library_type(lib2)
 include(cmake/LibraryLinkageSettings.cmake) 
