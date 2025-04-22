@@ -3,7 +3,7 @@
 [![CMake](https://img.shields.io/badge/CMake-3.26+-blue.svg)](https://cmake.org/)
 [![vcpkg](https://img.shields.io/badge/vcpkg-enabled-green.svg)](https://vcpkg.io/)
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
-
+[![](https://tokei.rs/b1/gitlab/cppshizoid/cmake_boilerplate)](https://gitlab.com/cppshizoid/cmake_boilerplate).
 Structure:
 
 ```sh
