@@ -1,31 +1,24 @@
-cmake_minimum_required(VERSION 3.26)
-project(lib LANGUAGES CXX)
+# Добавляем поддиректории с библиотеками
+add_subdirectory(library1)
+add_subdirectory(library2)
 
-add_subdirectory(src)
-add_subdirectory(test)
 
-# Версионирование
-set_target_properties(lib PROPERTIES
-        VERSION ${LIB_VERSION}
-        SOVERSION 1
+# Создаем интерфейсную библиотеку-контейнер (опционально)
+add_library(lib_utilities INTERFACE)
+target_link_libraries(lib_utilities INTERFACE 
+    library1 
+    library2
 )
 
-include(cmake/LibraryPlatformSettings.cmake)
-include(cmake/LibraryCompilerSettings.cmake)
-include(cmake/LibraryExportSettings.cmake)
-
-include(cmake/LibraryCP.cmake)
-
-option(BUILD_SHARED_LIBS "Build as shared library" ON)
-option(BUILD_TESTING "Build tests" ON) 
-
-configure_library_type(lib)
-include(cmake/LibraryLinkageSettings.cmake) 
-
-target_include_directories(lib PUBLIC
-        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
-        $<INSTALL_INTERFACE:include>
+# Делаем библиотеки доступными для остального проекта
+set(UTILITY_LIBS library1 library2 PARENT_SCOPE)
+set(ALL_UTILITIES_TARGET lib_utilities PARENT_SCOPE)
+add_library(utils INTERFACE)
+target_link_libraries(lib_utilities INTERFACE 
+    library1 
+    library2
 )
 
-include(cmake/LibraryInstallSettings.cmake)
-target_compile_features(${LIBRARY_OUTPUT_NAME} PUBLIC cxx_std_23)
+# Делаем библиотеки доступными для остального проекта
+set(UTILITY_LIBS library1 library2 PARENT_SCOPE)
+set(ALL_UTILITIES_TARGET lib_utilities PARENT_SCOPE)

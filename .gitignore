@@ -43,10 +43,12 @@ CMakeCache.txt
 build_ninja
 cmake_install.cmake
 cmake-*
-build/
+build/*
+vcpkg_installed
 
 # ide code editors ignore
 checks.json
 .vscode/
 .idea/
 .vs/
+.cache

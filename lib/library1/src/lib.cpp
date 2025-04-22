@@ -2,8 +2,8 @@
 
 #include <print>
 
-namespace lib {
+namespace lib1 {
     void print_hello() {
-        std::print("Hello");
+        std::print("Hello ");
     };
 }

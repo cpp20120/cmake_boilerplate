@@ -16,7 +16,7 @@ set(CPACK_PACKAGE_VERSION ${PROJECT_VERSION})
 set(CPACK_PACKAGE_CONTACT "cppshizoid@gmail.com")
 set(CPACK_PACKAGE_NAME "${PROJECT_NAME}")
 set(CPACK_PACKAGE_VENDOR "cppshizoid")
-set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "Professional C++ Project")
+set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "Personal C++ Project")
 set(CPACK_STRIP_FILES TRUE)
 
 # Настройки компонентов

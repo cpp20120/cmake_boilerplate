@@ -1,6 +1,5 @@
 #include <gtest/gtest.h>
 #include "../include/include.hpp"
-#include "../lib/include/include.hpp"
 
 GTEST_TEST(FuncTest, PositiveNumbers) {
   ASSERT_EQ(proj::func(2, 3), 5);

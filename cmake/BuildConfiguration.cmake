@@ -21,10 +21,10 @@ if(CMAKE_BUILD_TYPE STREQUAL "Debug")
             #-fsanitize=address
             #-fsanitize=undefined
             #-fno-optimize-sibling-calls
-            -fsanitize=thread
+            #-fsanitize=thread
         )
         target_link_options(${PROJECT_NAME} PRIVATE
-            -fsanitize=address
+            #-fsanitize=address
             #-fsanitize=undefined
         )
     endif()

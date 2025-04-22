@@ -25,6 +25,7 @@ include(cmake/BuildConfiguration.cmake)
 include(cmake/CodeFormatAndAnalysis.cmake)
 #include(cmake/ThirdParty.cmake)
 #include(cmake/CodeCoverage.cmake)
+#include(cmake/ShaderCompilation.cmake)
 
 install(TARGETS ${PROJECT_NAME}
     RUNTIME DESTINATION bin
@@ -33,4 +34,4 @@ install(TARGETS ${PROJECT_NAME}
     INCLUDES DESTINATION include
 )
 
-#include(cmake/CPackConfig.cmake)
+include(cmake/CPackConfig.cmake)
