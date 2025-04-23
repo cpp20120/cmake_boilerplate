@@ -52,3 +52,4 @@ checks.json
 .idea/
 .vs/
 .cache
+out

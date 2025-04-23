@@ -16,6 +16,8 @@ include(cmake/LibraryLinkageSettings.cmake)
 
 include(cmake/LibraryCP.cmake)
 
+enable_testing()
+
 option(BUILD_SHARED_LIBS "Build as shared library" ON)
 option(BUILD_TESTS "Build tests" ON)
 

@@ -12,7 +12,11 @@
       "binaryDir": "${sourceDir}/build/vcpkg-release",
       "cacheVariables": {
         "CMAKE_CXX_STANDARD": "23",
-        "BUILD_TESTING": "ON"
+        "BUILD_TESTING": "ON",
+        "CMAKE_TOOLCHAIN_FILE": {
+          "type": "FILEPATH",
+          "value": "$env{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake"
+        }
       }
     },
     {
