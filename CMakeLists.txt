@@ -2,6 +2,11 @@
 cmake_minimum_required(VERSION 3.26)
 project(TEST_PROJECT CXX)
 
+# docs
+if (DOCS)
+add_subdirectory(docs)
+endif ()
+
 # Vcpkg integration
 if(DEFINED ENV{VCPKG_ROOT} AND NOT DEFINED CMAKE_TOOLCHAIN_FILE)
     set(CMAKE_TOOLCHAIN_FILE "${VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake"

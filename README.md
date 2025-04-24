@@ -47,6 +47,7 @@ Structure:
 │   └── CMakeLists.txt
 │   └── test_*.cpp
 ├── .clang-format
+├── .clang-tidy
 ├── .gitignore
 ├── build_all.(ps/sh) (build all script for unix and windows)
 ├── CMakeLists.txt
@@ -58,9 +59,8 @@ Structure:
 └── README.md
 ```
 
-I use  [vcpkg](https://vcpkg.io/en/index.html) for pm(in [windows & linux](https://github.com/cppshizoidS/cmake_boilerplate/tree/vcpkg)), [cmake](https://cmake.org/) for generator files for [ninja-build](https://ninja-build.org/), [clang-format](https://clang.llvm.org/docs/ClangFormat.html) for format and [doxygen](https://www.doxygen.nl/manual/index.html) for generate docs.
-GTest for Unit Test and Ctest for running tests. It can be used for graphics project.
-Lcov/Gcov for test coverage. 
+I use  [vcpkg](https://vcpkg.io/en/index.html) for pm(in [windows & linux](https://github.com/cppshizoidS/cmake_boilerplate/tree/vcpkg)), [cmake](https://cmake.org/) for generator files for [ninja-build](https://ninja-build.org/), [clang-format](https://clang.llvm.org/docs/ClangFormat.html) for format and [doxygen](https://www.doxygen.nl/manual/index.html) for generate docs, [clang-tidy](https://clang.llvm.org/extra/clang-tidy/) for linting.
+GTest for Unit Test and Ctest for running tests. Lcov/Gcov for test coverage.  It can be used for graphics project. 
 
 
 ---
@@ -69,9 +69,10 @@ This template contains everything you need:
 * cmake presets
 * vcpkg.json
 * cript for install all needed packages(for debain based, fedora, arch based & macos)
-* github.ci(ci drops in this repo because it used many packages and some conflicts, pick packages what you need)
+* github.ci/gitlab.ci
 * .gitignore
-* clang-foramt
+* clang-format
+* clang-tidy
 * gcov, lcov
 * mold/lld linker(available for gcc/clang)
 * lib build flags
