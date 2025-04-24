@@ -3,4 +3,4 @@ add_library(library1
 )
 
 target_include_directories(library1 PUBLIC include)
-target_link_libraries(${CMAKE_PROJECT_NAME} PRIVATE library1)
+#target_link_libraries(${CMAKE_PROJECT_NAME} PRIVATE library1)

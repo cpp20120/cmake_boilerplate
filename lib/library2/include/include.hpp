@@ -4,6 +4,8 @@
 namespace lib2 {
 
 void print_world();
+inline int add_numbers(const int a,const int b) { return a + b; }
+int sum_of_numbers(int a, int b);
 
 }  // namespace lib2
 

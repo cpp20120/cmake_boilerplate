@@ -1,8 +1,17 @@
+
 option(BUILD_ALL_TESTS "Build all module tests automatically" ON)
 enable_testing()
+
 if(BUILD_TESTS AND BUILD_TESTING)
-    # First find the GTest package
-    find_package(GTest CONFIG REQUIRED)
+    if(NOT TARGET GTest::GTest)
+        find_package(GTest REQUIRED)
+    endif()
+
+    add_executable(TEST_PROJECT_tests test_main.cpp)
+    target_link_libraries(TEST_PROJECT_tests PRIVATE
+            GTest::GTest
+            GTest::Main
+    )
 
 
     if(TARGET GTest::gtest)
@@ -10,17 +19,17 @@ if(BUILD_TESTS AND BUILD_TESTING)
     else()
         message(FATAL_ERROR "GTest not found but BUILD_TESTS is ON")
     endif()
-
-    if(BUILD_ALL_TESTS)
-        message(STATUS "Building all module tests...")
-        
-        if(NOT TARGET library1_tests)
-            add_subdirectory(${PROJECT_SOURCE_DIR}/lib/library1/lib1_test ${CMAKE_BINARY_DIR}/lib/library1/lib1_test/bin)
-        endif()
-        if(NOT TARGET library2_tests)
-            add_subdirectory(${PROJECT_SOURCE_DIR}/lib/library2/lib2_test ${CMAKE_BINARY_DIR}/lib/library2/lib2_test/bin)
-        endif()
-    else()
-        message(STATUS "BUILD_ALL_TESTS is OFF. Build module tests manually.")
-    endif()
 endif()
+
+add_custom_target(run_all_tests
+        COMMAND ${CMAKE_CTEST_COMMAND} --output-on-failure
+        COMMENT "Running all tests"
+        VERBATIM
+)
+
+# Добавляем зависимости всех тестов
+foreach(test_target IN ITEMS lib1_test lib2_test TEST_PROJECT_tests)
+    if(TARGET ${test_target})
+        add_dependencies(run_all_tests ${test_target})
+    endif()
+endforeach()

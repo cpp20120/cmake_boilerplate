@@ -22,8 +22,11 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 add_subdirectory(src)
 add_subdirectory(lib)
 # add tests
-#option(BUILD_ALL_TESTS "Build tests" ON)
-#add_subdirectory(tests)
+set(BUILD_ALL_TESTS ON CACHE BOOL "Build all tests" FORCE)
+message(STATUS "BUILD_ALL_TESTS value: ${BUILD_ALL_TESTS} (defined at ${CMAKE_CURRENT_LIST_FILE}:${CMAKE_CURRENT_LIST_LINE})")
+enable_testing()
+option(BUILD_ALL_TESTS "Build tests" ON)
+add_subdirectory(tests)
 
 # Include additional configurations
 include(cmake/PlatformSettings.cmake)
