@@ -6,6 +6,15 @@ import sys
 import re
 from pathlib import Path
 
+def check_graphviz_installed():
+    try:
+        result = subprocess.run(['dot', '-V'],
+                                capture_output=True,
+                                text=True)
+        return result.returncode == 0
+    except FileNotFoundError:
+        return False
+
 def find_source_files(project_root):
     input_dirs = [
         project_root / "include",
@@ -24,6 +33,20 @@ def find_source_files(project_root):
 
     return sorted(source_files)
 
+def get_project_name_from_cmake(project_root):
+    cmake_file = project_root / "CMakeLists.txt"
+    if not cmake_file.exists():
+        return "API Documentation"
+
+    with open(cmake_file, 'r', encoding='utf-8') as f:
+        content = f.read()
+
+    match = re.search(r'project\s*\(\s*([^\s\)]+)', content, re.IGNORECASE)
+    if match:
+        return match.group(1)
+
+    return "API Documentation"
+
 def generate_doxygen():
     project_root = Path(__file__).parent.parent.resolve()
     docs_dir = project_root / "docs"
@@ -34,6 +57,12 @@ def generate_doxygen():
         shutil.rmtree(build_docs_dir)
     build_docs_dir.mkdir(parents=True)
 
+    project_name = get_project_name_from_cmake(project_root)
+    print(f"Detected project name: {project_name}")
+
+    # Проверка наличия Graphviz для диаграмм
+    has_graphviz = check_graphviz_installed()
+    print(f"Graphviz available: {'YES' if has_graphviz else 'NO'}")
 
     source_files = find_source_files(project_root)
     if not source_files:
@@ -46,7 +75,8 @@ def generate_doxygen():
         doxyfile_content = f.read()
 
     config = {
-        'PROJECT_NAME': 'API Documentation',
+        'PROJECT_NAME': project_name,
+        'PROJECT_BRIEF': f"{project_name} API Documentation",
         'INPUT': ' '.join(f'"{f}"' for f in source_files),
         'RECURSIVE': 'YES',
         'EXTRACT_ALL': 'YES',
@@ -63,7 +93,25 @@ def generate_doxygen():
         'PREDEFINED': 'DOXYGEN_SHOULD_SKIP_THIS',
         'EXTRACT_PACKAGE': 'YES',
         'HIDE_UNDOC_MEMBERS': 'NO',
-        'HIDE_UNDOC_CLASSES': 'NO'
+        'HIDE_UNDOC_CLASSES': 'NO',
+        # Настройки для диаграмм классов
+        'HAVE_DOT': 'YES' if has_graphviz else 'NO',
+        'DOT_IMAGE_FORMAT': 'svg',
+        'INTERACTIVE_SVG': 'YES',
+        'DOT_TRANSPARENT': 'YES',
+        'CLASS_GRAPH': 'YES',
+        'COLLABORATION_GRAPH': 'YES',
+        'GROUP_GRAPHS': 'YES',
+        'UML_LOOK': 'YES',
+        'CALL_GRAPH': 'YES',
+        'CALLER_GRAPH': 'YES',
+        'GRAPHICAL_HIERARCHY': 'YES',
+        'DIRECTORY_GRAPH': 'YES',
+        'DOT_GRAPH_MAX_NODES': '100',
+        'MAX_DOT_GRAPH_DEPTH': '3',
+        'DOT_MULTI_TARGETS': 'YES',
+        'GENERATE_LEGEND': 'YES',
+        'DOT_CLEANUP': 'YES'
     }
 
     for key, value in config.items():
@@ -107,6 +155,11 @@ def generate_doxygen():
         return 1
 
     print(f"\nDocumentation successfully generated at:\n{index_html}")
+
+    if has_graphviz:
+        print("\nClass diagrams and other graphs were generated")
+    else:
+        print("\nNote: Install Graphviz (dot) for class diagrams generation")
 
     try:
         if sys.platform == "win32":

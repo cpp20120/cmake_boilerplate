@@ -13,7 +13,7 @@ Structure:
 ├── build(contains generation from cmake(ninja.build) and also contains compile_commands.json
 ├── cmake (contains cmake scripts for project)
 ├── docs
-│   └── CMakeLists.txt
+│   └── generate_docs.py
 │   └── Doxyfile.in  
 ├── include
 │   └── *.hpp
@@ -77,7 +77,7 @@ This template contains everything you need:
 * mold/lld linker(available for gcc/clang)
 * lib build flags
 * library versioning
-* setuped doxygen
+* setuped doxygen(with graphviz)
 * setuped installers for windows(NSIS) and packages for deb and rpm
 * caching on ci
 * basic setup for nvim zsh OMZ
