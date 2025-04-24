@@ -1,0 +1,99 @@
+{
+  "configurations": [
+    {
+      "name": "x64-Debug",
+      "generator": "Ninja",
+      "configurationType": "Debug",
+      "inheritEnvironments": [ "msvc_x64_x64" ],
+      "buildRoot": "${projectDir}\\out\\build\\${name}",
+      "installRoot": "${projectDir}\\out\\install\\${name}",
+      "cmakeCommandArgs": "",
+      "buildCommandArgs": "",
+      "ctestCommandArgs": ""
+    },
+    {
+      "name": "x86-Release",
+      "generator": "Ninja",
+      "configurationType": "RelWithDebInfo",
+      "buildRoot": "${projectDir}\\out\\build\\${name}",
+      "installRoot": "${projectDir}\\out\\install\\${name}",
+      "cmakeCommandArgs": "",
+      "buildCommandArgs": "",
+      "ctestCommandArgs": "",
+      "inheritEnvironments": [ "msvc_x86" ],
+      "variables": []
+    },
+    {
+      "name": "release",
+      "generator": "Ninja",
+      "configurationType": "Release",
+      "buildRoot": "${projectDir}\\build\\release",
+      "cmakeCommandArgs": "-DCMAKE_CXX_STANDARD=23 -DBUILD_TESTING=ON -DBUILD_ALL_TESTS=ON -DCMAKE_BUILD_TYPE=Release -DENABLE_SANITIZERS=OFF",
+      "inheritEnvironments": [ "msvc_x64_x64" ],
+      "variables": []
+    },
+    {
+      "name": "debug",
+      "generator": "Ninja",
+      "configurationType": "Debug",
+      "buildRoot": "${projectDir}\\build\\debug",
+      "cmakeCommandArgs": "-DCMAKE_CXX_STANDARD=23 -DBUILD_TESTING=ON -DBUILD_ALL_TESTS=ON -DCMAKE_BUILD_TYPE=Debug -DENABLE_SANITIZERS=OFF",
+      "inheritEnvironments": [ "msvc_x64_x64" ],
+      "variables": []
+    },
+    {
+      "name": "debug-sanitize-address",
+      "generator": "Ninja",
+      "configurationType": "Debug",
+      "buildRoot": "${projectDir}\\build\\debug-sanitize-address",
+      "cmakeCommandArgs": "-DCMAKE_CXX_STANDARD=23 -DBUILD_TESTING=ON -DBUILD_ALL_TESTS=ON -DCMAKE_BUILD_TYPE=Debug -DENABLE_SANITIZERS=ON -DSANITIZER=address",
+      "inheritEnvironments": [ "msvc_x64_x64" ],
+      "variables": []
+    },
+    {
+      "name": "debug-sanitize-thread",
+      "generator": "Ninja",
+      "configurationType": "Debug",
+      "buildRoot": "${projectDir}\\build\\debug-sanitize-thread",
+      "cmakeCommandArgs": "-DCMAKE_CXX_STANDARD=23 -DBUILD_TESTING=ON -DBUILD_ALL_TESTS=ON -DCMAKE_BUILD_TYPE=Debug -DENABLE_SANITIZERS=ON -DSANITIZER=thread",
+      "inheritEnvironments": [ "msvc_x64_x64" ],
+      "variables": []
+    },
+    {
+      "name": "vcpkg-release",
+      "generator": "Ninja",
+      "configurationType": "Release",
+      "buildRoot": "${projectDir}\\build\\vcpkg-release",
+      "cmakeCommandArgs": "-DCMAKE_CXX_STANDARD=23 -DBUILD_TESTING=ON -DBUILD_ALL_TESTS=ON -DCMAKE_BUILD_TYPE=Release -DENABLE_SANITIZERS=OFF -DCMAKE_TOOLCHAIN_FILE=E:/vcpkg/scripts/buildsystems/vcpkg.cmake -DVCPKG_TARGET_TRIPLET=x64-windows -DVCPKG_MANIFEST_DIR=${sourceDir} -DVCPKG_MANIFEST_MODE=on",
+      "inheritEnvironments": [ "msvc_x64_x64" ],
+      "variables": []
+    },
+    {
+      "name": "vcpkg-debug",
+      "generator": "Ninja",
+      "configurationType": "Debug",
+      "buildRoot": "${projectDir}\\build\\vcpkg-debug",
+      "cmakeCommandArgs": "-DCMAKE_CXX_STANDARD=23 -DBUILD_TESTING=ON -DBUILD_ALL_TESTS=ON -DCMAKE_BUILD_TYPE=Debug -DENABLE_SANITIZERS=OFF -DCMAKE_TOOLCHAIN_FILE=E:/vcpkg/scripts/buildsystems/vcpkg.cmake -DVCPKG_TARGET_TRIPLET=x64-windows -DVCPKG_MANIFEST_DIR=${sourceDir} -DVCPKG_MANIFEST_MODE=on",
+      "inheritEnvironments": [ "msvc_x64_x64" ],
+      "variables": []
+    },
+    {
+      "name": "vcpkg-debug-sanitize-address",
+      "generator": "Ninja",
+      "configurationType": "Debug",
+      "buildRoot": "${projectDir}\\build\\vcpkg-debug-sanitize-address",
+      "cmakeCommandArgs": "-DCMAKE_CXX_STANDARD=23 -DBUILD_TESTING=ON -DBUILD_ALL_TESTS=ON -DCMAKE_BUILD_TYPE=Debug -DENABLE_SANITIZERS=ON -DSANITIZER=address -DCMAKE_TOOLCHAIN_FILE=E:/vcpkg/scripts/buildsystems/vcpkg.cmake -DVCPKG_TARGET_TRIPLET=x64-windows -DVCPKG_MANIFEST_DIR=${sourceDir} -DVCPKG_MANIFEST_MODE=on",
+      "inheritEnvironments": [ "msvc_x64_x64" ],
+      "variables": []
+    },
+    {
+      "name": "vcpkg-debug-sanitize-thread",
+      "generator": "Ninja",
+      "configurationType": "Debug",
+      "buildRoot": "${projectDir}\\build\\vcpkg-debug-sanitize-thread",
+      "cmakeCommandArgs": "-DCMAKE_CXX_STANDARD=23 -DBUILD_TESTING=ON -DBUILD_ALL_TESTS=ON -DCMAKE_BUILD_TYPE=Debug -DENABLE_SANITIZERS=ON -DSANITIZER=thread -DCMAKE_TOOLCHAIN_FILE=E:/vcpkg/scripts/buildsystems/vcpkg.cmake -DVCPKG_TARGET_TRIPLET=x64-windows -DVCPKG_MANIFEST_DIR=${sourceDir} -DVCPKG_MANIFEST_MODE=on",
+      "inheritEnvironments": [ "msvc_x64_x64" ],
+      "variables": []
+    }
+  ]
+}
