@@ -1,12 +1,8 @@
 #include <gtest/gtest.h>
-#include <iostream>
-#include <sstream>
-#include <string>
+
 #include <print>
+
 #include "../../library2/include/include.hpp"
-
-
-
 
 TEST(SumOfNumbersTest2, PositiveNumbers) {
   std::print("SecondLib Tests\n");

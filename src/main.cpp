@@ -9,6 +9,8 @@ int main() {
  lib1::print_hello();
  lib2::print_world();
 
-  lib1::add_numbers(23, 34);
+  constexpr int first_number = 23;
+  constexpr int second_number = 45;
+  lib1::add_numbers(first_number, second_number);
  return 0;
 }

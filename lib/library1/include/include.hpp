@@ -1,7 +1,6 @@
 #ifndef LIB1_INCLUDE_HPP
 #define LIB1_INCLUDE_HPP
 
-#include <print>
 
 namespace lib1 {
 
