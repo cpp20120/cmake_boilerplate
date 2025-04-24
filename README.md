@@ -90,6 +90,7 @@ This template contains everything you need:
 * docker setup
 * static analysis tools setuped
 * sanizers setuped
+* Visual Studio cmake settings preset pick
 
 ### Build Debug
 
