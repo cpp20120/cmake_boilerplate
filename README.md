@@ -13,6 +13,7 @@ Structure:
 ├── build(contains generation from cmake(ninja.build) and also contains compile_commands.json
 ├── cmake (contains cmake scripts for project)
 ├── docs
+|	└── CMakeLists.txt
 │   └── generate_docs.py
 │   └── Doxyfile.in  
 ├── include
@@ -154,4 +155,9 @@ ctest --preset test-sanitize-address
 ## Run specific test suite
 ```sh
 ctest --preset test-library1
+```
+
+## Run docs generation
+```sh
+cmake --build . --target docs
 ```
