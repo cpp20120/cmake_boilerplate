@@ -65,9 +65,10 @@ Lcov/Gcov for test coverage.
 
 ---
 This template contains everything you need:
-* Ready CMakeLists.txt with specific options for windows 
+* ready CMakeLists.txt with specific options for windows 
+* cmake presets
 * vcpkg.json
-* script for install all needed packages(for debain based, fedora, arch based & macos)
+* cript for install all needed packages(for debain based, fedora, arch based & macos)
 * github.ci(ci drops in this repo because it used many packages and some conflicts, pick packages what you need)
 * .gitignore
 * clang-foramt
@@ -86,31 +87,70 @@ This template contains everything you need:
 * debug configs enable flags for most checks for compilers (clang/gcc and msvc)(some may confict need to pick what and when need)
 * docker setup
 * static analysis tools setuped
+* sanizers setuped
 
 ### Build Debug
 
 ```sh
 mkdir -p build/debug
 cd build/debug
-cmake -DCMAKE_BUILD_TYPE=Debug ../..
-cmake --build .
+cmake --preset debug
+cmake --build --preset build-debug
 ```
 
 ### Build Release:
 ```sh
 mkdir -p build/release
 cd build/release
-cmake -DCMAKE_BUILD_TYPE=Release ../..
-cmake --build .
+cmake --preset release
+cmake --build --preset build-release
 ```
 
-or
-
+### Vcpkg debug build:
 ```sh
+cmake --preset vcpkg-debug
+cmake --build --preset build-vcpkg-debug
+```
 
-# Debug build
-./build_all.sh --debug
+### Vcpkg release  build:
+```sh
+cmake --preset vcpkg-release
+cmake --build --preset build-vcpkg-release
+```
 
-# Release build
-./build_all.sh --release
+
+### Build with sanitazers:
+
+## Address sanitizer
+```sh
+cmake --preset debug-sanitize-address
+cmake --build --preset build-debug-sanitize-address
+```
+## Thread sanitizer
+```sh
+cmake --preset debug-sanitize-thread
+cmake --build --preset build-debug-sanitize-thread
+```
+## Undefined behavior sanitizer
+```sh
+cmake --preset debug-sanitize-undefined
+cmake --build --preset build-debug-sanitize-undefined```
+```
+(specify sanitizer what you need)
+
+### Testing
+
+## Run all tests (release build)
+```sh
+ctest --preset test-all
+```
+
+## Run tests with address sanitizer
+```sh
+ctest --preset test-sanitize-address
+```
+
+## Run specific test suite
+```sh
+ctest --preset test-library1
 ```

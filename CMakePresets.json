@@ -4,13 +4,12 @@
     "major": 3,
     "minor": 19
   },
-
   "configurePresets": [
     {
       "name": "base",
       "hidden": true,
       "generator": "Ninja",
-      "binaryDir": "${sourceDir}/build/vcpkg-release",
+      "binaryDir": "${sourceDir}/build/${presetName}",
       "cacheVariables": {
         "CMAKE_CXX_STANDARD": "23",
         "BUILD_TESTING": "ON",
@@ -23,21 +22,55 @@
     },
     {
       "name": "release",
-      "inherits": [ "base" ],
+      "inherits": ["base"],
       "cacheVariables": {
-        "CMAKE_BUILD_TYPE": "Release"
+        "CMAKE_BUILD_TYPE": "Release",
+        "ENABLE_SANITIZERS": "OFF"
       }
     },
     {
       "name": "debug",
-      "inherits": [ "base" ],
+      "inherits": ["base"],
       "cacheVariables": {
-        "CMAKE_BUILD_TYPE": "Debug"
+        "CMAKE_BUILD_TYPE": "Debug",
+        "ENABLE_SANITIZERS": "OFF"
+      }
+    },
+    {
+      "name": "debug-sanitize-address",
+      "inherits": ["debug"],
+      "cacheVariables": {
+        "ENABLE_SANITIZERS": "ON",
+        "SANITIZER": "address"
+      }
+    },
+    {
+      "name": "debug-sanitize-thread",
+      "inherits": ["debug"],
+      "cacheVariables": {
+        "ENABLE_SANITIZERS": "ON",
+        "SANITIZER": "thread"
+      }
+    },
+    {
+      "name": "debug-sanitize-undefined",
+      "inherits": ["debug"],
+      "cacheVariables": {
+        "ENABLE_SANITIZERS": "ON",
+        "SANITIZER": "undefined"
+      }
+    },
+    {
+      "name": "debug-sanitize-leak",
+      "inherits": ["debug"],
+      "cacheVariables": {
+        "ENABLE_SANITIZERS": "ON",
+        "SANITIZER": "leak"
       }
     },
     {
       "name": "vcpkg-release",
-      "inherits": [ "release" ],
+      "inherits": ["release"],
       "cacheVariables": {
         "CMAKE_TOOLCHAIN_FILE": "E:/vcpkg/scripts/buildsystems/vcpkg.cmake",
         "VCPKG_TARGET_TRIPLET": "x64-windows",
@@ -47,31 +80,83 @@
     },
     {
       "name": "vcpkg-debug",
-      "inherits": [ "debug" ],
+      "inherits": ["debug"],
       "cacheVariables": {
         "CMAKE_TOOLCHAIN_FILE": "E:/vcpkg/scripts/buildsystems/vcpkg.cmake",
         "VCPKG_TARGET_TRIPLET": "x64-windows",
         "VCPKG_MANIFEST_DIR": "${sourceDir}",
         "VCPKG_MANIFEST_MODE": "on"
       }
+    },
+    {
+      "name": "vcpkg-debug-sanitize-address",
+      "inherits": ["vcpkg-debug"],
+      "cacheVariables": {
+        "ENABLE_SANITIZERS": "ON",
+        "SANITIZER": "address"
+      }
+    },
+    {
+      "name": "vcpkg-debug-sanitize-thread",
+      "inherits": ["vcpkg-debug"],
+      "cacheVariables": {
+        "ENABLE_SANITIZERS": "ON",
+        "SANITIZER": "thread"
+      }
     }
   ],
   "buildPresets": [
     {
       "name": "build-release",
-      "configurePreset": "release",
-      "targets": [ "all" ]
+      "configurePreset": "release"
+    },
+    {
+      "name": "build-debug",
+      "configurePreset": "debug"
+    },
+    {
+      "name": "build-debug-sanitize-address",
+      "configurePreset": "debug-sanitize-address"
+    },
+    {
+      "name": "build-debug-sanitize-thread",
+      "configurePreset": "debug-sanitize-thread"
     },
     {
       "name": "build-vcpkg-release",
-      "configurePreset": "vcpkg-release",
-      "targets": [ "all" ]
+      "configurePreset": "vcpkg-release"
+    },
+    {
+      "name": "build-vcpkg-debug",
+      "configurePreset": "vcpkg-debug"
+    },
+    {
+      "name": "build-vcpkg-debug-sanitize-address",
+      "configurePreset": "vcpkg-debug-sanitize-address"
+    },
+    {
+      "name": "build-vcpkg-debug-sanitize-thread",
+      "configurePreset": "vcpkg-debug-sanitize-thread"
     }
   ],
   "testPresets": [
     {
       "name": "test-all",
       "configurePreset": "vcpkg-release",
+      "output": {
+        "outputOnFailure": true
+      }
+    },
+    {
+      "name": "test-sanitize-address",
+      "configurePreset": "debug-sanitize-address",
+      "output": {
+        "outputOnFailure": true
+      }
+    },
+    {
+      "name": "test-sanitize-thread",
+      "configurePreset": "debug-sanitize-thread",
       "output": {
         "outputOnFailure": true
       }
