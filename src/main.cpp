@@ -12,5 +12,6 @@ int main() {
   constexpr int first_number = 23;
   constexpr int second_number = 45;
   lib1::add_numbers(first_number, second_number);
+  lib2::sum_of_numbers(first_number, second_number);
  return 0;
 }

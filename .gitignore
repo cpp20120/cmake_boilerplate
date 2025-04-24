@@ -53,3 +53,6 @@ checks.json
 .vs/
 .cache
 out
+
+#doxygen
+doxygen_output/

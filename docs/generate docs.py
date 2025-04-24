@@ -15,6 +15,15 @@ def check_graphviz_installed():
     except FileNotFoundError:
         return False
 
+def check_doxygen_installed():
+    try:
+        result = subprocess.run(['doxygen', '--version'],
+                                capture_output=True,
+                                text=True)
+        return result.returncode == 0
+    except FileNotFoundError:
+        return False
+
 def find_source_files(project_root):
     input_dirs = [
         project_root / "include",
@@ -51,16 +60,15 @@ def generate_doxygen():
     project_root = Path(__file__).parent.parent.resolve()
     docs_dir = project_root / "docs"
     doxyfile_in = docs_dir / "Doxyfile.in"
-    build_docs_dir = docs_dir / "build_docs"
+    doxygen_output_dir = docs_dir / "doxygen_output" 
 
-    if build_docs_dir.exists():
-        shutil.rmtree(build_docs_dir)
-    build_docs_dir.mkdir(parents=True)
+    if doxygen_output_dir.exists():
+        shutil.rmtree(doxygen_output_dir)
+    doxygen_output_dir.mkdir(parents=True)
 
     project_name = get_project_name_from_cmake(project_root)
     print(f"Detected project name: {project_name}")
 
-    # Проверка наличия Graphviz для диаграмм
     has_graphviz = check_graphviz_installed()
     print(f"Graphviz available: {'YES' if has_graphviz else 'NO'}")
 
@@ -78,6 +86,7 @@ def generate_doxygen():
         'PROJECT_NAME': project_name,
         'PROJECT_BRIEF': f"{project_name} API Documentation",
         'INPUT': ' '.join(f'"{f}"' for f in source_files),
+        'OUTPUT_DIRECTORY': str(doxygen_output_dir), 
         'RECURSIVE': 'YES',
         'EXTRACT_ALL': 'YES',
         'EXTRACT_PRIVATE': 'YES',
@@ -94,7 +103,7 @@ def generate_doxygen():
         'EXTRACT_PACKAGE': 'YES',
         'HIDE_UNDOC_MEMBERS': 'NO',
         'HIDE_UNDOC_CLASSES': 'NO',
-        # Настройки для диаграмм классов
+
         'HAVE_DOT': 'YES' if has_graphviz else 'NO',
         'DOT_IMAGE_FORMAT': 'svg',
         'INTERACTIVE_SVG': 'YES',
@@ -125,7 +134,7 @@ def generate_doxygen():
                 lines.append(line)
         doxyfile_content = '\n'.join(lines)
 
-    doxyfile = build_docs_dir / "Doxyfile"
+    doxyfile = doxygen_output_dir / "Doxyfile"
     with open(doxyfile, 'w', encoding='utf-8') as f:
         f.write(doxyfile_content)
 
@@ -149,7 +158,7 @@ def generate_doxygen():
         print(f"Generation failed: {e}")
         return 1
 
-    index_html = build_docs_dir / "html" / "index.html"
+    index_html = doxygen_output_dir / "html" / "index.html"
     if not index_html.exists():
         print("Error: Documentation was not generated")
         return 1

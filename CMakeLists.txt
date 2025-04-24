@@ -3,8 +3,9 @@ cmake_minimum_required(VERSION 3.26)
 project(TEST_PROJECT CXX)
 
 # docs
-if (DOCS)
-add_subdirectory(docs)
+option(BUILD_DOCS "Build documentation" ON)
+if (BUILD_DOCS)
+    add_subdirectory(docs)
 endif ()
 
 # Vcpkg integration
