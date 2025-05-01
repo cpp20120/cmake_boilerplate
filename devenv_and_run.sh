@@ -47,19 +47,27 @@ install_packages() {
         sudo add-apt-repository -y contrib
         sudo add-apt-repository -y non-free
         sudo apt-get update -y
-        sudo apt-get install -y zsh build-essential neofetch git clang clang-tools mold clang-format gcc cmake ninja-build lld lldb valgrind graphviz libgtest-dev lcov gcovr python3-pip doxygen neovim qtbase5-dev qt6-base-dev libglfw3 libglfw3-dev glew-utils libglew-dev libglm-dev libvulkan1 vulkan-validationlayers glslang-dev spirv-tools spirv-cross libsfml-dev ripgrep lazygit python3 nodejs npm fd-find unzip
+        sudo apt-get install -y zsh build-essential neofetch git clang clang-tools mold clang-format gcc cmake ninja-build lld lldb valgrind graphviz libgtest-dev lcov gcovr python3-pip doxygen neovim fd-find qtbase5-dev qt6-base-dev libglfw3 libglfw3-dev glew-utils libglew-dev libglm-dev libvulkan1 vulkan-validationlayers glslang-dev spirv-tools spirv-cross libsfml-dev ripgrep lazygit python3 nodejs npm fd-find unzip
+        # Install cmake-format
+        sudo pip3 install cmake-format
     elif [ -x "$(command -v dnf)" ]; then
         echo "Detected dnf, installing packages for Fedora/RHEL..."
         sudo dnf install -y dnf5
         sudo dnf5 install -y https://download1.rpmfusion.org/free/fedora/rpmfusion-free-release-$(rpm -E %fedora).noarch.rpm
         sudo dnf5 install -y https://download1.rpmfusion.org/nonfree/fedora/rpmfusion-nonfree-release-$(rpm -E %fedora).noarch.rpm
-        sudo dnf5 install -y zsh @development-tools neofetch git clang clang-tools-extra compiler-rt mold gcc cmake ninja-build lld lldb valgrind graphviz lcov gcovr python3 python3-pip gtest doxygen neovim SFML SFML-devel qt5-qtbase-devel qt5-qtbase qt6-core qt6-qtbase qt6-qtbase-devel qt6-qtmultimedia glfw glm-devel glew vulkan-headers vulkan-loader vulkan-tools vulkan-volk-devel glslang spirv-tools spirv-llvm-translator ripgrep lazygit bottom nodejs npm fd-find unzip
+        sudo dnf5 install -y zsh @development-tools neofetch git clang clang-tools-extra compiler-rt mold gcc cmake ninja-build lld lldb valgrind graphviz lcov gcovr python3 python3-pip gtest doxygen neovim fd-find SFML SFML-devel qt5-qtbase-devel qt5-qtbase qt6-core qt6-qtbase qt6-qtbase-devel qt6-qtmultimedia glfw glm-devel glew vulkan-headers vulkan-loader vulkan-tools vulkan-volk-devel glslang spirv-tools spirv-llvm-translator ripgrep lazygit bottom nodejs npm fd-find unzip
+        # Install cmake-format
+        sudo pip3 install cmake-format
     elif [ -x "$(command -v pacman)" ]; then
         echo "Detected pacman, installing packages for Arch/Manjaro..."
-        sudo pacman -Syyu --noconfirm zsh base-devel neofetch neovim python python-pip lua git clang mold compiler-rt gcc cmake doxygen ninja make lld lldb valgrind graphviz gcov gcovr lcov gtest qt5-base qt5-multimedia qt5-quick3d qt6-tools qt6-quick3d qt6-multimedia glfw glew glm vulkan-extra-layers vulkan-extra-tools vulkan-headers vulkan-tools vulkan-validation-layers spirv-llvm-translator sfml ripgrep lazygit bottom nodejs npm fd unzip
+        sudo pacman -Syyu --noconfirm zsh base-devel neofetch neovim python python-pip lua git clang mold compiler-rt gcc cmake doxygen ninja make lld lldb valgrind graphviz gcov gcovr lcov gtest fd qt5-base qt5-multimedia qt5-quick3d qt6-tools qt6-quick3d qt6-multimedia glfw glew glm vulkan-extra-layers vulkan-extra-tools vulkan-headers vulkan-tools vulkan-validation-layers spirv-llvm-translator sfml ripgrep lazygit bottom nodejs npm fd unzip
+        # Install cmake-format
+        sudo pip install cmake-format
     elif [ -x "$(command -v brew)" ]; then
         echo "Detected brew, installing packages for macOS..."
-        brew install zsh xcodebuild neofetch neovim python3 git clang cmake doxygen ninja make lld lldb valgrind graphviz lcov gcovr qt5 qt6 glfw glew glm vulkan-headers vulkan-loader vulkan-tools vulkan-extenstionlayer vulkan-validationlayer spirv-cross spirv-headers spirv-llvm-translator xcode-build-server googletest sfml ripgrep lazygit bottom node npm fd unzip
+        brew install zsh xcodebuild neofetch neovim python3 fd git clang cmake doxygen ninja make lld lldb valgrind graphviz lcov gcovr qt5 qt6 glfw glew glm vulkan-headers vulkan-loader vulkan-tools vulkan-extenstionlayer vulkan-validationlayer spirv-cross spirv-headers spirv-llvm-translator xcode-build-server googletest sfml ripgrep lazygit bottom node npm fd unzip
+        # Install cmake-format
+        pip3 install cmake-format
     else
         echo -e "${RED}Failed to detect package manager. Please install packages manually.${NC}"
         exit 1
@@ -185,6 +193,17 @@ EOL
     # Add the rest of the configuration
     cat >> ~/.config/nvim/init.lua << 'EOL'
     end
+  },
+  -- Add cmake-format support
+  {
+    "salkin-mada/cmake-format.nvim",
+    config = function()
+      require("cmake-format").setup({
+        cmake_format = {
+          style = "file",
+        }
+      })
+    end
   }
 })
 
@@ -277,6 +296,9 @@ main() {
         done
         echo -e "\nFirst launch of Neovim may take a moment to finish setting up."
     fi
+    
+    echo -e "\n${YELLOW}CMake Format has been installed and configured for Neovim.${NC}"
+    echo "You can format CMake files with the command ':CMakeFormat' in Neovim."
 }
 
 main
