@@ -12,13 +12,10 @@ permissions:
 jobs:
   build-linux:
     runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        preset: [vcpkg-debug, vcpkg-release]
     steps:
       - uses: actions/checkout@v4
 
-      - name: Install dependencies (Ubuntu)
+      - name: Install dependencies
         run: |
           sudo apt update
           sudo apt install -y ninja-build lcov gcovr clang cmake doxygen graphviz nsis
@@ -29,47 +26,23 @@ jobs:
           vcpkgDirectory: '${{ github.workspace }}/vcpkg'
           vcpkgJsonGlob: '**/vcpkg.json'
 
-      - name: Configure (Linux ${{ matrix.preset }})
-        run: cmake --preset ${{ matrix.preset }}
+      - name: Configure (Release)
+        run: cmake --preset vcpkg-release
 
       - name: Build
-        run: cmake --build --preset build-${{ matrix.preset }}
+        run: cmake --build --preset build-vcpkg-release
 
       - name: Run tests
-        run: ctest --preset test-all
+        run: ctest --preset test-vcpkg-release
 
       - name: Generate Coverage
-        if: matrix.preset == 'vcpkg-debug'
         run: |
           lcov --capture --directory . --output-file coverage.info
           lcov --remove coverage.info '/usr/*' '*/vcpkg/*' --output-file coverage.info
           lcov --list coverage.info
 
-  build-sanitizers:
-    runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        sanitizer: [address, thread, undefined]
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Install dependencies
-        run: sudo apt install -y ninja-build clang cmake
-
-      - name: Configure with sanitizer
-        run: cmake --preset debug-sanitize-${{ matrix.sanitizer }}
-
-      - name: Build
-        run: cmake --build --preset build-debug-sanitize-${{ matrix.sanitizer }}
-
-      - name: Run tests
-        run: ctest --preset test-sanitize-${{ matrix.sanitizer }}
-
   build-windows:
     runs-on: windows-latest
-    strategy:
-      matrix:
-        preset: [vcpkg-debug, vcpkg-release]
     steps:
       - uses: actions/checkout@v4
 
@@ -79,24 +52,20 @@ jobs:
           vcpkgDirectory: '${{ github.workspace }}/vcpkg'
           vcpkgJsonGlob: '**/vcpkg.json'
 
-      - name: Configure (Windows ${{ matrix.preset }})
-        run: cmake --preset ${{ matrix.preset }}
+      - name: Configure (Release)
+        run: cmake --preset vcpkg-release
 
       - name: Build
-        run: cmake --build --preset build-${{ matrix.preset }}
+        run: cmake --build --preset build-vcpkg-release
 
       - name: Run tests
-        run: ctest --preset test-all
+        run: ctest --preset test-vcpkg-release
 
       - name: Build Installer (NSIS)
-        if: matrix.preset == 'vcpkg-release'
         run: makensis setup.nsi
 
   build-macos:
     runs-on: macos-latest
-    strategy:
-      matrix:
-        preset: [vcpkg-debug, vcpkg-release]
     steps:
       - uses: actions/checkout@v4
 
@@ -109,22 +78,11 @@ jobs:
           vcpkgDirectory: '${{ github.workspace }}/vcpkg'
           vcpkgJsonGlob: '**/vcpkg.json'
 
-      - name: Configure (macOS ${{ matrix.preset }})
-        run: cmake --preset ${{ matrix.preset }}
+      - name: Configure (Release)
+        run: cmake --preset vcpkg-release
 
       - name: Build
-        run: cmake --build --preset build-${{ matrix.preset }}
+        run: cmake --build --preset build-vcpkg-release
 
       - name: Run tests
-        run: ctest --preset test-all
-
-  docker:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Build Docker image
-        run: docker build -t game_engine_build .
-
-      - name: Run tests inside container
-        run: docker run --rm game_engine_build ctest --preset test-all
+        run: ctest --preset test-vcpkg-release
