@@ -6,28 +6,44 @@ on:
   pull_request:
     branches: [main, master]
 
-permissions:
-  contents: read
+env:
+  VCPKG_ROOT: ${{ github.workspace }}/vcpkg
+  VCPKG_TOOLCHAIN: ${{ github.workspace }}/vcpkg/scripts/buildsystems/vcpkg.cmake
 
 jobs:
   build-linux:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          submodules: recursive  # Important if vcpkg is a submodule
 
-      - name: Install dependencies
+      - name: Install system dependencies
         run: |
-          sudo apt update
-          sudo apt install -y ninja-build lcov gcovr clang cmake doxygen graphviz nsis
+          sudo apt-get update
+          sudo apt-get install -y \
+            build-essential \
+            ninja-build \
+            lcov \
+            gcovr \
+            clang \
+            cmake \
+            doxygen \
+            graphviz \
+            nsis \
+            git
 
       - name: Setup vcpkg
-        uses: lukka/run-vcpkg@v11
-        with:
-          vcpkgDirectory: '${{ github.workspace }}/vcpkg'
-          vcpkgJsonGlob: '**/vcpkg.json'
+        run: |
+          git clone https://github.com/Microsoft/vcpkg.git
+          ./vcpkg/bootstrap-vcpkg.sh -disableMetrics
+          echo "VCPKG_ROOT=$VCPKG_ROOT" >> $GITHUB_ENV
+          echo "VCPKG_TOOLCHAIN=$VCPKG_TOOLCHAIN" >> $GITHUB_ENV
 
       - name: Configure (Release)
-        run: cmake --preset vcpkg-release
+        run: |
+          cmake --preset vcpkg-release \
+            -DCMAKE_TOOLCHAIN_FILE=$VCPKG_TOOLCHAIN
 
       - name: Build
         run: cmake --build --preset build-vcpkg-release
@@ -45,15 +61,20 @@ jobs:
     runs-on: windows-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          submodules: recursive
 
       - name: Setup vcpkg
-        uses: lukka/run-vcpkg@v11
-        with:
-          vcpkgDirectory: '${{ github.workspace }}/vcpkg'
-          vcpkgJsonGlob: '**/vcpkg.json'
+        run: |
+          git clone https://github.com/Microsoft/vcpkg.git
+          .\vcpkg\bootstrap-vcpkg.bat -disableMetrics
+          echo "VCPKG_ROOT=$VCPKG_ROOT" >> $env:GITHUB_ENV
+          echo "VCPKG_TOOLCHAIN=$VCPKG_TOOLCHAIN" >> $env:GITHUB_ENV
 
       - name: Configure (Release)
-        run: cmake --preset vcpkg-release
+        run: |
+          cmake --preset vcpkg-release `
+            -DCMAKE_TOOLCHAIN_FILE=$env:VCPKG_TOOLCHAIN
 
       - name: Build
         run: cmake --build --preset build-vcpkg-release
@@ -68,18 +89,25 @@ jobs:
     runs-on: macos-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          submodules: recursive
 
       - name: Install dependencies
-        run: brew install ninja cmake doxygen graphviz
+        run: |
+          brew update
+          brew install ninja cmake doxygen graphviz
 
       - name: Setup vcpkg
-        uses: lukka/run-vcpkg@v11
-        with:
-          vcpkgDirectory: '${{ github.workspace }}/vcpkg'
-          vcpkgJsonGlob: '**/vcpkg.json'
+        run: |
+          git clone https://github.com/Microsoft/vcpkg.git
+          ./vcpkg/bootstrap-vcpkg.sh -disableMetrics
+          echo "VCPKG_ROOT=$VCPKG_ROOT" >> $GITHUB_ENV
+          echo "VCPKG_TOOLCHAIN=$VCPKG_TOOLCHAIN" >> $GITHUB_ENV
 
       - name: Configure (Release)
-        run: cmake --preset vcpkg-release
+        run: |
+          cmake --preset vcpkg-release \
+            -DCMAKE_TOOLCHAIN_FILE=$VCPKG_TOOLCHAIN
 
       - name: Build
         run: cmake --build --preset build-vcpkg-release
