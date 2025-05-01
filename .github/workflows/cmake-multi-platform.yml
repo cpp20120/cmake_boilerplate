@@ -6,121 +6,125 @@ on:
   pull_request:
     branches: [main, master]
 
-env:
-  VCPKG_ROOT: ${{ github.workspace }}/vcpkg
-  VCPKG_TOOLCHAIN: ${{ github.workspace }}/vcpkg/scripts/buildsystems/vcpkg.cmake
+permissions:
+  contents: read
 
 jobs:
   build-linux:
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        preset: [vcpkg-debug, vcpkg-release]
     steps:
       - uses: actions/checkout@v4
-        with:
-          submodules: recursive  # Important if vcpkg is a submodule
 
-      - name: Install system dependencies
+      - name: Install dependencies (Ubuntu)
         run: |
-          sudo apt-get update
-          sudo apt-get install -y \
-            build-essential \
-            ninja-build \
-            lcov \
-            gcovr \
-            clang \
-            cmake \
-            doxygen \
-            graphviz \
-            nsis \
-            git
+          sudo apt update
+          sudo apt install -y ninja-build lcov gcovr clang cmake doxygen graphviz nsis
 
       - name: Setup vcpkg
-        run: |
-          git clone https://github.com/Microsoft/vcpkg.git
-          ./vcpkg/bootstrap-vcpkg.sh -disableMetrics
-          echo "VCPKG_ROOT=$VCPKG_ROOT" >> $GITHUB_ENV
-          echo "VCPKG_TOOLCHAIN=$VCPKG_TOOLCHAIN" >> $GITHUB_ENV
+        uses: lukka/run-vcpkg@v11
+        with:
+          vcpkgDirectory: '${{ github.workspace }}/vcpkg'
+          vcpkgJsonGlob: '**/vcpkg.json'
 
-      - name: Configure (Release)
-        run: |
-          cmake --preset vcpkg-release \
-            -DCMAKE_TOOLCHAIN_FILE=$VCPKG_TOOLCHAIN
+      - name: Configure (Linux ${{ matrix.preset }})
+        run: cmake --preset ${{ matrix.preset }}
 
       - name: Build
-        run: cmake --build --preset build-vcpkg-release
+        run: cmake --build --preset build-${{ matrix.preset }}
 
       - name: Run tests
-        run: ctest --preset test-vcpkg-release
+        run: ctest --preset test-all
 
       - name: Generate Coverage
+        if: matrix.preset == 'vcpkg-debug'
         run: |
           lcov --capture --directory . --output-file coverage.info
           lcov --remove coverage.info '/usr/*' '*/vcpkg/*' --output-file coverage.info
           lcov --list coverage.info
 
-  build-windows:
-    runs-on: windows-latest
+  build-sanitizers:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        sanitizer: [address, thread, undefined]
     steps:
       - uses: actions/checkout@v4
-        with:
-          submodules: recursive
 
-      - name: Setup MSVC and Ninja
-        uses: ilammy/msvc-dev-cmd@v1
-        with:
-          arch: x64  # or x86 if needed
+      - name: Install dependencies
+        run: sudo apt install -y ninja-build clang cmake
 
-      - name: Install NSIS
-        run: choco install nsis -y
-
-      - name: Setup vcpkg
-        run: |
-          git clone https://github.com/Microsoft/vcpkg.git
-          .\vcpkg\bootstrap-vcpkg.bat -disableMetrics
-          echo "VCPKG_ROOT=${{ github.workspace }}\vcpkg" >> $env:GITHUB_ENV
-          echo "VCPKG_TOOLCHAIN=${{ github.workspace }}\vcpkg\scripts\buildsystems\vcpkg.cmake" >> $env:GITHUB_ENV
-
-      - name: Configure (Release)
-        run: |
-          cmake --preset vcpkg-release `
-            -DCMAKE_TOOLCHAIN_FILE="$env:VCPKG_TOOLCHAIN" `
-            -DCMAKE_MAKE_PROGRAM=ninja `
-            -G "Ninja"
+      - name: Configure with sanitizer
+        run: cmake --preset debug-sanitize-${{ matrix.sanitizer }}
 
       - name: Build
-        run: cmake --build --preset build-vcpkg-release --config Release
+        run: cmake --build --preset build-debug-sanitize-${{ matrix.sanitizer }}
 
       - name: Run tests
-        run: ctest --preset test-vcpkg-release --config Release
+        run: ctest --preset test-sanitize-${{ matrix.sanitizer }}
+
+  build-windows:
+    runs-on: windows-latest
+    strategy:
+      matrix:
+        preset: [vcpkg-debug, vcpkg-release]
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup vcpkg
+        uses: lukka/run-vcpkg@v11
+        with:
+          vcpkgDirectory: '${{ github.workspace }}/vcpkg'
+          vcpkgJsonGlob: '**/vcpkg.json'
+
+      - name: Configure (Windows ${{ matrix.preset }})
+        run: cmake --preset ${{ matrix.preset }}
+
+      - name: Build
+        run: cmake --build --preset build-${{ matrix.preset }}
+
+      - name: Run tests
+        run: ctest --preset test-all
 
       - name: Build Installer (NSIS)
+        if: matrix.preset == 'vcpkg-release'
         run: makensis setup.nsi
 
   build-macos:
     runs-on: macos-latest
+    strategy:
+      matrix:
+        preset: [vcpkg-debug, vcpkg-release]
     steps:
       - uses: actions/checkout@v4
-        with:
-          submodules: recursive
 
       - name: Install dependencies
-        run: |
-          brew update
-          brew install ninja cmake doxygen graphviz
+        run: brew install ninja cmake doxygen graphviz
 
       - name: Setup vcpkg
-        run: |
-          git clone https://github.com/Microsoft/vcpkg.git
-          ./vcpkg/bootstrap-vcpkg.sh -disableMetrics
-          echo "VCPKG_ROOT=$VCPKG_ROOT" >> $GITHUB_ENV
-          echo "VCPKG_TOOLCHAIN=$VCPKG_TOOLCHAIN" >> $GITHUB_ENV
+        uses: lukka/run-vcpkg@v11
+        with:
+          vcpkgDirectory: '${{ github.workspace }}/vcpkg'
+          vcpkgJsonGlob: '**/vcpkg.json'
 
-      - name: Configure (Release)
-        run: |
-          cmake --preset vcpkg-release \
-            -DCMAKE_TOOLCHAIN_FILE=$VCPKG_TOOLCHAIN
+      - name: Configure (macOS ${{ matrix.preset }})
+        run: cmake --preset ${{ matrix.preset }}
 
       - name: Build
-        run: cmake --build --preset build-vcpkg-release
+        run: cmake --build --preset build-${{ matrix.preset }}
 
       - name: Run tests
-        run: ctest --preset test-vcpkg-release
+        run: ctest --preset test-all
+
+  docker:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build Docker image
+        run: docker build -t game_engine_build .
+
+      - name: Run tests inside container
+        run: docker run --rm game_engine_build ctest --preset test-all
