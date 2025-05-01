@@ -8,7 +8,6 @@
     {
       "name": "base",
       "hidden": true,
-      "generator": "Ninja",
       "binaryDir": "${sourceDir}/build/${presetName}",
       "cacheVariables": {
         "CMAKE_CXX_STANDARD": "23",
@@ -21,6 +20,29 @@
       }
     },
     {
+      "name": "base-windows",
+      "hidden": true,
+      "inherits": "base",
+      "generator": "Ninja",
+      "architecture": {
+        "value": "x64",
+        "strategy": "external"
+      },
+      "cacheVariables": {
+        "CMAKE_MAKE_PROGRAM": "ninja"
+      }
+    },
+    {
+      "name": "base-macos",
+      "hidden": true,
+      "inherits": "base",
+      "generator": "Ninja",
+      "cacheVariables": {
+        "CMAKE_OSX_ARCHITECTURES": "arm64;x86_64",
+        "CMAKE_MAKE_PROGRAM": "ninja"
+      }
+    },
+    {
       "name": "release",
       "inherits": ["base"],
       "cacheVariables": {
@@ -29,11 +51,39 @@
       }
     },
     {
+      "name": "windows-release",
+      "inherits": ["release", "base-windows"],
+      "cacheVariables": {
+        "VCPKG_TARGET_TRIPLET": "x64-windows"
+      }
+    },
+    {
+      "name": "macos-release",
+      "inherits": ["release", "base-macos"],
+      "cacheVariables": {
+        "VCPKG_TARGET_TRIPLET": "x64-osx"
+      }
+    },
+    {
       "name": "debug",
       "inherits": ["base"],
       "cacheVariables": {
         "CMAKE_BUILD_TYPE": "Debug",
         "ENABLE_SANITIZERS": "OFF"
+      }
+    },
+    {
+      "name": "windows-debug",
+      "inherits": ["debug", "base-windows"],
+      "cacheVariables": {
+        "VCPKG_TARGET_TRIPLET": "x64-windows"
+      }
+    },
+    {
+      "name": "macos-debug",
+      "inherits": ["debug", "base-macos"],
+      "cacheVariables": {
+        "VCPKG_TARGET_TRIPLET": "x64-osx"
       }
     },
     {
@@ -73,7 +123,29 @@
       "inherits": ["release"],
       "cacheVariables": {
         "CMAKE_TOOLCHAIN_FILE": "${sourceDir}/vcpkg/scripts/buildsystems/vcpkg.cmake",
+<<<<<<< HEAD
         "VCPKG_TARGET_TRIPLET": "x64-windows",
+=======
+        "VCPKG_TARGET_TRIPLET": "x64-linux",
+        "VCPKG_MANIFEST_DIR": "${sourceDir}",
+        "VCPKG_MANIFEST_MODE": "on"
+      }
+    },
+    {
+      "name": "vcpkg-windows-release",
+      "inherits": ["windows-release"],
+      "cacheVariables": {
+        "CMAKE_TOOLCHAIN_FILE": "${sourceDir}/vcpkg/scripts/buildsystems/vcpkg.cmake",
+        "VCPKG_MANIFEST_DIR": "${sourceDir}",
+        "VCPKG_MANIFEST_MODE": "on"
+      }
+    },
+    {
+      "name": "vcpkg-macos-release",
+      "inherits": ["macos-release"],
+      "cacheVariables": {
+        "CMAKE_TOOLCHAIN_FILE": "${sourceDir}/vcpkg/scripts/buildsystems/vcpkg.cmake",
+>>>>>>> 69a030737bcd259e234778d6403cc5ad0909f5b8
         "VCPKG_MANIFEST_DIR": "${sourceDir}",
         "VCPKG_MANIFEST_MODE": "on"
       }
@@ -83,7 +155,29 @@
       "inherits": ["debug"],
       "cacheVariables": {
         "CMAKE_TOOLCHAIN_FILE": "${sourceDir}/vcpkg/scripts/buildsystems/vcpkg.cmake",
+<<<<<<< HEAD
         "VCPKG_TARGET_TRIPLET": "x64-windows",
+=======
+        "VCPKG_TARGET_TRIPLET": "x64-linux",
+        "VCPKG_MANIFEST_DIR": "${sourceDir}",
+        "VCPKG_MANIFEST_MODE": "on"
+      }
+    },
+    {
+      "name": "vcpkg-windows-debug",
+      "inherits": ["windows-debug"],
+      "cacheVariables": {
+        "CMAKE_TOOLCHAIN_FILE": "${sourceDir}/vcpkg/scripts/buildsystems/vcpkg.cmake",
+        "VCPKG_MANIFEST_DIR": "${sourceDir}",
+        "VCPKG_MANIFEST_MODE": "on"
+      }
+    },
+    {
+      "name": "vcpkg-macos-debug",
+      "inherits": ["macos-debug"],
+      "cacheVariables": {
+        "CMAKE_TOOLCHAIN_FILE": "${sourceDir}/vcpkg/scripts/buildsystems/vcpkg.cmake",
+>>>>>>> 69a030737bcd259e234778d6403cc5ad0909f5b8
         "VCPKG_MANIFEST_DIR": "${sourceDir}",
         "VCPKG_MANIFEST_MODE": "on"
       }
@@ -111,8 +205,24 @@
       "configurePreset": "release"
     },
     {
+      "name": "build-windows-release",
+      "configurePreset": "windows-release"
+    },
+    {
+      "name": "build-macos-release",
+      "configurePreset": "macos-release"
+    },
+    {
       "name": "build-debug",
       "configurePreset": "debug"
+    },
+    {
+      "name": "build-windows-debug",
+      "configurePreset": "windows-debug"
+    },
+    {
+      "name": "build-macos-debug",
+      "configurePreset": "macos-debug"
     },
     {
       "name": "build-debug-sanitize-address",
@@ -127,8 +237,24 @@
       "configurePreset": "vcpkg-release"
     },
     {
+      "name": "build-vcpkg-windows-release",
+      "configurePreset": "vcpkg-windows-release"
+    },
+    {
+      "name": "build-vcpkg-macos-release",
+      "configurePreset": "vcpkg-macos-release"
+    },
+    {
       "name": "build-vcpkg-debug",
       "configurePreset": "vcpkg-debug"
+    },
+    {
+      "name": "build-vcpkg-windows-debug",
+      "configurePreset": "vcpkg-windows-debug"
+    },
+    {
+      "name": "build-vcpkg-macos-debug",
+      "configurePreset": "vcpkg-macos-debug"
     },
     {
       "name": "build-vcpkg-debug-sanitize-address",
@@ -143,6 +269,20 @@
     {
       "name": "test-all",
       "configurePreset": "vcpkg-debug",
+      "output": {
+        "outputOnFailure": true
+      }
+    },
+    {
+      "name": "test-windows-all",
+      "configurePreset": "vcpkg-windows-debug",
+      "output": {
+        "outputOnFailure": true
+      }
+    },
+    {
+      "name": "test-macos-all",
+      "configurePreset": "vcpkg-macos-debug",
       "output": {
         "outputOnFailure": true
       }
