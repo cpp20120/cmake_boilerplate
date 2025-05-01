@@ -75,6 +75,7 @@ This template contains everything you need:
 * .gitignore
 * clang-format
 * clang-tidy
+* cmake-format
 * gcov, lcov
 * mold/lld linker(available for gcc/clang)
 * lib build flags
@@ -91,6 +92,7 @@ This template contains everything you need:
 * docker setup
 * static analysis tools setuped
 * sanizers setuped
+* scritps for parallel formatting (code and cmake)
 * Visual Studio cmake settings preset pick
 
 ### Build Debug
