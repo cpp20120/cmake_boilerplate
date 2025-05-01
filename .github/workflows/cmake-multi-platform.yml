@@ -64,23 +64,33 @@ jobs:
         with:
           submodules: recursive
 
+      - name: Setup MSVC and Ninja
+        uses: ilammy/msvc-dev-cmd@v1
+        with:
+          arch: x64  # or x86 if needed
+
+      - name: Install NSIS
+        run: choco install nsis -y
+
       - name: Setup vcpkg
         run: |
           git clone https://github.com/Microsoft/vcpkg.git
           .\vcpkg\bootstrap-vcpkg.bat -disableMetrics
-          echo "VCPKG_ROOT=$VCPKG_ROOT" >> $env:GITHUB_ENV
-          echo "VCPKG_TOOLCHAIN=$VCPKG_TOOLCHAIN" >> $env:GITHUB_ENV
+          echo "VCPKG_ROOT=${{ github.workspace }}\vcpkg" >> $env:GITHUB_ENV
+          echo "VCPKG_TOOLCHAIN=${{ github.workspace }}\vcpkg\scripts\buildsystems\vcpkg.cmake" >> $env:GITHUB_ENV
 
       - name: Configure (Release)
         run: |
           cmake --preset vcpkg-release `
-            -DCMAKE_TOOLCHAIN_FILE=$env:VCPKG_TOOLCHAIN
+            -DCMAKE_TOOLCHAIN_FILE="$env:VCPKG_TOOLCHAIN" `
+            -DCMAKE_MAKE_PROGRAM=ninja `
+            -G "Ninja"
 
       - name: Build
-        run: cmake --build --preset build-vcpkg-release
+        run: cmake --build --preset build-vcpkg-release --config Release
 
       - name: Run tests
-        run: ctest --preset test-vcpkg-release
+        run: ctest --preset test-vcpkg-release --config Release
 
       - name: Build Installer (NSIS)
         run: makensis setup.nsi
