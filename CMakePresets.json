@@ -123,9 +123,7 @@
       "inherits": ["release"],
       "cacheVariables": {
         "CMAKE_TOOLCHAIN_FILE": "${sourceDir}/vcpkg/scripts/buildsystems/vcpkg.cmake",
-<<<<<<< HEAD
         "VCPKG_TARGET_TRIPLET": "x64-windows",
-=======
         "VCPKG_TARGET_TRIPLET": "x64-linux",
         "VCPKG_MANIFEST_DIR": "${sourceDir}",
         "VCPKG_MANIFEST_MODE": "on"
@@ -145,7 +143,6 @@
       "inherits": ["macos-release"],
       "cacheVariables": {
         "CMAKE_TOOLCHAIN_FILE": "${sourceDir}/vcpkg/scripts/buildsystems/vcpkg.cmake",
->>>>>>> 69a030737bcd259e234778d6403cc5ad0909f5b8
         "VCPKG_MANIFEST_DIR": "${sourceDir}",
         "VCPKG_MANIFEST_MODE": "on"
       }
@@ -155,9 +152,7 @@
       "inherits": ["debug"],
       "cacheVariables": {
         "CMAKE_TOOLCHAIN_FILE": "${sourceDir}/vcpkg/scripts/buildsystems/vcpkg.cmake",
-<<<<<<< HEAD
         "VCPKG_TARGET_TRIPLET": "x64-windows",
-=======
         "VCPKG_TARGET_TRIPLET": "x64-linux",
         "VCPKG_MANIFEST_DIR": "${sourceDir}",
         "VCPKG_MANIFEST_MODE": "on"
@@ -177,7 +172,6 @@
       "inherits": ["macos-debug"],
       "cacheVariables": {
         "CMAKE_TOOLCHAIN_FILE": "${sourceDir}/vcpkg/scripts/buildsystems/vcpkg.cmake",
->>>>>>> 69a030737bcd259e234778d6403cc5ad0909f5b8
         "VCPKG_MANIFEST_DIR": "${sourceDir}",
         "VCPKG_MANIFEST_MODE": "on"
       }
