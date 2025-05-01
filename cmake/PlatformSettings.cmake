@@ -8,7 +8,7 @@ if(WIN32)
     )
     
     if(MSVC)
-        add_compile_options(/MP /W3
+        add_compile_options(/MP /W4
             /utf-8
             /sdl
             /nologo

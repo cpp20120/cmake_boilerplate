@@ -1,13 +1,13 @@
 cmake_minimum_required(VERSION 3.26)
-project(library1 LANGUAGES CXX)
+project(library1 LANGUAGES CXX
+VERSION 1.0.0
+
+)
 
 add_subdirectory(src)
 
 # Версионирование
-set_target_properties(library1 PROPERTIES
-        VERSION 1.0.0
-        SOVERSION 1
-)
+
 
 include(cmake/LibraryExportSettings.cmake)
 include(cmake/LibraryCompilerSettings.cmake)
@@ -25,6 +25,11 @@ configure_library_type(library1)
 target_include_directories(library1 PUBLIC
         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
         $<INSTALL_INTERFACE:include>
+)
+
+set_target_properties(library1 PROPERTIES
+        VERSION 1.0.0
+        SOVERSION 1
 )
 
 include(cmake/LibraryInstallSettings.cmake)

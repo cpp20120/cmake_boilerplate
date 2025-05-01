@@ -9,8 +9,8 @@ namespace proj {
  * @param b second int parameter
  * @return sum of both
  */
-static int func(const int a, const int b) {
-  return a + b;
+static int func(const int first_number, const int second_number) {
+  return first_number + second_number;
 }
 }
 

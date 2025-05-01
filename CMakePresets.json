@@ -142,28 +142,28 @@
   "testPresets": [
     {
       "name": "test-all",
-      "configurePreset": "vcpkg-release",
+      "configurePreset": "vcpkg-debug",
       "output": {
         "outputOnFailure": true
       }
     },
     {
       "name": "test-sanitize-address",
-      "configurePreset": "debug-sanitize-address",
+      "configurePreset": "debug",
       "output": {
         "outputOnFailure": true
       }
     },
     {
       "name": "test-sanitize-thread",
-      "configurePreset": "debug-sanitize-thread",
+      "configurePreset": "debug",
       "output": {
         "outputOnFailure": true
       }
     },
     {
       "name": "test-library1",
-      "configurePreset": "vcpkg-release",
+      "configurePreset": "vcpkg-debug",
       "output": {
         "outputOnFailure": true
       },
@@ -175,7 +175,7 @@
     },
     {
       "name": "test-library2",
-      "configurePreset": "vcpkg-release",
+      "configurePreset": "vcpkg-debug",
       "output": {
         "outputOnFailure": true
       },

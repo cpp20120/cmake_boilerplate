@@ -8,4 +8,4 @@ include(CMakeFindDependencyMacro)
 
 include("${CMAKE_CURRENT_LIST_DIR}/libTargets.cmake")
 
-check_required_components(lib)
+check_required_components(library2)

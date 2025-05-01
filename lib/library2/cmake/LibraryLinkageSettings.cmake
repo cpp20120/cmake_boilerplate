@@ -1,6 +1,5 @@
 
 
-# 5. Подключаем остальные настройки ПОСЛЕ создания цели
 include(cmake/LibraryCompilerSettings.cmake)
 include(cmake/LibraryExportSettings.cmake)
 
@@ -45,21 +44,20 @@ function(configure_library_type TARGET_NAME)
 endfunction()
 
 # 7. Вызываем функцию конфигурации
-configure_library_type(lib2)
+configure_library_type(library2)
 
 # 8. Версионирование
 set(LIB_VERSION 1.0.0)
-set_target_properties(lib2 PROPERTIES
+set_target_properties(library2 PROPERTIES
         VERSION ${LIB_VERSION}
         SOVERSION 1
 )
 
 # 9. Директории include
-target_include_directories(lib2 PUBLIC
-    $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/include>
-    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
-    $<INSTALL_INTERFACE:include>
+target_include_directories(library2 PUBLIC
+        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+        $<INSTALL_INTERFACE:include>
 )
 
 # 10. Установка
-#include(cmake/LibraryInstallSettings.cmake)
+include(cmake/LibraryInstallSettings.cmake)

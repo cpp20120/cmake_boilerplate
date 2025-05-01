@@ -1,3 +1,4 @@
+#include <type_traits>
 #ifndef LIB1_INCLUDE_HPP
 #define LIB1_INCLUDE_HPP
 
@@ -20,6 +21,14 @@ inline int add_numbers(const int first_number,const int second_number) { return 
  * @return sum of both
  */
 int sum_of_numbers(const int first_number,const int second_number);
+
+template <typename T>
+concept Arithmetic = std::is_arithmetic_v<T>;
+
+template <Arithmetic T>
+constexpr T add_numbers(const T first_number, const T second_number) {
+  return first_number + second_number;
+}
 
 }  // namespace lib1
 

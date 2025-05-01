@@ -1,6 +1,21 @@
 # Main CMakeLists.txt
 cmake_minimum_required(VERSION 3.26)
-project(TEST_PROJECT CXX)
+project(TEST_PROJECT 
+    LANGUAGES CXX
+    VERSION 1.0.0
+    DESCRIPTION "Test Project"
+)
+
+# Include additional configurations
+
+include(cmake/PlatformSettings.cmake)
+include(cmake/CompilerSettings.cmake)
+include(cmake/LinkerSettings.cmake)
+include(cmake/CodeFormatAndAnalysis.cmake)
+
+set(ENABLE_SANITIZERS ON CACHE BOOL "Enable sanitizers")
+set(SANITIZER "address" CACHE STRING "Sanitizer type")
+include(cmake/CompilerSettings.cmake)
 
 # docs
 option(BUILD_DOCS "Build documentation" ON)
@@ -37,12 +52,7 @@ enable_testing()
 option(BUILD_ALL_TESTS "Build tests" ON)
 add_subdirectory(tests)
 
-# Include additional configurations
-include(cmake/PlatformSettings.cmake)
-include(cmake/CompilerSettings.cmake)
-include(cmake/LinkerSettings.cmake)
 include(cmake/BuildConfiguration.cmake)
-include(cmake/CodeFormatAndAnalysis.cmake)
 
 # Installation
 install(TARGETS ${PROJECT_NAME}

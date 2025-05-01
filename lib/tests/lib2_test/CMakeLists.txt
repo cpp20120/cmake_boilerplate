@@ -1,4 +1,4 @@
-if(NOT TARGET lib2)
+if(NOT TARGET library2)
     message(FATAL_ERROR "Library2 not found!")
 endif()
 
@@ -8,7 +8,7 @@ endif()
 
 add_executable(lib2_test lib_test.cpp)
 target_link_libraries(lib2_test PRIVATE
-        lib2
+        library2
         GTest::GTest
         GTest::Main
 )
