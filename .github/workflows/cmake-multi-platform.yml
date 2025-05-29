@@ -30,7 +30,7 @@ jobs:
           vcpkgJsonGlob: '**/vcpkg.json'
 
       - name: Configure (Linux ${{ matrix.preset }})
-        run: cmake --preset ${{ matrix.preset }}
+        run: cmake --preset ${{ matrix.preset }} -G Ninja
 
       - name: Build
         run: cmake --build --preset build-${{ matrix.preset }}
@@ -57,7 +57,7 @@ jobs:
         run: sudo apt install -y ninja-build clang cmake
 
       - name: Configure with sanitizer
-        run: cmake --preset debug-sanitize-${{ matrix.sanitizer }}
+        run: cmake --preset debug-sanitize-${{ matrix.sanitizer }} -G Ninja
 
       - name: Build
         run: cmake --build --preset build-debug-sanitize-${{ matrix.sanitizer }}
@@ -80,7 +80,7 @@ jobs:
           vcpkgJsonGlob: '**/vcpkg.json'
 
       - name: Configure (Windows ${{ matrix.preset }})
-        run: cmake --preset ${{ matrix.preset }}
+        run: cmake --preset ${{ matrix.preset }} -G Ninja
 
       - name: Build
         run: cmake --build --preset build-${{ matrix.preset }}
@@ -110,7 +110,7 @@ jobs:
           vcpkgJsonGlob: '**/vcpkg.json'
 
       - name: Configure (macOS ${{ matrix.preset }})
-        run: cmake --preset ${{ matrix.preset }}
+        run: cmake --preset ${{ matrix.preset }} -G Ninja
 
       - name: Build
         run: cmake --build --preset build-${{ matrix.preset }}
@@ -124,7 +124,7 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: Build Docker image
-        run: docker build -t game_engine_build .
+        run: docker build -t cmake_boilerplate_build .
 
       - name: Run tests inside container
-        run: docker run --rm game_engine_build ctest --preset test-all
+        run: docker run --rm cmake_boilerplate_build ctest --preset test-all
