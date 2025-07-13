@@ -13,6 +13,7 @@
         "CMAKE_CXX_STANDARD": "23",
         "BUILD_TESTING": "ON",
         "BUILD_ALL_TESTS": "ON",
+        "ENABLE_FUZZING": "OFF", 
         "CMAKE_TOOLCHAIN_FILE": {
           "type": "FILEPATH",
           "value": "$env{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake"
@@ -189,6 +190,46 @@
         "ENABLE_SANITIZERS": "ON",
         "SANITIZER": "thread"
       }
+    },
+    {
+      "name": "fuzz-base",
+      "hidden": true,
+      "inherits": "debug",
+      "cacheVariables": {
+        "ENABLE_FUZZING": "ON",
+        "ENABLE_SANITIZERS": "ON",
+        "SANITIZER": "address",
+        "FUZZ_RUNTIME": "60"
+      }
+    },
+    {
+      "name": "fuzz-linux",
+      "inherits": ["fuzz-base"],
+      "cacheVariables": {
+        "CMAKE_CXX_COMPILER": "clang++"
+      }
+    },
+    {
+      "name": "fuzz-windows",
+      "inherits": ["fuzz-base", "base-windows"],
+      "cacheVariables": {
+        "CMAKE_CXX_COMPILER": "clang-cl"
+      }
+    },
+    {
+      "name": "fuzz-macos",
+      "inherits": ["fuzz-base", "base-macos"],
+      "cacheVariables": {
+        "CMAKE_CXX_COMPILER": "clang++"
+      }
+    },
+    {
+      "name": "fuzz-vcpkg",
+      "inherits": ["fuzz-base"],
+      "cacheVariables": {
+        "CMAKE_TOOLCHAIN_FILE": "${sourceDir}/vcpkg/scripts/buildsystems/vcpkg.cmake",
+        "VCPKG_TARGET_TRIPLET": "x64-linux"
+      }
     }
   ],
   "buildPresets": [
@@ -255,6 +296,26 @@
     {
       "name": "build-vcpkg-debug-sanitize-thread",
       "configurePreset": "vcpkg-debug-sanitize-thread"
+    },
+    {
+      "name": "build-fuzz",
+      "configurePreset": "fuzz-linux",
+      "targets": ["fuzz_target"]
+    },
+    {
+      "name": "build-fuzz-windows",
+      "configurePreset": "fuzz-windows",
+      "targets": ["fuzz_target"]
+    },
+    {
+      "name": "build-fuzz-macos",
+      "configurePreset": "fuzz-macos",
+      "targets": ["fuzz_target"]
+    },
+    {
+      "name": "build-fuzz-vcpkg",
+      "configurePreset": "fuzz-vcpkg",
+      "targets": ["fuzz_target"]
     }
   ],
   "testPresets": [
@@ -314,6 +375,53 @@
       "filter": {
         "include": {
           "name": "^library2_tests"
+        }
+      }
+    },
+    {
+      "name": "test-fuzz",
+      "configurePreset": "fuzz-linux",
+      "output": {
+        "outputOnFailure": true
+      },
+      "execution": {
+        "noTestsAction": "error",
+        "stopOnFailure": false
+      },
+      "filter": {
+        "include": {
+          "name": "^fuzz_target$"
+        }
+      }
+    },
+    {
+      "name": "test-fuzz-short",
+      "configurePreset": "fuzz-linux",
+      "output": {
+        "outputOnFailure": true
+      },
+      "execution": {
+        "noTestsAction": "error",
+        "stopOnFailure": false
+      },
+      "environment": {
+        "FUZZ_RUNTIME": "10"
+      },
+      "filter": {
+        "include": {
+          "name": "^fuzz_target$"
+        }
+      }
+    },
+    {
+      "name": "test-fuzz-vcpkg",
+      "configurePreset": "fuzz-vcpkg",
+      "output": {
+        "outputOnFailure": true
+      },
+      "filter": {
+        "include": {
+          "name": "^fuzz_target$"
         }
       }
     }
