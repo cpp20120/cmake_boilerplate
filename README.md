@@ -3,11 +3,11 @@
 [![CMake](https://img.shields.io/badge/CMake-3.26+-blue.svg)](https://cmake.org/)
 [![vcpkg](https://img.shields.io/badge/vcpkg-enabled-green.svg)](https://vcpkg.io/)
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
-[![](https://tokei.rs/b1/gitlab/cppshizoid/cmake_boilerplate)](https://gitlab.com/cppshizoid/cmake_boilerplate).
+[![](https://tokei.rs/b1/gitlab/cppshizoid/cmake_boilerplate)](https://github.com/cpp20120/cmake_boilerplate).
 
 Structure:
 
-```sh
+
 ```sh
 ├── .github/workflows
 │   └── build_cmake.yml
@@ -46,6 +46,8 @@ Structure:
 │   └── CMakeLists.txt
 │   └── *.cpp
 ├── test
+|   └──fuzz_test (contains fuzz tests)
+|       └──CMakeLists.txt
 │   └── CMakeLists.txt
 │   └── test_*.cpp
 ├── .clang-format
@@ -61,7 +63,7 @@ Structure:
 └── README.md
 ```
 
-I use  [vcpkg](https://vcpkg.io/en/index.html) for pm(in [windows & linux](https://github.com/cppshizoidS/cmake_boilerplate/tree/vcpkg)), [cmake](https://cmake.org/) for generator files for [ninja-build](https://ninja-build.org/), [clang-format](https://clang.llvm.org/docs/ClangFormat.html) for format and [doxygen](https://www.doxygen.nl/manual/index.html) for generate docs, [clang-tidy](https://clang.llvm.org/extra/clang-tidy/) for linting.
+I use  [vcpkg](https://vcpkg.io/en/index.html) for pm(in [windows & linux](https://github.com/cppshizoidS/cmake_boilerplate/tree/vcpkg)), [cmake](https://cmake.org/) for generator files for [ninja-build](https://ninja-build.org/), [clang-format](https://clang.llvm.org/docs/ClangFormat.html) for format and [doxygen](https://www.doxygen.nl/manual/index.html) for generate docs, [clang-tidy](https://clang.llvm.org/extra/clang-tidy/) for linting, [libfuzzer](https://llvm.org/docs/LibFuzzer.html) for fuzz tests.
 GTest for Unit Test and Ctest for running tests. Lcov/Gcov for test coverage.  It can be used for graphics project. 
 
 
@@ -86,6 +88,7 @@ This template contains everything you need:
 * basic setup for nvim zsh OMZ
 * IWYU
 * setuped CTest and GTest
+* setuped fuzz testing
 * shader build script
 * different configurations: debug, release...
 * debug configs enable flags for most checks for compilers (clang/gcc and msvc)(some may confict need to pick what and when need)
@@ -145,6 +148,38 @@ cmake --build --preset build-debug-sanitize-undefined```
 (specify sanitizer what you need)
 
 ### Testing
+
+## Run Fuzz Testing
+
+```sh
+cmake -B build -DENABLE_FUZZING=ON -DCMAKE_CXX_COMPILER=clang++
+cmake --build build --target fuzz_target
+```
+
+Manually
+
+```sh
+./build/fuzz/fuzz_target ./fuzz/corpus -max_len=1024 -runs=100000
+```
+
+From CTest
+
+```sh
+ctest -R fuzz_target_test
+```
+
+Auto crash test
+```sh
+mkdir -p artifacts/crashes
+./build/fuzz/fuzz_target -artifact_prefix=artifacts/crashes/
+```
+
+
+With vcpkg 
+```sh
+cmake --preset fuzz-vcpkg
+cmake --build --preset build-fuzz-vcpkg
+```
 
 ## Run all tests (release build)
 ```sh
