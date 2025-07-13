@@ -19,7 +19,6 @@ set(ENABLE_SANITIZERS
 set(SANITIZER
     "address"
     CACHE STRING "Sanitizer type")
-include(cmake/CompilerSettings.cmake)
 
 # docs
 option(BUILD_DOCS "Build documentation" ON)
@@ -51,16 +50,27 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 add_subdirectory(src)
 add_subdirectory(lib)
 # add tests
-set(BUILD_ALL_TESTS
-    ON
-    CACHE BOOL "Build all tests" FORCE)
-message(
-  STATUS "BUILD_ALL_TESTS value: ${BUILD_ALL_TESTS} (defined at ${CMAKE_CURRENT_LIST_FILE}:${CMAKE_CURRENT_LIST_LINE})")
+option(BUILD_ALL_TESTS "Build all tests" ON)
+message(STATUS "BUILD_ALL_TESTS value: ${BUILD_ALL_TESTS}")
 enable_testing()
-option(BUILD_ALL_TESTS "Build tests" ON)
 add_subdirectory(tests)
 
 include(cmake/BuildConfiguration.cmake)
+
+option(ENABLE_FUZZING "Enable fuzz testing (libFuzzer/AFL++)" OFF)
+if(ENABLE_FUZZING)
+  add_subdirectory(test/fuzz_test)
+  set(FUZZ_RUNTIME 10 CACHE STRING "Number of seconds to run fuzz tests")
+    if(CMAKE_CXX_COMPILER_ID MATCHES "Clang")
+        set(FUZZER_FLAGS "-fsanitize=fuzzer-no-link,address,undefined")
+        set(FUZZER_LINK_FLAGS "-fsanitize=fuzzer")
+    elseif(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+        message("Please use clang i rely on it for fuzz test")
+    endif()
+
+    add_compile_options(${FUZZER_FLAGS})
+    add_link_options(${FUZZER_FLAGS} ${FUZZER_LINK_FLAGS})
+endif()
 
 # Installation
 install(
