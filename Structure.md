@@ -1,4 +1,4 @@
-```sh
+
 ```sh
 ├── .github/workflows
 │   └── build_cmake.yml
@@ -36,6 +36,8 @@
 │   └── CMakeLists.txt
 │   └── *.cpp
 ├── test
+|   └──fuzz_test (contains fuzz tests)
+|       └──CMakeLists.txt
 │   └── CMakeLists.txt
 │   └── test_*.cpp
 ├── .clang-format
