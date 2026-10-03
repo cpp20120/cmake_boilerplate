@@ -1,11 +1,10 @@
 #include <gtest/gtest.h>
 
-#include <print>
-
+#include <iostream>
 #include "../../library2/include/include.hpp"
 
 TEST(SumOfNumbersTest2, PositiveNumbers) {
-  std::print("SecondLib Tests\n");
+  std::cout << "SecondLib Tests\n";
   ASSERT_EQ(5, lib2::sum_of_numbers(2, 3));
   ASSERT_EQ(10, lib2::sum_of_numbers(5, 5));
   ASSERT_EQ(100, lib2::sum_of_numbers(50, 50));
