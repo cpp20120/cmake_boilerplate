@@ -1,0 +1,13 @@
+.git
+.github
+build
+out
+cmake-build-*
+vcpkg
+artifacts
+__pycache__
+*.pyc
+*.profraw
+*.profdata
+*.gcda
+*.gcno

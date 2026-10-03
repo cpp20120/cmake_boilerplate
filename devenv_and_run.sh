@@ -60,7 +60,7 @@ install_packages() {
         sudo pip3 install cmake-format
     elif [ -x "$(command -v pacman)" ]; then
         echo "Detected pacman, installing packages for Arch/Manjaro..."
-        sudo pacman -Syyu --noconfirm zsh base-devel neofetch neovim python python-pip lua git clang mold compiler-rt gcc cmake doxygen ninja make lld lldb valgrind graphviz gcov gcovr lcov gtest fd qt5-base qt5-multimedia qt5-quick3d qt6-tools qt6-quick3d qt6-multimedia glfw glew glm vulkan-extra-layers vulkan-extra-tools vulkan-headers vulkan-tools vulkan-validation-layers spirv-llvm-translator sfml ripgrep lazygit bottom nodejs npm fd unzip
+        sudo pacman -Syyu --noconfirm zsh base-devel neofetch neovim python python-pip lua git clang mold compiler-rt gcc cmake doxygen ninja make lld lldb valgrind graphviz  gcovr lcov gtest fd qt5-base qt5-multimedia  qt6-tools qt6-quick3d qt6-multimedia glfw glew glm vulkan-extra-layers vulkan-extra-tools vulkan-headers vulkan-tools vulkan-validation-layers spirv-llvm-translator sfml ripgrep lazygit bottom nodejs npm fd unzip
         # Install cmake-format
         sudo pip install cmake-format
     elif [ -x "$(command -v brew)" ]; then

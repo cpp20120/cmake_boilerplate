@@ -1,3 +1,4 @@
+#include <climits>
 #include <gtest/gtest.h>
 #include "../include/include.hpp"
 
@@ -14,8 +15,8 @@ GTEST_TEST(FuncTest, Zero) {
   ASSERT_EQ(proj::func(5, 0), 5);
 }
 
-GTEST_TEST(FuncTest, Overflow) {
-  ASSERT_EQ(proj::func(INT_MAX, 1), INT_MIN);
+GTEST_TEST(FuncTest, RepresentableBoundary) {
+  ASSERT_EQ(proj::func(INT_MAX, 0), INT_MAX);
 }
 int main(int argc, char **argv) {
   testing::InitGoogleTest(&argc, argv);

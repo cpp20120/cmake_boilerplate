@@ -11,8 +11,9 @@ permissions:
 
 jobs:
   build-linux:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     strategy:
+      fail-fast: false
       matrix:
         preset: [vcpkg-debug, vcpkg-release]
     steps:
@@ -20,111 +21,165 @@ jobs:
 
       - name: Install dependencies (Ubuntu)
         run: |
-          sudo apt update
-          sudo apt install -y ninja-build lcov gcovr clang cmake doxygen graphviz nsis
+          sudo apt-get update
+          sudo apt-get install -y ninja-build clang cmake
 
       - name: Setup vcpkg
         uses: lukka/run-vcpkg@v11
         with:
           vcpkgDirectory: '${{ github.workspace }}/vcpkg'
-          vcpkgJsonGlob: '**/vcpkg.json'
+          vcpkgJsonGlob: 'vcpkg.json'
 
       - name: Configure (Linux ${{ matrix.preset }})
-        run: cmake --preset ${{ matrix.preset }} -G Ninja
+        run: >-
+          cmake --preset ${{ matrix.preset }} -G Ninja
+          -DCMAKE_CXX_COMPILER=g++
+          -DVCPKG_MANIFEST_FEATURES=tests -DBOILERPLATE_BUILD_GOOGLE_TESTS=ON
 
       - name: Build
-        run: cmake --build --preset build-${{ matrix.preset }}
+        run: cmake --build --preset build-${{ matrix.preset }} --parallel 2
 
       - name: Run tests
-        run: ctest --preset test-all
+        run: ctest --test-dir build/${{ matrix.preset }} --output-on-failure --no-tests=error
 
-      - name: Generate Coverage
+      - name: Check CMake policies and relocated packages
         if: matrix.preset == 'vcpkg-debug'
+        run: cmake --build --preset build-${{ matrix.preset }} --target boilerplate_check_cmake
+
+  coverage:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install dependencies
         run: |
-          lcov --capture --directory . --output-file coverage.info
-          lcov --remove coverage.info '/usr/*' '*/vcpkg/*' --output-file coverage.info
-          lcov --list coverage.info
+          sudo apt-get update
+          sudo apt-get install -y ninja-build cmake gcovr
+
+      - name: Configure with GCC coverage instrumentation
+        run: cmake --preset app-coverage -DCMAKE_CXX_COMPILER=g++
+
+      - name: Build
+        run: cmake --build --preset app-coverage --parallel 2
+
+      - name: Run tests
+        run: ctest --preset app-coverage --output-on-failure --no-tests=error
+
+      - name: Generate coverage report
+        run: >-
+          gcovr --root . --object-directory out/build/app-coverage
+          --exclude '.*[/]tests[/].*' --exclude '.*[/]_deps[/].*'
+          --xml-pretty --output out/build/app-coverage/coverage.xml --print-summary
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: coverage
+          path: out/build/app-coverage/coverage.xml
+          if-no-files-found: error
 
   build-sanitizers:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     strategy:
+      fail-fast: false
       matrix:
         sanitizer: [address, thread, undefined]
     steps:
       - uses: actions/checkout@v4
 
       - name: Install dependencies
-        run: sudo apt install -y ninja-build clang cmake
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y ninja-build clang cmake
 
       - name: Configure with sanitizer
-        run: cmake --preset debug-sanitize-${{ matrix.sanitizer }} -G Ninja
+        run: cmake --preset debug-sanitize-${{ matrix.sanitizer }} -G Ninja -DCMAKE_CXX_COMPILER=clang++
 
       - name: Build
-        run: cmake --build --preset build-debug-sanitize-${{ matrix.sanitizer }}
+        run: cmake --build --preset build-debug-sanitize-${{ matrix.sanitizer }} --parallel 2
 
       - name: Run tests
-        run: ctest --preset test-sanitize-${{ matrix.sanitizer }}
+        env:
+          UBSAN_OPTIONS: halt_on_error=1:print_stacktrace=1
+          TSAN_OPTIONS: halt_on_error=1
+        run: ctest --preset test-sanitize-${{ matrix.sanitizer }} --output-on-failure --no-tests=error
 
   build-windows:
     runs-on: windows-latest
     strategy:
+      fail-fast: false
       matrix:
-        preset: [vcpkg-debug, vcpkg-release]
+        preset: [vcpkg-windows-debug, vcpkg-windows-release]
     steps:
       - uses: actions/checkout@v4
+
+      - name: Setup MSVC for Ninja
+        uses: ilammy/msvc-dev-cmd@v1
+        with:
+          arch: x64
 
       - name: Setup vcpkg
         uses: lukka/run-vcpkg@v11
         with:
           vcpkgDirectory: '${{ github.workspace }}/vcpkg'
-          vcpkgJsonGlob: '**/vcpkg.json'
+          vcpkgJsonGlob: 'vcpkg.json'
 
       - name: Configure (Windows ${{ matrix.preset }})
-        run: cmake --preset ${{ matrix.preset }} -G Ninja
+        run: >-
+          cmake --preset ${{ matrix.preset }}
+          -DCMAKE_CXX_COMPILER=cl -DENABLE_PACKAGING=ON
+          -DVCPKG_MANIFEST_FEATURES=tests -DBOILERPLATE_BUILD_GOOGLE_TESTS=ON
 
       - name: Build
-        run: cmake --build --preset build-${{ matrix.preset }}
+        run: cmake --build --preset build-${{ matrix.preset }} --parallel 2
 
       - name: Run tests
-        run: ctest --preset test-all
+        run: ctest --test-dir build/${{ matrix.preset }} --output-on-failure --no-tests=error
+
+      - name: Install NSIS
+        if: matrix.preset == 'vcpkg-windows-release'
+        run: choco install nsis --yes --no-progress
 
       - name: Build Installer (NSIS)
-        if: matrix.preset == 'vcpkg-release'
-        run: makensis setup.nsi
+        if: matrix.preset == 'vcpkg-windows-release'
+        working-directory: build/${{ matrix.preset }}
+        run: cpack --config CPackConfig.cmake -G NSIS
 
   build-macos:
     runs-on: macos-latest
     strategy:
+      fail-fast: false
       matrix:
-        preset: [vcpkg-debug, vcpkg-release]
+        preset: [vcpkg-macos-debug, vcpkg-macos-release]
     steps:
       - uses: actions/checkout@v4
 
       - name: Install dependencies
-        run: brew install ninja cmake doxygen graphviz
+        run: brew install ninja
 
       - name: Setup vcpkg
         uses: lukka/run-vcpkg@v11
         with:
           vcpkgDirectory: '${{ github.workspace }}/vcpkg'
-          vcpkgJsonGlob: '**/vcpkg.json'
+          vcpkgJsonGlob: 'vcpkg.json'
 
       - name: Configure (macOS ${{ matrix.preset }})
-        run: cmake --preset ${{ matrix.preset }} -G Ninja
+        # Match the native arm64 runner and its vcpkg packages, rather than
+        # linking a universal application against single-architecture libraries.
+        run: >-
+          cmake --preset ${{ matrix.preset }}
+          -DCMAKE_OSX_ARCHITECTURES=arm64 -DVCPKG_TARGET_TRIPLET=arm64-osx
+          -DVCPKG_MANIFEST_FEATURES=tests -DBOILERPLATE_BUILD_GOOGLE_TESTS=ON
 
       - name: Build
-        run: cmake --build --preset build-${{ matrix.preset }}
+        run: cmake --build --preset build-${{ matrix.preset }} --parallel 2
 
       - name: Run tests
-        run: ctest --preset test-all
+        run: ctest --test-dir build/${{ matrix.preset }} --output-on-failure --no-tests=error
 
   docker:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
 
-      - name: Build Docker image
-        run: docker build -t cmake_boilerplate_build .
-
-      - name: Run tests inside container
-        run: docker run --rm cmake_boilerplate_build ctest --preset test-all
+      - name: Build and test container workflow
+        run: python3 tools/container.py --image cmake_boilerplate_build test --preset app-release

@@ -1,8 +1,9 @@
 {
-  "version": 3,
+  "version": 6,
   "cmakeMinimumRequired": {
     "major": 3,
-    "minor": 19
+    "minor": 26,
+    "patch": 0
   },
   "configurePresets": [
     {
@@ -12,12 +13,7 @@
       "cacheVariables": {
         "CMAKE_CXX_STANDARD": "23",
         "BUILD_TESTING": "ON",
-        "BUILD_ALL_TESTS": "ON",
-        "ENABLE_FUZZING": "OFF", 
-        "CMAKE_TOOLCHAIN_FILE": {
-          "type": "FILEPATH",
-          "value": "$env{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake"
-        }
+        "BOILERPLATE_BUILD_TESTS": "ON"
       }
     },
     {
@@ -45,7 +41,9 @@
     },
     {
       "name": "release",
-      "inherits": ["base"],
+      "inherits": [
+        "base"
+      ],
       "cacheVariables": {
         "CMAKE_BUILD_TYPE": "Release",
         "ENABLE_SANITIZERS": "OFF"
@@ -53,21 +51,29 @@
     },
     {
       "name": "windows-release",
-      "inherits": ["release", "base-windows"],
+      "inherits": [
+        "release",
+        "base-windows"
+      ],
       "cacheVariables": {
         "VCPKG_TARGET_TRIPLET": "x64-windows"
       }
     },
     {
       "name": "macos-release",
-      "inherits": ["release", "base-macos"],
+      "inherits": [
+        "release",
+        "base-macos"
+      ],
       "cacheVariables": {
         "VCPKG_TARGET_TRIPLET": "x64-osx"
       }
     },
     {
       "name": "debug",
-      "inherits": ["base"],
+      "inherits": [
+        "base"
+      ],
       "cacheVariables": {
         "CMAKE_BUILD_TYPE": "Debug",
         "ENABLE_SANITIZERS": "OFF"
@@ -75,21 +81,29 @@
     },
     {
       "name": "windows-debug",
-      "inherits": ["debug", "base-windows"],
+      "inherits": [
+        "debug",
+        "base-windows"
+      ],
       "cacheVariables": {
         "VCPKG_TARGET_TRIPLET": "x64-windows"
       }
     },
     {
       "name": "macos-debug",
-      "inherits": ["debug", "base-macos"],
+      "inherits": [
+        "debug",
+        "base-macos"
+      ],
       "cacheVariables": {
         "VCPKG_TARGET_TRIPLET": "x64-osx"
       }
     },
     {
       "name": "debug-sanitize-address",
-      "inherits": ["debug"],
+      "inherits": [
+        "debug"
+      ],
       "cacheVariables": {
         "ENABLE_SANITIZERS": "ON",
         "SANITIZER": "address"
@@ -97,7 +111,9 @@
     },
     {
       "name": "debug-sanitize-thread",
-      "inherits": ["debug"],
+      "inherits": [
+        "debug"
+      ],
       "cacheVariables": {
         "ENABLE_SANITIZERS": "ON",
         "SANITIZER": "thread"
@@ -105,7 +121,9 @@
     },
     {
       "name": "debug-sanitize-undefined",
-      "inherits": ["debug"],
+      "inherits": [
+        "debug"
+      ],
       "cacheVariables": {
         "ENABLE_SANITIZERS": "ON",
         "SANITIZER": "undefined"
@@ -113,7 +131,9 @@
     },
     {
       "name": "debug-sanitize-leak",
-      "inherits": ["debug"],
+      "inherits": [
+        "debug"
+      ],
       "cacheVariables": {
         "ENABLE_SANITIZERS": "ON",
         "SANITIZER": "leak"
@@ -121,74 +141,96 @@
     },
     {
       "name": "vcpkg-release",
-      "inherits": ["release"],
+      "inherits": [
+        "release"
+      ],
       "cacheVariables": {
-        "CMAKE_TOOLCHAIN_FILE": "${sourceDir}/vcpkg/scripts/buildsystems/vcpkg.cmake",
         "VCPKG_TARGET_TRIPLET": "x64-linux",
         "VCPKG_MANIFEST_DIR": "${sourceDir}",
-        "VCPKG_MANIFEST_MODE": "on"
+        "VCPKG_MANIFEST_MODE": "on",
+        "BOILERPLATE_DEPENDENCY_PROVIDER": "vcpkg"
       }
     },
     {
       "name": "vcpkg-windows-release",
-      "inherits": ["windows-release"],
+      "inherits": [
+        "windows-release"
+      ],
       "cacheVariables": {
-        "CMAKE_TOOLCHAIN_FILE": "${sourceDir}/vcpkg/scripts/buildsystems/vcpkg.cmake",
         "VCPKG_MANIFEST_DIR": "${sourceDir}",
-        "VCPKG_MANIFEST_MODE": "on"
+        "VCPKG_MANIFEST_MODE": "on",
+        "BOILERPLATE_DEPENDENCY_PROVIDER": "vcpkg"
       }
     },
     {
       "name": "vcpkg-macos-release",
-      "inherits": ["macos-release"],
+      "inherits": [
+        "macos-release"
+      ],
       "cacheVariables": {
-        "CMAKE_TOOLCHAIN_FILE": "${sourceDir}/vcpkg/scripts/buildsystems/vcpkg.cmake",
         "VCPKG_MANIFEST_DIR": "${sourceDir}",
-        "VCPKG_MANIFEST_MODE": "on"
+        "VCPKG_MANIFEST_MODE": "on",
+        "BOILERPLATE_DEPENDENCY_PROVIDER": "vcpkg"
       }
     },
     {
       "name": "vcpkg-debug",
-      "inherits": ["debug"],
+      "inherits": [
+        "debug"
+      ],
       "cacheVariables": {
-        "CMAKE_TOOLCHAIN_FILE": "${sourceDir}/vcpkg/scripts/buildsystems/vcpkg.cmake",
         "VCPKG_TARGET_TRIPLET": "x64-linux",
         "VCPKG_MANIFEST_DIR": "${sourceDir}",
-        "VCPKG_MANIFEST_MODE": "on"
+        "VCPKG_MANIFEST_MODE": "on",
+        "BOILERPLATE_DEPENDENCY_PROVIDER": "vcpkg"
       }
     },
     {
       "name": "vcpkg-windows-debug",
-      "inherits": ["windows-debug"],
+      "inherits": [
+        "windows-debug"
+      ],
       "cacheVariables": {
-        "CMAKE_TOOLCHAIN_FILE": "${sourceDir}/vcpkg/scripts/buildsystems/vcpkg.cmake",
         "VCPKG_MANIFEST_DIR": "${sourceDir}",
-        "VCPKG_MANIFEST_MODE": "on"
+        "VCPKG_MANIFEST_MODE": "on",
+        "BOILERPLATE_DEPENDENCY_PROVIDER": "vcpkg"
       }
     },
     {
       "name": "vcpkg-macos-debug",
-      "inherits": ["macos-debug"],
+      "inherits": [
+        "macos-debug"
+      ],
       "cacheVariables": {
-        "CMAKE_TOOLCHAIN_FILE": "${sourceDir}/vcpkg/scripts/buildsystems/vcpkg.cmake",
+        "VCPKG_MANIFEST_DIR": "${sourceDir}",
+        "VCPKG_MANIFEST_MODE": "on",
+        "BOILERPLATE_DEPENDENCY_PROVIDER": "vcpkg"
+      }
+    },
+    {
+      "name": "vcpkg-debug-sanitize-address",
+      "inherits": [
+        "vcpkg-debug"
+      ],
+      "cacheVariables": {
+        "ENABLE_SANITIZERS": "ON",
+        "SANITIZER": "address",
+        "BOILERPLATE_DEPENDENCY_PROVIDER": "vcpkg",
         "VCPKG_MANIFEST_DIR": "${sourceDir}",
         "VCPKG_MANIFEST_MODE": "on"
       }
     },
     {
-      "name": "vcpkg-debug-sanitize-address",
-      "inherits": ["vcpkg-debug"],
-      "cacheVariables": {
-        "ENABLE_SANITIZERS": "ON",
-        "SANITIZER": "address"
-      }
-    },
-    {
       "name": "vcpkg-debug-sanitize-thread",
-      "inherits": ["vcpkg-debug"],
+      "inherits": [
+        "vcpkg-debug"
+      ],
       "cacheVariables": {
         "ENABLE_SANITIZERS": "ON",
-        "SANITIZER": "thread"
+        "SANITIZER": "thread",
+        "BOILERPLATE_DEPENDENCY_PROVIDER": "vcpkg",
+        "VCPKG_MANIFEST_DIR": "${sourceDir}",
+        "VCPKG_MANIFEST_MODE": "on"
       }
     },
     {
@@ -204,31 +246,230 @@
     },
     {
       "name": "fuzz-linux",
-      "inherits": ["fuzz-base"],
+      "inherits": [
+        "fuzz-base"
+      ],
       "cacheVariables": {
-        "CMAKE_CXX_COMPILER": "clang++"
+        "CMAKE_CXX_COMPILER": "clang++",
+        "BOILERPLATE_FUZZ_BACKEND": "libfuzzer"
       }
     },
     {
       "name": "fuzz-windows",
-      "inherits": ["fuzz-base", "base-windows"],
+      "inherits": [
+        "fuzz-base",
+        "base-windows"
+      ],
       "cacheVariables": {
-        "CMAKE_CXX_COMPILER": "clang-cl"
+        "CMAKE_CXX_COMPILER": "clang-cl",
+        "BOILERPLATE_FUZZ_BACKEND": "libfuzzer"
       }
     },
     {
       "name": "fuzz-macos",
-      "inherits": ["fuzz-base", "base-macos"],
+      "inherits": [
+        "fuzz-base",
+        "base-macos"
+      ],
       "cacheVariables": {
-        "CMAKE_CXX_COMPILER": "clang++"
+        "CMAKE_CXX_COMPILER": "clang++",
+        "BOILERPLATE_FUZZ_BACKEND": "libfuzzer"
       }
     },
     {
       "name": "fuzz-vcpkg",
-      "inherits": ["fuzz-base"],
+      "inherits": [
+        "fuzz-base"
+      ],
       "cacheVariables": {
-        "CMAKE_TOOLCHAIN_FILE": "${sourceDir}/vcpkg/scripts/buildsystems/vcpkg.cmake",
-        "VCPKG_TARGET_TRIPLET": "x64-linux"
+        "VCPKG_TARGET_TRIPLET": "x64-linux",
+        "BOILERPLATE_FUZZ_BACKEND": "libfuzzer",
+        "BOILERPLATE_DEPENDENCY_PROVIDER": "vcpkg",
+        "VCPKG_MANIFEST_DIR": "${sourceDir}",
+        "VCPKG_MANIFEST_MODE": "on"
+      }
+    },
+    {
+      "name": "app-base",
+      "hidden": true,
+      "generator": "Ninja",
+      "binaryDir": "${sourceDir}/out/build/${presetName}",
+      "cacheVariables": {
+        "BOILERPLATE_LIBRARIES_ONLY": "OFF",
+        "BOILERPLATE_BUILD_TESTS": "ON",
+        "BOILERPLATE_BUILD_SHARED": "ON",
+        "BOILERPLATE_BUILD_STATIC": "OFF"
+      }
+    },
+    {
+      "name": "app-vcpkg-provider",
+      "hidden": true,
+      "cacheVariables": {
+        "BOILERPLATE_DEPENDENCY_PROVIDER": "vcpkg",
+        "VCPKG_MANIFEST_DIR": "${sourceDir}",
+        "VCPKG_MANIFEST_MODE": "on"
+      }
+    },
+    {
+      "name": "app-vcpkg-all",
+      "inherits": [
+        "app-release",
+        "app-vcpkg-provider"
+      ],
+      "cacheVariables": {
+        "BOILERPLATE_PROJECT_CAPABILITIES": "full",
+        "BOILERPLATE_BUILD_EXAMPLES": "ON",
+        "BOILERPLATE_BUILD_GOOGLE_TESTS": "ON",
+        "BOILERPLATE_BUILD_BENCHMARKS": "ON",
+        "BOILERPLATE_BUILD_GOOGLE_BENCHMARKS": "ON",
+        "BOILERPLATE_BUILD_PROPERTY_TESTS": "ON",
+        "VCPKG_MANIFEST_FEATURES": "tests;pbt;benchmarks"
+      }
+    },
+    {
+      "name": "app-debug",
+      "inherits": "app-base",
+      "cacheVariables": {
+        "BOILERPLATE_PROFILE": "debug"
+      }
+    },
+    {
+      "name": "app-release",
+      "inherits": "app-base",
+      "cacheVariables": {
+        "BOILERPLATE_PROFILE": "release"
+      }
+    },
+    {
+      "name": "app-hardening",
+      "inherits": "app-release",
+      "cacheVariables": {
+        "BOILERPLATE_HARDENING": "ON"
+      }
+    },
+    {
+      "name": "app-coverage",
+      "inherits": "app-debug",
+      "cacheVariables": {
+        "BOILERPLATE_COVERAGE": "ON"
+      }
+    },
+    {
+      "name": "app-asan",
+      "inherits": "app-debug",
+      "cacheVariables": {
+        "BOILERPLATE_SANITIZER": "address-undefined"
+      }
+    },
+    {
+      "name": "app-tsan",
+      "inherits": "app-debug",
+      "cacheVariables": {
+        "BOILERPLATE_SANITIZER": "thread"
+      }
+    },
+    {
+      "name": "app-examples",
+      "inherits": "app-debug",
+      "cacheVariables": {
+        "BOILERPLATE_BUILD_EXAMPLES": "ON"
+      }
+    },
+    {
+      "name": "app-google-tests",
+      "inherits": "app-debug",
+      "cacheVariables": {
+        "BOILERPLATE_BUILD_GOOGLE_TESTS": "ON"
+      }
+    },
+    {
+      "name": "app-fuzz",
+      "inherits": "app-debug",
+      "cacheVariables": {
+        "CMAKE_CXX_COMPILER": "clang++",
+        "BOILERPLATE_BUILD_FUZZERS": "ON",
+        "BOILERPLATE_FUZZ_BACKEND": "libfuzzer"
+      }
+    },
+    {
+      "name": "app-bench-both",
+      "inherits": "app-release",
+      "cacheVariables": {
+        "BOILERPLATE_BUILD_BENCHMARKS": "ON",
+        "BOILERPLATE_BUILD_GOOGLE_BENCHMARKS": "ON"
+      }
+    },
+    {
+      "name": "app-minimal",
+      "inherits": "app-release",
+      "cacheVariables": {
+        "BOILERPLATE_PROJECT_CAPABILITIES": "project-minimal",
+        "BOILERPLATE_BUILD_TESTS": "OFF"
+      }
+    },
+    {
+      "name": "app-ci",
+      "inherits": "app-debug",
+      "cacheVariables": {
+        "BOILERPLATE_PROJECT_CAPABILITIES": "ci",
+        "BOILERPLATE_REQUIRE_PROJECT_TOOLS": "ON"
+      }
+    },
+    {
+      "name": "app-distribution",
+      "inherits": "app-release",
+      "cacheVariables": {
+        "BOILERPLATE_PROJECT_CAPABILITIES": "distribution;testing"
+      }
+    },
+    {
+      "name": "app-full",
+      "inherits": "app-release",
+      "cacheVariables": {
+        "BOILERPLATE_PROJECT_CAPABILITIES": "full"
+      }
+    },
+    {
+      "name": "app-property-tests",
+      "inherits": "app-debug",
+      "cacheVariables": {
+        "BOILERPLATE_BUILD_PROPERTY_TESTS": "ON",
+        "BOILERPLATE_PROJECT_CAPABILITIES": "developer;property-testing"
+      }
+    },
+    {
+      "name": "app-fuzz-aflpp",
+      "inherits": "app-debug",
+      "cacheVariables": {
+        "CMAKE_CXX_COMPILER": "afl-clang-fast++",
+        "BOILERPLATE_FUZZ_BACKEND": "aflpp",
+        "BOILERPLATE_BUILD_FUZZERS": "ON"
+      }
+    },
+    {
+      "name": "app-fuzz-honggfuzz",
+      "inherits": "app-debug",
+      "cacheVariables": {
+        "CMAKE_CXX_COMPILER": "hfuzz-clang++",
+        "BOILERPLATE_FUZZ_BACKEND": "honggfuzz",
+        "BOILERPLATE_BUILD_FUZZERS": "ON"
+      }
+    },
+    {
+      "name": "app-fuzztest-unit",
+      "inherits": "app-debug",
+      "cacheVariables": {
+        "BOILERPLATE_BUILD_FUZZTESTS": "ON",
+        "BOILERPLATE_FUZZTEST_MODE": "unit"
+      }
+    },
+    {
+      "name": "app-fuzztest-fuzzing",
+      "inherits": "app-debug",
+      "cacheVariables": {
+        "CMAKE_CXX_COMPILER": "clang++",
+        "BOILERPLATE_BUILD_FUZZTESTS": "ON",
+        "BOILERPLATE_FUZZTEST_MODE": "fuzzing"
       }
     }
   ],
@@ -266,6 +507,10 @@
       "configurePreset": "debug-sanitize-thread"
     },
     {
+      "name": "build-debug-sanitize-undefined",
+      "configurePreset": "debug-sanitize-undefined"
+    },
+    {
       "name": "build-vcpkg-release",
       "configurePreset": "vcpkg-release"
     },
@@ -300,22 +545,110 @@
     {
       "name": "build-fuzz",
       "configurePreset": "fuzz-linux",
-      "targets": ["fuzz_target"]
+      "targets": [
+        "fuzz_target"
+      ]
     },
     {
       "name": "build-fuzz-windows",
       "configurePreset": "fuzz-windows",
-      "targets": ["fuzz_target"]
+      "targets": [
+        "fuzz_target"
+      ]
     },
     {
       "name": "build-fuzz-macos",
       "configurePreset": "fuzz-macos",
-      "targets": ["fuzz_target"]
+      "targets": [
+        "fuzz_target"
+      ]
     },
     {
       "name": "build-fuzz-vcpkg",
       "configurePreset": "fuzz-vcpkg",
-      "targets": ["fuzz_target"]
+      "targets": [
+        "fuzz_target"
+      ]
+    },
+    {
+      "name": "app-debug",
+      "configurePreset": "app-debug"
+    },
+    {
+      "name": "app-release",
+      "configurePreset": "app-release"
+    },
+    {
+      "name": "app-hardening",
+      "configurePreset": "app-hardening"
+    },
+    {
+      "name": "app-coverage",
+      "configurePreset": "app-coverage"
+    },
+    {
+      "name": "app-asan",
+      "configurePreset": "app-asan"
+    },
+    {
+      "name": "app-tsan",
+      "configurePreset": "app-tsan"
+    },
+    {
+      "name": "app-examples",
+      "configurePreset": "app-examples"
+    },
+    {
+      "name": "app-google-tests",
+      "configurePreset": "app-google-tests"
+    },
+    {
+      "name": "app-fuzz",
+      "configurePreset": "app-fuzz"
+    },
+    {
+      "name": "app-bench-both",
+      "configurePreset": "app-bench-both"
+    },
+    {
+      "name": "app-minimal",
+      "configurePreset": "app-minimal"
+    },
+    {
+      "name": "app-ci",
+      "configurePreset": "app-ci"
+    },
+    {
+      "name": "app-distribution",
+      "configurePreset": "app-distribution"
+    },
+    {
+      "name": "app-full",
+      "configurePreset": "app-full"
+    },
+    {
+      "name": "app-property-tests",
+      "configurePreset": "app-property-tests"
+    },
+    {
+      "name": "app-fuzz-aflpp",
+      "configurePreset": "app-fuzz-aflpp"
+    },
+    {
+      "name": "app-fuzz-honggfuzz",
+      "configurePreset": "app-fuzz-honggfuzz"
+    },
+    {
+      "name": "app-fuzztest-unit",
+      "configurePreset": "app-fuzztest-unit"
+    },
+    {
+      "name": "app-fuzztest-fuzzing",
+      "configurePreset": "app-fuzztest-fuzzing"
+    },
+    {
+      "name": "app-vcpkg-all",
+      "configurePreset": "app-vcpkg-all"
     }
   ],
   "testPresets": [
@@ -342,14 +675,21 @@
     },
     {
       "name": "test-sanitize-address",
-      "configurePreset": "debug",
+      "configurePreset": "debug-sanitize-address",
       "output": {
         "outputOnFailure": true
       }
     },
     {
       "name": "test-sanitize-thread",
-      "configurePreset": "debug",
+      "configurePreset": "debug-sanitize-thread",
+      "output": {
+        "outputOnFailure": true
+      }
+    },
+    {
+      "name": "test-sanitize-undefined",
+      "configurePreset": "debug-sanitize-undefined",
       "output": {
         "outputOnFailure": true
       }
@@ -424,6 +764,251 @@
           "name": "^fuzz_target$"
         }
       }
+    },
+    {
+      "name": "app-debug",
+      "configurePreset": "app-debug",
+      "output": {
+        "outputOnFailure": true
+      },
+      "execution": {
+        "noTestsAction": "error"
+      }
+    },
+    {
+      "name": "app-release",
+      "configurePreset": "app-release",
+      "output": {
+        "outputOnFailure": true
+      },
+      "execution": {
+        "noTestsAction": "error"
+      }
+    },
+    {
+      "name": "app-hardening",
+      "configurePreset": "app-hardening",
+      "output": {
+        "outputOnFailure": true
+      },
+      "execution": {
+        "noTestsAction": "error"
+      }
+    },
+    {
+      "name": "app-coverage",
+      "configurePreset": "app-coverage",
+      "output": {
+        "outputOnFailure": true
+      },
+      "execution": {
+        "noTestsAction": "error"
+      }
+    },
+    {
+      "name": "app-asan",
+      "configurePreset": "app-asan",
+      "output": {
+        "outputOnFailure": true
+      },
+      "execution": {
+        "noTestsAction": "error"
+      }
+    },
+    {
+      "name": "app-tsan",
+      "configurePreset": "app-tsan",
+      "output": {
+        "outputOnFailure": true
+      },
+      "execution": {
+        "noTestsAction": "error"
+      }
+    },
+    {
+      "name": "app-examples",
+      "configurePreset": "app-examples",
+      "output": {
+        "outputOnFailure": true
+      },
+      "execution": {
+        "noTestsAction": "error"
+      }
+    },
+    {
+      "name": "app-google-tests",
+      "configurePreset": "app-google-tests",
+      "output": {
+        "outputOnFailure": true
+      },
+      "execution": {
+        "noTestsAction": "error"
+      }
+    },
+    {
+      "name": "app-fuzz",
+      "configurePreset": "app-fuzz",
+      "output": {
+        "outputOnFailure": true
+      },
+      "execution": {
+        "noTestsAction": "error"
+      }
+    },
+    {
+      "name": "app-bench-both",
+      "configurePreset": "app-bench-both",
+      "output": {
+        "outputOnFailure": true
+      },
+      "execution": {
+        "noTestsAction": "error"
+      }
+    },
+    {
+      "name": "app-minimal",
+      "configurePreset": "app-minimal",
+      "output": {
+        "outputOnFailure": true
+      }
+    },
+    {
+      "name": "app-ci",
+      "configurePreset": "app-ci",
+      "output": {
+        "outputOnFailure": true
+      }
+    },
+    {
+      "name": "app-distribution",
+      "configurePreset": "app-distribution",
+      "output": {
+        "outputOnFailure": true
+      }
+    },
+    {
+      "name": "app-full",
+      "configurePreset": "app-full",
+      "output": {
+        "outputOnFailure": true
+      }
+    },
+    {
+      "name": "app-vcpkg-all",
+      "configurePreset": "app-vcpkg-all",
+      "output": {
+        "outputOnFailure": true
+      },
+      "execution": {
+        "noTestsAction": "error"
+      }
+    }
+  ],
+  "include": [
+    "lib/cmake/LibraryPresets.json"
+  ],
+  "workflowPresets": [
+    {
+      "name": "app-debug",
+      "steps": [
+        {
+          "type": "configure",
+          "name": "app-debug"
+        },
+        {
+          "type": "build",
+          "name": "app-debug"
+        },
+        {
+          "type": "test",
+          "name": "app-debug"
+        }
+      ]
+    },
+    {
+      "name": "app-release",
+      "steps": [
+        {
+          "type": "configure",
+          "name": "app-release"
+        },
+        {
+          "type": "build",
+          "name": "app-release"
+        },
+        {
+          "type": "test",
+          "name": "app-release"
+        }
+      ]
+    },
+    {
+      "name": "app-google-tests",
+      "steps": [
+        {
+          "type": "configure",
+          "name": "app-google-tests"
+        },
+        {
+          "type": "build",
+          "name": "app-google-tests"
+        },
+        {
+          "type": "test",
+          "name": "app-google-tests"
+        }
+      ]
+    },
+    {
+      "name": "app-minimal",
+      "steps": [
+        {
+          "type": "configure",
+          "name": "app-minimal"
+        },
+        {
+          "type": "build",
+          "name": "app-minimal"
+        },
+        {
+          "type": "test",
+          "name": "app-minimal"
+        }
+      ]
+    },
+    {
+      "name": "app-distribution",
+      "steps": [
+        {
+          "type": "configure",
+          "name": "app-distribution"
+        },
+        {
+          "type": "build",
+          "name": "app-distribution"
+        },
+        {
+          "type": "test",
+          "name": "app-distribution"
+        }
+      ]
+    },
+    {
+      "name": "app-vcpkg-all",
+      "steps": [
+        {
+          "type": "configure",
+          "name": "app-vcpkg-all"
+        },
+        {
+          "type": "build",
+          "name": "app-vcpkg-all"
+        },
+        {
+          "type": "test",
+          "name": "app-vcpkg-all"
+        }
+      ]
     }
   ]
 }

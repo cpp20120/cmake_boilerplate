@@ -1,0 +1,4 @@
+[
+  {"name":"one", "args":["1"], "cpu_count":1, "metadata":{"kind":"fixture"}},
+  {"name":"two", "args":["2"], "cpu_count":1, "metadata":{"kind":"fixture"}}
+]

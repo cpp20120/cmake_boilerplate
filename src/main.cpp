@@ -1,9 +1,17 @@
 
+/**
+ * @file
+ * @brief Sample application linking both example libraries.
+ */
 #include "../include/include.hpp"
 #include "../lib/library1/include/include.hpp"
 #include "../lib/library2/include/include.hpp"
 
 
+/**
+ * @brief Print "HelloWorld" and exercise the sample arithmetic APIs.
+ * @return Zero after the example calls complete successfully.
+ */
 int main() {
  proj::func(1, 2);
  lib1::print_hello();
@@ -13,5 +21,6 @@ int main() {
   constexpr int second_number = 45;
   lib1::add_numbers(first_number, second_number);
   lib2::sum_of_numbers(first_number, second_number);
+ lib2::sum_on_worker(first_number, second_number);
  return 0;
 }

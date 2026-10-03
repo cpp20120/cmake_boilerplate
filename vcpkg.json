@@ -1,11 +1,42 @@
 {
   "name": "testproject",
   "version": "1.0.0",
-  "dependencies": [
-    {
-      "name": "gtest",
-      "version>=": "1.10.0"
+  "builtin-baseline": "3b6ec96bfa4d7dacd8ab1a97676a82c9cb18111e",
+  "features": {
+    "tests": {
+      "description": "GoogleTest support",
+      "dependencies": [
+        "gtest"
+      ]
+    },
+    "pbt": {
+      "description": "Property-based testing with RapidCheck",
+      "dependencies": [
+        "rapidcheck"
+      ]
+    },
+    "benchmarks": {
+      "description": "Google Benchmark support",
+      "dependencies": [
+        "benchmark"
+      ]
+    },
+    "graphics": {
+      "description": "Vulkan/OpenGL desktop graphics capability dependencies",
+      "dependencies": [
+        "vulkan",
+        "glfw3",
+        "glew",
+        "glm",
+        "imgui"
+      ]
+    },
+    "qt": {
+      "description": "Qt 6 desktop/QML capability dependencies",
+      "dependencies": [
+        "qtbase",
+        "qtdeclarative"
+      ]
     }
-  ],
-  "builtin-baseline": "3426db05b996481ca31e95fff3734cf23e0f51bc"
+  }
 }

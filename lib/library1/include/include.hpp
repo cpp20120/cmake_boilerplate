@@ -1,31 +1,54 @@
+/**
+ * @file
+ * @brief Public API of the dependency-free example library.
+ */
+#include "library1_export.h"
 #include <type_traits>
 #ifndef LIB1_INCLUDE_HPP
 #define LIB1_INCLUDE_HPP
 
-
+/// @brief Greeting and arithmetic examples without external dependencies.
 namespace lib1 {
 
-void print_hello();
+/**
+ * @brief Write "Hello" to standard output without a trailing newline.
+ * @note Output errors are not reported to the caller.
+ */
+LIBRARY1_EXPORT void print_hello();
 
 /**
- *
- * @param first_number fist int number
- * @param second_number second int number
- * @return sum of both
+ * @brief Add two integers inline.
+ * @param first_number First operand.
+ * @param second_number Second operand.
+ * @return The sum of the two operands.
+ * @pre The mathematical sum must be representable as an int.
+ * @note Overflow is not checked.
  */
 inline int add_numbers(const int first_number,const int second_number) { return first_number + second_number; }
 /**
- *
- * @param first_number fist int number
- * @param second_number second int number
- * @return sum of both
+ * @brief Add two integers through the compiled library API.
+ * @param first_number First operand.
+ * @param second_number Second operand.
+ * @return The sum of the two operands.
+ * @pre The mathematical sum must be representable as an int.
+ * @note Overflow is not checked.
  */
-int sum_of_numbers(const int first_number,const int second_number);
+LIBRARY1_EXPORT int sum_of_numbers(const int first_number,const int second_number);
 
-template <typename T>
-concept Arithmetic = std::is_arithmetic_v<T>;
-
-template <Arithmetic T>
+/**
+ * @brief Add two values of the same arithmetic type.
+ * @tparam T An arithmetic type accepted by std::is_arithmetic_v.
+ * @param first_number First operand.
+ * @param second_number Second operand.
+ * @return The result of built-in addition, converted to T.
+ * @pre For signed integer arithmetic, the addition must not overflow its
+ *      promoted operand type.
+ * @note Integral promotions, conversion to T and floating-point rounding follow
+ *       the normal C++ arithmetic rules. No overflow or precision checks occur.
+ * @note This overload can be evaluated at compile time. Specify the template
+ *       argument explicitly to select it for int, e.g. add_numbers<int>(2, 3).
+ */
+template <typename T, std::enable_if_t<std::is_arithmetic_v<T>, int> = 0>
 constexpr T add_numbers(const T first_number, const T second_number) {
   return first_number + second_number;
 }

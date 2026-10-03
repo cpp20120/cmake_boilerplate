@@ -64,7 +64,7 @@
       "generator": "Ninja",
       "configurationType": "Release",
       "buildRoot": "${projectDir}\\build\\vcpkg-release",
-      "cmakeCommandArgs": "-DCMAKE_CXX_STANDARD=23 -DBUILD_TESTING=ON -DBUILD_ALL_TESTS=ON -DCMAKE_BUILD_TYPE=Release -DENABLE_SANITIZERS=OFF -DCMAKE_TOOLCHAIN_FILE=E:/vcpkg/scripts/buildsystems/vcpkg.cmake -DVCPKG_TARGET_TRIPLET=x64-windows -DVCPKG_MANIFEST_DIR=${sourceDir} -DVCPKG_MANIFEST_MODE=on",
+      "cmakeCommandArgs": "-DCMAKE_CXX_STANDARD=23 -DBUILD_TESTING=ON -DBUILD_ALL_TESTS=ON -DCMAKE_BUILD_TYPE=Release -DENABLE_SANITIZERS=OFF -DBOILERPLATE_DEPENDENCY_PROVIDER=vcpkg -DVCPKG_TARGET_TRIPLET=x64-windows -DVCPKG_MANIFEST_DIR=${sourceDir} -DVCPKG_MANIFEST_MODE=on",
       "inheritEnvironments": [ "msvc_x64_x64" ],
       "variables": []
     },
@@ -73,7 +73,7 @@
       "generator": "Ninja",
       "configurationType": "Debug",
       "buildRoot": "${projectDir}\\build\\vcpkg-debug",
-      "cmakeCommandArgs": "-DCMAKE_CXX_STANDARD=23 -DBUILD_TESTING=ON -DBUILD_ALL_TESTS=ON -DCMAKE_BUILD_TYPE=Debug -DENABLE_SANITIZERS=OFF -DCMAKE_TOOLCHAIN_FILE=E:/vcpkg/scripts/buildsystems/vcpkg.cmake -DVCPKG_TARGET_TRIPLET=x64-windows -DVCPKG_MANIFEST_DIR=${sourceDir} -DVCPKG_MANIFEST_MODE=on",
+      "cmakeCommandArgs": "-DCMAKE_CXX_STANDARD=23 -DBUILD_TESTING=ON -DBUILD_ALL_TESTS=ON -DCMAKE_BUILD_TYPE=Debug -DENABLE_SANITIZERS=OFF -DBOILERPLATE_DEPENDENCY_PROVIDER=vcpkg -DVCPKG_TARGET_TRIPLET=x64-windows -DVCPKG_MANIFEST_DIR=${sourceDir} -DVCPKG_MANIFEST_MODE=on",
       "inheritEnvironments": [ "msvc_x64_x64" ],
       "variables": []
     },
@@ -82,7 +82,7 @@
       "generator": "Ninja",
       "configurationType": "Debug",
       "buildRoot": "${projectDir}\\build\\vcpkg-debug-sanitize-address",
-      "cmakeCommandArgs": "-DCMAKE_CXX_STANDARD=23 -DBUILD_TESTING=ON -DBUILD_ALL_TESTS=ON -DCMAKE_BUILD_TYPE=Debug -DENABLE_SANITIZERS=ON -DSANITIZER=address -DCMAKE_TOOLCHAIN_FILE=E:/vcpkg/scripts/buildsystems/vcpkg.cmake -DVCPKG_TARGET_TRIPLET=x64-windows -DVCPKG_MANIFEST_DIR=${sourceDir} -DVCPKG_MANIFEST_MODE=on",
+      "cmakeCommandArgs": "-DCMAKE_CXX_STANDARD=23 -DBUILD_TESTING=ON -DBUILD_ALL_TESTS=ON -DCMAKE_BUILD_TYPE=Debug -DENABLE_SANITIZERS=ON -DSANITIZER=address -DBOILERPLATE_DEPENDENCY_PROVIDER=vcpkg -DVCPKG_TARGET_TRIPLET=x64-windows -DVCPKG_MANIFEST_DIR=${sourceDir} -DVCPKG_MANIFEST_MODE=on",
       "inheritEnvironments": [ "msvc_x64_x64" ],
       "variables": []
     },
@@ -91,7 +91,7 @@
       "generator": "Ninja",
       "configurationType": "Debug",
       "buildRoot": "${projectDir}\\build\\vcpkg-debug-sanitize-thread",
-      "cmakeCommandArgs": "-DCMAKE_CXX_STANDARD=23 -DBUILD_TESTING=ON -DBUILD_ALL_TESTS=ON -DCMAKE_BUILD_TYPE=Debug -DENABLE_SANITIZERS=ON -DSANITIZER=thread -DCMAKE_TOOLCHAIN_FILE=E:/vcpkg/scripts/buildsystems/vcpkg.cmake -DVCPKG_TARGET_TRIPLET=x64-windows -DVCPKG_MANIFEST_DIR=${sourceDir} -DVCPKG_MANIFEST_MODE=on",
+      "cmakeCommandArgs": "-DCMAKE_CXX_STANDARD=23 -DBUILD_TESTING=ON -DBUILD_ALL_TESTS=ON -DCMAKE_BUILD_TYPE=Debug -DENABLE_SANITIZERS=ON -DSANITIZER=thread -DBOILERPLATE_DEPENDENCY_PROVIDER=vcpkg -DVCPKG_TARGET_TRIPLET=x64-windows -DVCPKG_MANIFEST_DIR=${sourceDir} -DVCPKG_MANIFEST_MODE=on",
       "inheritEnvironments": [ "msvc_x64_x64" ],
       "variables": []
     }

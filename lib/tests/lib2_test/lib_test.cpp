@@ -23,6 +23,11 @@ TEST(SumOfNumbersTest2, MixedNumbers) {
   ASSERT_EQ(0, lib2::sum_of_numbers(5, -5));
 }
 
+TEST(SumOfNumbersTest2, WorkerThread) {
+  ASSERT_EQ(42, lib2::sum_on_worker(19, 23));
+  ASSERT_EQ(-7, lib2::sum_on_worker(-10, 3));
+}
+
 TEST(SumOfNumbersTest2, Zero) {
   ASSERT_EQ(5, lib2::sum_of_numbers(5, 0));
   ASSERT_EQ(-5, lib2::sum_of_numbers(-5, 0));
