@@ -22,7 +22,7 @@ jobs:
       - name: Install dependencies (Ubuntu)
         run: |
           sudo apt-get update
-          sudo apt-get install -y ninja-build clang cmake
+          sudo apt-get install -y ninja-build clang lld cmake
 
       - name: Setup vcpkg
         uses: lukka/run-vcpkg@v11
@@ -45,6 +45,10 @@ jobs:
       - name: Check CMake policies and relocated packages
         if: matrix.preset == 'vcpkg-debug'
         run: cmake --build --preset build-${{ matrix.preset }} --target boilerplate_check_cmake
+
+      - name: Check Clang CFI policies and rejected calls
+        if: matrix.preset == 'vcpkg-debug'
+        run: cmake --build --preset build-${{ matrix.preset }} --target boilerplate_check_control_flow
 
   coverage:
     runs-on: ubuntu-24.04
@@ -138,6 +142,10 @@ jobs:
       - name: Install NSIS
         if: matrix.preset == 'vcpkg-windows-release'
         run: choco install nsis --yes --no-progress
+
+      - name: Check Windows CFG policies and binary metadata
+        if: matrix.preset == 'vcpkg-windows-debug'
+        run: cmake --build --preset build-${{ matrix.preset }} --target boilerplate_check_control_flow
 
       - name: Build Installer (NSIS)
         if: matrix.preset == 'vcpkg-windows-release'

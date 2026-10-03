@@ -152,12 +152,13 @@ boilerplate_add_test(runtime_test
   POLICY_OPTIONS WARNINGS_AS_ERRORS OFF)
 ```
 
-Predefined orthogonal policies are `minimal` (`cpp-minimal` alias), `hardened`, `coverage`,
+Predefined orthogonal policies are `minimal` (`cpp-minimal` alias), `hardened` (`hardening` alias), `coverage`,
 `debug-symbols`, `frame-pointers`, `werror`, `ccache`, `clang-tidy`, `unity`, `native`,
 `thin-lto`, `full-lto`, `lld`, `gc-sections`, `no-plt`, `no-semantic-interposition`,
-`icf`, `asan`, `ubsan`, `asan-ubsan`, `tsan`, `lsan`, `pgo-generate`, and `pgo-use`.
+`icf`, `cfi`, `cfi-icall`, `cfi-vcall`, `windows-cfg`, `asan`, `ubsan`,
+`asan-ubsan`, `tsan`, `lsan`, `pgo-generate`, and `pgo-use`.
 `minimal` explicitly removes
-expensive optimization/instrumentation/tooling defaults (LTO, PGO, sanitizer,
+expensive optimization/instrumentation/tooling defaults (LTO, PGO, sanitizer, CFI, CFG,
 native tuning, clang-tidy, ccache, etc.) while keeping the project's selected C++
 standard and artifact naming. This is the small denominator for `src/ + include/`
 projects.
@@ -209,6 +210,71 @@ presets. Build configuration (`Debug`/`Release`, compiler/toolchain, generator) 
 orthogonal and belongs in presets/toolchain files.
 
 
+### Control-flow protection
+
+Control-flow protection is target policy, independent of the existing `SANITIZER`
+setting. The implementation lives in `ControlFlow.cmake` and is loaded by the
+normal `Boilerplate.cmake` entry point; no project-specific flag scripts are needed.
+
+| Policy | Effective settings / behavior |
+| --- | --- |
+| `cfi` | Clang's `-fsanitize=cfi` schemes, ThinLTO, lld, hidden default visibility |
+| `cfi-icall` | Type checks on indirect function calls, ThinLTO, lld |
+| `cfi-vcall` | Type checks on virtual calls, ThinLTO, lld, hidden default visibility |
+| `windows-cfg` | `/guard:cf` compilation and `/GUARD:CF /DYNAMICBASE` linking |
+| `runtime-hardened` | `runtime` + `hardening` + `cfi`; also links Threads |
+
+```cmake
+boilerplate_add_executable(game
+  SOURCES src/main.cpp
+  POLICIES runtime-hardened)
+
+# A narrower check, Full LTO instead of the policy's ThinLTO default,
+# and diagnostic output before termination.
+boilerplate_add_executable(tool
+  SOURCES tools/main.cpp
+  POLICIES minimal cfi-icall
+  POLICY_OPTIONS LTO_MODE full CFI_DIAGNOSTICS ON)
+
+# Windows is a separate backend; it does not check C++ function signatures.
+boilerplate_add_executable(windows_game
+  SOURCES src/main.cpp
+  POLICIES runtime hardening windows-cfg)
+```
+
+Select the example matching the toolchain: this implementation supports CFI on
+Linux with GNU-style Clang, and CFG on Windows with MSVC/clang-cl. Other platforms,
+CFI without LTO and mixed CFI/CFG fail at configure time. A compile-and-link probe
+checks the actual linker and sanitizer-runtime combination. CFG also rejects
+the `/ZI` Edit and Continue and `/clr` modes in the project compiler flags.
+
+The project defaults are `BOILERPLATE_CFI=none|cfi|cfi-icall|cfi-vcall`,
+`BOILERPLATE_CFI_DIAGNOSTICS=OFF` and `BOILERPLATE_WINDOWS_CFG=OFF`. The matching
+target keys are `CFI`, `CFI_DIAGNOSTICS` and `WINDOWS_CFG`. Setting the CFI cache
+variable alone requires an explicit `BOILERPLATE_LTO_MODE=thin|full` and an
+LTO-capable linker (normally `BOILERPLATE_USE_LLD=ON`). Named CFI policies already
+supply these defaults; later policies or `POLICY_OPTIONS` can override them.
+CFI traps by default. Diagnostics mode reports the violation and terminates;
+it does not recover and continue execution. `minimal` resets all three settings.
+
+Apply CFI to every owned target that contains code you want instrumented, including
+static libraries. Static/object targets forward final-link requirements; they do
+not instrument their consumers' source files. Shared-library checks cover that
+library's own link unit. Diagnostic shared libraries also forward the UBSan runtime
+link requirement to their executable consumers. This does **not** enable cross-DSO
+CFI: DLL/plugin callbacks, exported polymorphic classes and scripting/JIT boundaries
+need a deliberate ABI design. Explicitly exported classes may have public LTO
+visibility and therefore no virtual-call CFI checks. See the
+[Clang CFI documentation](https://clang.llvm.org/docs/ControlFlowIntegrity.html).
+Windows CFG has different guarantees; see
+[Microsoft's CFG documentation](https://learn.microsoft.com/en-us/cpp/build/reference/guard-enable-control-flow-guard).
+
+`boilerplate_check_control_flow` is available with Ninja plus Clang/lld on Linux,
+or Ninja plus MSVC/clang-cl on Windows. It builds real fixtures, runs valid calls,
+checks CFI rejection of mismatched indirect/virtual calls in both trap and
+diagnostic modes, and checks Windows EXE/DLL CFG metadata using `dumpbin`.
+Linux CI runs CFI checks; Windows CI runs CFG checks.
+
 ### Built-in domain policies
 
 The reusable layer now ships three domain modules. Runtime policies are archetypes;
@@ -238,7 +304,7 @@ boilerplate_add_test(race_test SOURCES tests/race.cpp
   LIBRARIES scheduler::scheduler POLICIES runtime-tsan)
 ```
 
-Runtime policies: `runtime`, `runtime-dagflow`, `runtime-webserver`,
+Runtime policies: `runtime`, `runtime-hardened`, `runtime-dagflow`, `runtime-webserver`,
 `runtime-profiled`, `runtime-asan`, `runtime-tsan`,
 `runtime-dagflow-profiled`, `runtime-webserver-profiled`. The two tuned runtime
 profiles intentionally target Clang/lld-style local performance work; `runtime-webserver`

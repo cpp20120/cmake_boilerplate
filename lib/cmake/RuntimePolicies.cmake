@@ -14,6 +14,11 @@ boilerplate_define_policy(runtime
   INHERITS minimal
   HOOKS _boilerplate_runtime_threads)
 
+# Clang/Linux hardening composition. Windows callers compose runtime hardening
+# windows-cfg explicitly; CFG is not a substitute for Clang's type checks.
+boilerplate_define_policy(runtime-hardened
+  INHERITS runtime hardening cfi)
+
 # CPU-bound scheduler/executor style: whole-program optimization and ELF call
 # overhead reductions are valuable; no plugin/interposition semantics assumed.
 boilerplate_define_policy(runtime-dagflow

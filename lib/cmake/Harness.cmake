@@ -120,7 +120,7 @@ function(boilerplate_add_harness name)
   list(APPEND _command "--meta=target=${ARG_TARGET}" "--meta=policies=${_policies}"
     "--meta=compiler=${CMAKE_CXX_COMPILER_ID}-${CMAKE_CXX_COMPILER_VERSION}"
     "--meta=generator=${CMAKE_GENERATOR}" "--meta=project=${PROJECT_NAME}")
-  foreach(_setting IN ITEMS CXX_STANDARD SANITIZER LTO_MODE PGO_MODE ENABLE_NATIVE
+  foreach(_setting IN ITEMS CXX_STANDARD SANITIZER CFI CFI_DIAGNOSTICS WINDOWS_CFG LTO_MODE PGO_MODE ENABLE_NATIVE
       ENABLE_NO_SEMANTIC_INTERPOSITION ENABLE_GC_SECTIONS ENABLE_NO_PLT USE_LLD ENABLE_ICF FRAME_POINTERS REPRODUCIBLE HARDENING COVERAGE)
     boilerplate_get_target_setting(${ARG_TARGET} ${_setting} _value)
     list(APPEND _command "--meta=${_setting}=${_value}")

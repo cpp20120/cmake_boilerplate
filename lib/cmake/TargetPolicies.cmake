@@ -4,7 +4,7 @@ include_guard(GLOBAL)
 # BOILERPLATE_* variables remain project defaults; a policy can override them
 # for one target without creating a preset/profile cross product.
 set_property(GLOBAL PROPERTY BOILERPLATE_POLICY_KEYS
-  "CXX_STANDARD;WARNINGS;WARNINGS_AS_ERRORS;HARDENING;COVERAGE;REPRODUCIBLE;UNITY_BUILD;CCACHE;CLANG_TIDY;FRAME_POINTERS;DEBUG_SYMBOLS;SANITIZER;LTO_MODE;PGO_MODE;PGO_DIR;PGO_PROFILE;ENABLE_NATIVE;ENABLE_NO_SEMANTIC_INTERPOSITION;ENABLE_GC_SECTIONS;ENABLE_NO_PLT;USE_LLD;ENABLE_ICF;ARTIFACT_SUFFIX")
+  "CXX_STANDARD;WARNINGS;WARNINGS_AS_ERRORS;HARDENING;CFI;CFI_DIAGNOSTICS;WINDOWS_CFG;COVERAGE;REPRODUCIBLE;UNITY_BUILD;CCACHE;CLANG_TIDY;FRAME_POINTERS;DEBUG_SYMBOLS;SANITIZER;LTO_MODE;PGO_MODE;PGO_DIR;PGO_PROFILE;ENABLE_NATIVE;ENABLE_NO_SEMANTIC_INTERPOSITION;ENABLE_GC_SECTIONS;ENABLE_NO_PLT;USE_LLD;ENABLE_ICF;ARTIFACT_SUFFIX")
 
 function(_boilerplate_policy_id name output)
   string(MAKE_C_IDENTIFIER "${name}" _id)
@@ -21,6 +21,8 @@ function(_boilerplate_default_setting key output)
     set(_value "${BOILERPLATE_WARNINGS_AS_ERRORS}")
   elseif(key STREQUAL "HARDENING")
     set(_value "${BOILERPLATE_HARDENING}")
+  elseif(key MATCHES "^(CFI|CFI_DIAGNOSTICS|WINDOWS_CFG)$")
+    set(_value "${BOILERPLATE_${key}}")
   elseif(key STREQUAL "COVERAGE")
     set(_value "${BOILERPLATE_COVERAGE}")
   elseif(key STREQUAL "REPRODUCIBLE")
@@ -210,6 +212,9 @@ boilerplate_define_policy(minimal
   WARNINGS ON
   WARNINGS_AS_ERRORS OFF
   HARDENING OFF
+  CFI none
+  CFI_DIAGNOSTICS OFF
+  WINDOWS_CFG OFF
   COVERAGE OFF
   REPRODUCIBLE OFF
   UNITY_BUILD OFF
@@ -231,6 +236,7 @@ boilerplate_define_policy(minimal
 # can inherit/compose these without becoming part of this generic substrate.
 boilerplate_define_policy(cpp-minimal INHERITS minimal)
 boilerplate_define_policy(hardened HARDENING ON)
+boilerplate_define_policy(hardening INHERITS hardened)
 boilerplate_define_policy(coverage COVERAGE ON)
 boilerplate_define_policy(reproducible REPRODUCIBLE ON)
 boilerplate_define_policy(debug-symbols DEBUG_SYMBOLS ON)
@@ -243,6 +249,10 @@ boilerplate_define_policy(native ENABLE_NATIVE ON)
 boilerplate_define_policy(thin-lto LTO_MODE thin)
 boilerplate_define_policy(full-lto LTO_MODE full)
 boilerplate_define_policy(lld USE_LLD ON)
+boilerplate_define_policy(cfi INHERITS thin-lto lld CFI cfi)
+boilerplate_define_policy(cfi-icall INHERITS thin-lto lld CFI cfi-icall)
+boilerplate_define_policy(cfi-vcall INHERITS thin-lto lld CFI cfi-vcall)
+boilerplate_define_policy(windows-cfg WINDOWS_CFG ON)
 boilerplate_define_policy(gc-sections ENABLE_GC_SECTIONS ON)
 boilerplate_define_policy(no-plt ENABLE_NO_PLT ON)
 boilerplate_define_policy(no-semantic-interposition ENABLE_NO_SEMANTIC_INTERPOSITION ON)
@@ -275,4 +285,3 @@ function(boilerplate_print_target_policy target)
     message(STATUS "  ${_key}=${_value}")
   endforeach()
 endfunction()
-

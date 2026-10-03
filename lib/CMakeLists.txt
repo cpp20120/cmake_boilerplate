@@ -81,6 +81,23 @@ if(_boilerplate_ninja)
       "-DCHECK_COMPILER=${CMAKE_CXX_COMPILER}"
       -P "${CMAKE_CURRENT_SOURCE_DIR}/tests/cmake/verify_examples.cmake"
     USES_TERMINAL VERBATIM)
+
+  set(_control_flow_compiler)
+  if(WIN32 AND MSVC)
+    set(_control_flow_compiler "${CMAKE_CXX_COMPILER}")
+  elseif(CMAKE_SYSTEM_NAME STREQUAL "Linux" AND _boilerplate_clang)
+    find_program(_boilerplate_lld ld.lld)
+    if(_boilerplate_lld)
+      set(_control_flow_compiler "${_boilerplate_clang}")
+    endif()
+  endif()
+  if(_control_flow_compiler)
+    add_custom_target(boilerplate_check_control_flow
+      COMMAND ${CMAKE_COMMAND} "-DCHECK_BINARY=${CMAKE_BINARY_DIR}/control-flow-check"
+        "-DCHECK_COMPILER=${_control_flow_compiler}"
+        -P "${CMAKE_CURRENT_SOURCE_DIR}/tests/cmake/verify_control_flow.cmake"
+      USES_TERMINAL VERBATIM)
+  endif()
 endif()
 
 if(_boilerplate_testing_enabled AND BOILERPLATE_BUILD_TESTS AND BUILD_TESTING)

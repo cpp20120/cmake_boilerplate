@@ -91,7 +91,7 @@ function(boilerplate_add_scenario name)
   boilerplate_append_setting(_content COMPILER "${CMAKE_CXX_COMPILER_ID} ${CMAKE_CXX_COMPILER_VERSION}")
   boilerplate_append_setting(_content SOURCE_DIR "${CMAKE_SOURCE_DIR}")
   set(_knobs "CMAKE_CXX_COMPILER=${CMAKE_CXX_COMPILER}")
-  foreach(_setting IN ITEMS LTO_MODE PGO_MODE SANITIZER ENABLE_NATIVE ENABLE_NO_PLT
+  foreach(_setting IN ITEMS LTO_MODE PGO_MODE SANITIZER CFI CFI_DIAGNOSTICS WINDOWS_CFG ENABLE_NATIVE ENABLE_NO_PLT
       ENABLE_NO_SEMANTIC_INTERPOSITION ENABLE_GC_SECTIONS ENABLE_ICF USE_LLD FRAME_POINTERS REPRODUCIBLE HARDENING COVERAGE CXX_STANDARD)
     boilerplate_get_target_setting(${ARG_TARGET} ${_setting} _value)
     list(APPEND _knobs "${_setting}=${_value}")

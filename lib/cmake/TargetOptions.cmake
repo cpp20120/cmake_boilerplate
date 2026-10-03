@@ -1,4 +1,5 @@
 include_guard(GLOBAL)
+include("${CMAKE_CURRENT_LIST_DIR}/ControlFlow.cmake")
 
 # Inspect final source lists, including target_sources() calls made after policy
 # application. Compiler depfiles do not know that a PGO profile is an input.
@@ -23,6 +24,7 @@ function(boilerplate_set_output_name target base)
 endfunction()
 
 function(_boilerplate_validate_target_options target)
+  _boilerplate_validate_control_flow(${target})
   foreach(_key IN ITEMS LTO_MODE PGO_MODE PGO_PROFILE SANITIZER ENABLE_NATIVE USE_LLD ENABLE_ICF DEBUG_SYMBOLS)
     boilerplate_get_target_setting(${target} ${_key} _${_key})
   endforeach()
@@ -126,7 +128,7 @@ function(boilerplate_apply_optimization target)
   endforeach()
 
   get_target_property(_target_type ${target} TYPE)
-  if(_target_type STREQUAL "STATIC_LIBRARY")
+  if(_target_type MATCHES "^(STATIC_LIBRARY|OBJECT_LIBRARY)$")
     set(_link_scope INTERFACE)
     set(_runtime_link_scope INTERFACE)
   elseif(_target_type STREQUAL "SHARED_LIBRARY")
@@ -232,6 +234,7 @@ function(boilerplate_apply_optimization target)
     endif()
   endif()
 
+  _boilerplate_apply_control_flow(${target})
   boilerplate_apply_policy_hooks(${target})
 endfunction()
 

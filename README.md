@@ -210,6 +210,19 @@ policies, and Vulkan/GLFW/GLEW/GLM/ImGui capability policies. Shader compilation
 an explicit source-aware helper. See [`lib/README.md`](lib/README.md#target-policies-and-composition)
 for the full composition model.
 
+Control-flow policies are also reusable: `cfi`, `cfi-icall`, `cfi-vcall` and
+`windows-cfg`. `runtime-hardened` composes `runtime`, `hardening` and `cfi`.
+For example, `POLICIES runtime-hardened` enables Clang CFI with ThinLTO/lld on Linux;
+Windows uses `POLICIES runtime hardening windows-cfg`. CFI traps by default;
+`POLICY_OPTIONS CFI_DIAGNOSTICS ON` enables fatal diagnostics. The backend validates
+the compiler and link requirements during configuration. See the
+[control-flow API and DLL/plugin limits](lib/README.md#control-flow-protection).
+
+```sh
+cmake --preset app-debug
+cmake --build --preset app-debug --target boilerplate_check_control_flow
+```
+
 
 ### Property/PBT and fuzz stack
 
