@@ -72,6 +72,10 @@ there is no separate dependency graph or custom package manager.
 
 ## Project capabilities and lifecycle
 
+For GLSL/HLSL variants, MODULE plugins, a versioned ABI/reload example, and
+relocatable application installation with runtime dependencies and resources,
+see [Shaders, plugins and application delivery](cmake/Delivery.md).
+
 The same reusable `cmake/` tree now covers whole-project concerns without turning them
 into target flags. Include `Bootstrap.cmake` before `project()` when using its in-source
 guard/dependency-provider bootstrap, then configure capabilities after `Boilerplate.cmake`:

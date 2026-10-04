@@ -117,9 +117,10 @@ function(_boilerplate_apply_control_flow target)
     boilerplate_get_target_setting(${target} CFI_DIAGNOSTICS _diagnostics)
     if(_type STREQUAL "SHARED_LIBRARY" AND NOT _cfi STREQUAL "none" AND _diagnostics)
       # Clang leaves diagnostic-runtime symbols unresolved in a DSO. Pull in
-      # UBSan's runtime at the final executable link without instrumenting the
-      # consumer or claiming cross-DSO CFI protection.
-      target_link_options(${target} INTERFACE -fsanitize=undefined)
+      # UBSan's C++ runtime at the final executable link without instrumenting
+      # the consumer or claiming cross-DSO CFI protection. The vptr selection
+      # also pulls in ubsan_standalone_cxx, needed for virtual-call diagnostics.
+      target_link_options(${target} INTERFACE -fsanitize=vptr)
     endif()
   endif()
 endfunction()

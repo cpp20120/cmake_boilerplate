@@ -122,9 +122,8 @@ Find installed packages with `CMAKE_PREFIX_PATH` or use a package-manager toolch
 via `CMAKE_TOOLCHAIN_FILE` **on the initial configure**. Default presets do not
 require vcpkg. Disabled components do not search for their optional dependencies.
 There are no unconditional clang-tidy/IWYU/ccache invocations or global optimization
-flags. The former root-level `cmake/CompilerSettings.cmake`, `LinkerSettings.cmake`,
-`CodeFormatAndAnalysis.cmake`, `CodeCoverage.cmake` and CPack/shader scripts have been
-replaced by the reusable capability/policy layer rather than kept as a second configuration path.
+flags. The obsolete root-level `cmake/` scripts have been removed. The single reusable
+implementation lives in `lib/cmake/`, including shader compilation and packaging.
 
 With `BOILERPLATE_DEPENDENCY_PROVIDER=vcpkg`, an explicit `CMAKE_TOOLCHAIN_FILE`
 takes priority. Otherwise bootstrap and `build_all.*` resolve vcpkg in this order:
@@ -230,6 +229,15 @@ The reusable testing layer now separates RapidCheck property tests, byte-oriente
 `LLVMFuzzerTestOneInput` fuzzing (libFuzzer/AFL++/honggfuzz), and Google FuzzTest.
 See [`lib/README.md`](lib/README.md#property-testing-and-fuzzing) for the helper API,
 compiler-wrapper requirements and vcpkg `pbt` feature.
+
+## Shaders, plugins and deployment
+
+Shader helpers support GLSL/SPIR-V and HLSL/DXC, named variants and transitive
+include dependencies. `boilerplate_add_plugin()` creates policy-aware MODULE
+targets; `examples/plugins` demonstrates a versioned C ABI and explicit reload.
+`boilerplate_install_application()` installs executable/plugin dependencies,
+resources and shaders together. See the [delivery API](lib/cmake/Delivery.md)
+for examples, platform requirements and regression targets.
 
 ## Optimization profiles
 
@@ -358,7 +366,10 @@ checking only for that invocation, not in the presets.
 
 ## API documentation
 
-Install Doxygen and optionally Graphviz (`dot`) for diagrams, then run:
+Documentation is generated directly by CMake's `doxygen_add_docs()` in
+`lib/cmake/project/Documentation.cmake`; Python is not required. CMake generates
+the Doxyfile in the build directory. Install Doxygen and optionally Graphviz
+(`dot`) for diagrams, then run:
 
 ```sh
 cmake -S . -B out/build/docs -G Ninja -DBUILD_DOCS=ON

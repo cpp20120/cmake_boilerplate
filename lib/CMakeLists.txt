@@ -82,6 +82,23 @@ if(_boilerplate_ninja)
       -P "${CMAKE_CURRENT_SOURCE_DIR}/tests/cmake/verify_examples.cmake"
     USES_TERMINAL VERBATIM)
 
+  add_custom_target(boilerplate_check_delivery
+    COMMAND ${CMAKE_COMMAND} "-DCHECK_BINARY=${CMAKE_BINARY_DIR}/delivery-check"
+      "-DCHECK_COMPILER=${CMAKE_CXX_COMPILER}"
+      -P "${CMAKE_CURRENT_SOURCE_DIR}/tests/cmake/verify_delivery.cmake"
+    COMMAND ${CMAKE_COMMAND} "-DCHECK_BINARY=${CMAKE_BINARY_DIR}/delivery-check-multi"
+      "-DCHECK_COMPILER=${CMAKE_CXX_COMPILER}" "-DCHECK_GENERATOR=Ninja Multi-Config"
+      -P "${CMAKE_CURRENT_SOURCE_DIR}/tests/cmake/verify_delivery.cmake"
+    USES_TERMINAL VERBATIM)
+  add_custom_target(boilerplate_check_shaders
+    COMMAND ${CMAKE_COMMAND} "-DCHECK_BINARY=${CMAKE_BINARY_DIR}/shader-check"
+      "-DCHECK_COMPILER=${CMAKE_CXX_COMPILER}"
+      -P "${CMAKE_CURRENT_SOURCE_DIR}/tests/cmake/verify_shaders.cmake"
+    COMMAND ${CMAKE_COMMAND} "-DCHECK_BINARY=${CMAKE_BINARY_DIR}/shader-check-multi"
+      "-DCHECK_COMPILER=${CMAKE_CXX_COMPILER}" "-DCHECK_GENERATOR=Ninja Multi-Config"
+      -P "${CMAKE_CURRENT_SOURCE_DIR}/tests/cmake/verify_shaders.cmake"
+    USES_TERMINAL VERBATIM)
+
   set(_control_flow_compiler)
   if(WIN32 AND MSVC)
     set(_control_flow_compiler "${CMAKE_CXX_COMPILER}")

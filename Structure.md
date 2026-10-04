@@ -16,10 +16,14 @@
 │   │   ├── Boilerplate.cmake
 │   │   ├── ProjectCapabilities.cmake # project lifecycle composition engine
 │   │   ├── project/               # docs/analysis/tests/package/cache/build-info/etc.
+│   │   │   └── Documentation.cmake # native CMake/Doxygen integration; no Python wrapper
 │   │   ├── TargetPolicies.cmake   # target compile/link composition engine
 │   │   ├── RuntimePolicies.cmake  # runtime / DagFlow-like / webserver-like
 │   │   ├── QtPolicies.cmake       # Qt6 capabilities + deploy helper
-│   │   ├── GraphicsPolicies.cmake # Vulkan/GLFW/GLEW/GLM/ImGui + shaders
+│   │   ├── GraphicsPolicies.cmake # Vulkan/GLFW/GLEW/GLM/ImGui policies
+│   │   ├── Shaders.cmake          # GLSL/HLSL variants and compiler depfiles
+│   │   ├── Plugins.cmake          # MODULE targets and export headers
+│   │   ├── Deployment.cmake       # runtime dependencies, resources and shaders
 │   │   ├── Harness.cmake          # optional Python research-harness bridge
 │   │   ├── harness/               # dependency-free Python execution core
 │   │   └── ...                    # libraries, workloads, PGO, scenarios, packages
@@ -29,9 +33,8 @@
 │   └── tests/                     # smoke + infrastructure regression fixtures
 ├── src/                           # example application
 ├── tests/                         # application tests/fuzzing
-├── docs/                          # documentation inputs/custom assets
 ├── shaders/                       # example assets; shader helper lives in lib/cmake
-├── examples/                       # first-class example workloads (`boilerplate_add_example`)
+├── examples/                      # example workloads and plugins/ ABI/reload host
 └── .github/workflows/
 ```
 

@@ -4,3 +4,4 @@ boilerplate_add_example(allocator_example
   PGO
   LABELS allocator)
 boilerplate_use_allocator(allocator_example)
+add_subdirectory(plugins)

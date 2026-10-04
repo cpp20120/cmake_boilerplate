@@ -22,7 +22,17 @@ jobs:
       - name: Install dependencies (Ubuntu)
         run: |
           sudo apt-get update
-          sudo apt-get install -y ninja-build clang lld cmake
+          sudo apt-get install -y ninja-build clang lld cmake patchelf glslc glslang-tools
+
+      - name: Install pinned DXC for shader checks
+        if: matrix.preset == 'vcpkg-debug'
+        run: |
+          curl --fail --location --retry 3 https://github.com/microsoft/DirectXShaderCompiler/releases/download/v1.9.2609/linux_dxc_2026_09_28.x86_x64.tar.gz -o "$RUNNER_TEMP/dxc.tar.gz"
+          echo "96faadc7f5c282d2ffda49804beb4c3ee38127bc252b723234e3c5cdf7aa39a1  $RUNNER_TEMP/dxc.tar.gz" | sha256sum --check
+          mkdir -p "$RUNNER_TEMP/dxc"
+          tar -xzf "$RUNNER_TEMP/dxc.tar.gz" -C "$RUNNER_TEMP/dxc"
+          "$RUNNER_TEMP/dxc/bin/dxc" --version
+          echo "$RUNNER_TEMP/dxc/bin" >> "$GITHUB_PATH"
 
       - name: Setup vcpkg
         uses: lukka/run-vcpkg@v11
@@ -49,6 +59,10 @@ jobs:
       - name: Check Clang CFI policies and rejected calls
         if: matrix.preset == 'vcpkg-debug'
         run: cmake --build --preset build-${{ matrix.preset }} --target boilerplate_check_control_flow
+
+      - name: Check plugins, relocated runtime installation and shader rebuilds
+        if: matrix.preset == 'vcpkg-debug'
+        run: cmake --build --preset build-${{ matrix.preset }} --target boilerplate_check_delivery boilerplate_check_shaders
 
   coverage:
     runs-on: ubuntu-24.04
@@ -152,6 +166,10 @@ jobs:
         working-directory: build/${{ matrix.preset }}
         run: cpack --config CPackConfig.cmake -G NSIS
 
+      - name: Check plugins and relocated runtime installation
+        if: matrix.preset == 'vcpkg-windows-debug'
+        run: cmake --build --preset build-${{ matrix.preset }} --target boilerplate_check_delivery
+
   build-macos:
     runs-on: macos-latest
     strategy:
@@ -183,6 +201,10 @@ jobs:
 
       - name: Run tests
         run: ctest --test-dir build/${{ matrix.preset }} --output-on-failure --no-tests=error
+
+      - name: Check plugins and relocated runtime installation
+        if: matrix.preset == 'vcpkg-macos-debug'
+        run: cmake --build --preset build-${{ matrix.preset }} --target boilerplate_check_delivery
 
   docker:
     runs-on: ubuntu-latest

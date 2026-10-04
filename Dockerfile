@@ -16,7 +16,8 @@ RUN apt-get update \
       ccache \
       git ca-certificates curl \
       python3 \
-      pkg-config file \
+      pkg-config file patchelf \
+      glslc glslang-tools \
       zip unzip \
       doxygen graphviz \
       cppcheck iwyu \
