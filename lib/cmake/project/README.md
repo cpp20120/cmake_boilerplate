@@ -59,6 +59,9 @@ CONFIGURE_HOOKS ... FINALIZE_HOOKS ...)`.
 
 ## Dependency provider
 
+[Capability fixes and checks](../CapabilityChecks.md) documents the tool,
+coverage, CUDA, dependency and Doxygen controls and their regression checks.
+
 `Bootstrap.cmake` exposes `BOILERPLATE_DEPENDENCY_PROVIDER`:
 `none`, `system`, `vcpkg`, `fetchcontent`, `cpm`. vcpkg toolchain selection happens
 before `project()`. `boilerplate_require_dependency()` first accepts an existing/imported
