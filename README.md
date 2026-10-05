@@ -232,6 +232,28 @@ compiler-wrapper requirements and vcpkg `pbt` feature.
 
 ## Shaders, plugins and deployment
 
+CUDA targets use `cuda`, `cuda-debug`, `cuda-profiled`, `cuda-fast-math`, or the
+`runtime-cuda` composition after enabling the `cuda` project capability.
+The `app-cuda-debug` and `app-cuda-release` presets enable that capability with
+Debug/Release configuration and provide matching build, test and workflow presets:
+
+```sh
+cmake --workflow --preset app-cuda-release
+# Or configure explicitly (choose architectures for your deployment):
+cmake --preset app-cuda-debug -DBOILERPLATE_CUDA_ARCHITECTURES=75
+cmake --build --preset app-cuda-debug --parallel 4
+ctest --preset app-cuda-debug
+cmake --build --preset app-cuda-debug --target boilerplate_check_cuda
+```
+
+These presets require NVIDIA nvcc and default to `native` GPU architectures.
+Without a working GPU/driver, override the architecture as above. CUDA policies
+are still selected per target; the Debug preset alone does not enable device
+debugging (`cuda-debug`). The sample application remains CPU-only; the explicit
+`boilerplate_check_cuda` target builds the CUDA fixtures.
+See [CUDA profiles and checks](lib/cmake/Cuda.md) for device architectures,
+runtime linkage, compatibility limits and a real nvcc regression check.
+
 Shader helpers support GLSL/SPIR-V and HLSL/DXC, named variants and transitive
 include dependencies. `boilerplate_add_plugin()` creates policy-aware MODULE
 targets; `examples/plugins` demonstrates a versioned C ABI and explicit reload.

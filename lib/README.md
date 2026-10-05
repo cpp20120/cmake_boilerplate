@@ -72,6 +72,9 @@ there is no separate dependency graph or custom package manager.
 
 ## Project capabilities and lifecycle
 
+The `cuda` project capability enables CUDA; [CUDA target policies](cmake/Cuda.md)
+provide `cuda`, `cuda-debug`, `cuda-profiled`, `cuda-fast-math` and `runtime-cuda`.
+
 For GLSL/HLSL variants, MODULE plugins, a versioned ABI/reload example, and
 relocatable application installation with runtime dependencies and resources,
 see [Shaders, plugins and application delivery](cmake/Delivery.md).

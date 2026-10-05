@@ -5,6 +5,8 @@ include_guard(GLOBAL)
 # for one target without creating a preset/profile cross product.
 set_property(GLOBAL PROPERTY BOILERPLATE_POLICY_KEYS
   "CXX_STANDARD;WARNINGS;WARNINGS_AS_ERRORS;HARDENING;CFI;CFI_DIAGNOSTICS;WINDOWS_CFG;COVERAGE;REPRODUCIBLE;UNITY_BUILD;CCACHE;CLANG_TIDY;FRAME_POINTERS;DEBUG_SYMBOLS;SANITIZER;LTO_MODE;PGO_MODE;PGO_DIR;PGO_PROFILE;ENABLE_NATIVE;ENABLE_NO_SEMANTIC_INTERPOSITION;ENABLE_GC_SECTIONS;ENABLE_NO_PLT;USE_LLD;ENABLE_ICF;ARTIFACT_SUFFIX")
+set_property(GLOBAL APPEND PROPERTY BOILERPLATE_POLICY_KEYS
+  CUDA CUDA_STANDARD CUDA_SEPARABLE_COMPILATION CUDA_RUNTIME_LIBRARY CUDA_LINEINFO CUDA_DEVICE_DEBUG CUDA_FAST_MATH)
 
 function(_boilerplate_policy_id name output)
   string(MAKE_C_IDENTIFIER "${name}" _id)
@@ -13,7 +15,11 @@ function(_boilerplate_policy_id name output)
 endfunction()
 
 function(_boilerplate_default_setting key output)
-  if(key STREQUAL "CXX_STANDARD")
+  if(key MATCHES "^(CUDA|CUDA_LINEINFO|CUDA_DEVICE_DEBUG|CUDA_FAST_MATH)$")
+    set(_value OFF)
+  elseif(key MATCHES "^(CUDA_STANDARD|CUDA_SEPARABLE_COMPILATION|CUDA_RUNTIME_LIBRARY)$")
+    set(_value "${BOILERPLATE_${key}}")
+  elseif(key STREQUAL "CXX_STANDARD")
     set(_value "${BOILERPLATE_CXX_STANDARD}")
   elseif(key STREQUAL "WARNINGS")
     set(_value "${BOILERPLATE_WARNINGS}")
@@ -209,6 +215,10 @@ endfunction()
 # Neutral baseline: enough for an ordinary std-only C++ target, and explicitly
 # resets expensive/project-specific defaults inherited from a larger build.
 boilerplate_define_policy(minimal
+  CUDA OFF
+  CUDA_LINEINFO OFF
+  CUDA_DEVICE_DEBUG OFF
+  CUDA_FAST_MATH OFF
   WARNINGS ON
   WARNINGS_AS_ERRORS OFF
   HARDENING OFF

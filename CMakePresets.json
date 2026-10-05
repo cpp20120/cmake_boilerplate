@@ -334,10 +334,28 @@
       }
     },
     {
+      "name": "app-cuda-debug",
+      "inherits": "app-debug",
+      "description": "Debug build with the CUDA project capability; apply CUDA policies per target",
+      "cacheVariables": {
+        "BOILERPLATE_PROJECT_CAPABILITIES": "developer;cuda",
+        "BOILERPLATE_CUDA_ARCHITECTURES": "native"
+      }
+    },
+    {
       "name": "app-release",
       "inherits": "app-base",
       "cacheVariables": {
         "BOILERPLATE_PROFILE": "release"
+      }
+    },
+    {
+      "name": "app-cuda-release",
+      "inherits": "app-release",
+      "description": "Release build with the CUDA project capability; apply CUDA policies per target",
+      "cacheVariables": {
+        "BOILERPLATE_PROJECT_CAPABILITIES": "developer;cuda",
+        "BOILERPLATE_CUDA_ARCHITECTURES": "native"
       }
     },
     {
@@ -575,8 +593,16 @@
       "configurePreset": "app-debug"
     },
     {
+      "name": "app-cuda-debug",
+      "configurePreset": "app-cuda-debug"
+    },
+    {
       "name": "app-release",
       "configurePreset": "app-release"
+    },
+    {
+      "name": "app-cuda-release",
+      "configurePreset": "app-cuda-release"
     },
     {
       "name": "app-hardening",
@@ -776,8 +802,28 @@
       }
     },
     {
+      "name": "app-cuda-debug",
+      "configurePreset": "app-cuda-debug",
+      "output": {
+        "outputOnFailure": true
+      },
+      "execution": {
+        "noTestsAction": "error"
+      }
+    },
+    {
       "name": "app-release",
       "configurePreset": "app-release",
+      "output": {
+        "outputOnFailure": true
+      },
+      "execution": {
+        "noTestsAction": "error"
+      }
+    },
+    {
+      "name": "app-cuda-release",
+      "configurePreset": "app-cuda-release",
       "output": {
         "outputOnFailure": true
       },
@@ -926,6 +972,23 @@
       ]
     },
     {
+      "name": "app-cuda-debug",
+      "steps": [
+        {
+          "type": "configure",
+          "name": "app-cuda-debug"
+        },
+        {
+          "type": "build",
+          "name": "app-cuda-debug"
+        },
+        {
+          "type": "test",
+          "name": "app-cuda-debug"
+        }
+      ]
+    },
+    {
       "name": "app-release",
       "steps": [
         {
@@ -939,6 +1002,23 @@
         {
           "type": "test",
           "name": "app-release"
+        }
+      ]
+    },
+    {
+      "name": "app-cuda-release",
+      "steps": [
+        {
+          "type": "configure",
+          "name": "app-cuda-release"
+        },
+        {
+          "type": "build",
+          "name": "app-cuda-release"
+        },
+        {
+          "type": "test",
+          "name": "app-cuda-release"
         }
       ]
     },

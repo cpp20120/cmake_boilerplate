@@ -90,6 +90,13 @@ if(_boilerplate_ninja)
       "-DCHECK_COMPILER=${CMAKE_CXX_COMPILER}" "-DCHECK_GENERATOR=Ninja Multi-Config"
       -P "${CMAKE_CURRENT_SOURCE_DIR}/tests/cmake/verify_delivery.cmake"
     USES_TERMINAL VERBATIM)
+  add_custom_target(boilerplate_check_cuda
+    COMMAND ${CMAKE_COMMAND} "-DCHECK_BINARY=${CMAKE_BINARY_DIR}/cuda-check"
+      "-DCHECK_COMPILER=${CMAKE_CXX_COMPILER}"
+      "-DCHECK_CUDA_COMPILER=${CMAKE_CUDA_COMPILER}"
+      "-DCHECK_CUDA_HOST_COMPILER=${CMAKE_CUDA_HOST_COMPILER}"
+      -P "${CMAKE_CURRENT_SOURCE_DIR}/tests/cmake/verify_cuda.cmake"
+    USES_TERMINAL VERBATIM)
   add_custom_target(boilerplate_check_shaders
     COMMAND ${CMAKE_COMMAND} "-DCHECK_BINARY=${CMAKE_BINARY_DIR}/shader-check"
       "-DCHECK_COMPILER=${CMAKE_CXX_COMPILER}"
