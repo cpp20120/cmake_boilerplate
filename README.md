@@ -91,6 +91,7 @@ Pass `-DNAME=value` at configure time. Lists use semicolons; quote the whole arg
 | `BOILERPLATE_BENCHMARK_GROUPS` | `all`; select `custom;google` or project-defined groups |
 | `BOILERPLATE_BUILD_<TARGET>` | Per-benchmark switch, e.g. `BOILERPLATE_BUILD_LIBRARY1_BENCH` |
 | `BOILERPLATE_BUILD_EXAMPLES` | OFF; explicit application/example targets |
+| `BOILERPLATE_BUILD_QT_EXAMPLE` | OFF; Qt 6 Widgets example, enabled by `app-qt-*` presets |
 | `BOILERPLATE_BUILD_PROPERTY_TESTS` | OFF; RapidCheck property-test example |
 | `BOILERPLATE_BUILD_FUZZERS` | OFF; byte-fuzz harness example (`libfuzzer|aflpp|honggfuzz`) |
 | `BOILERPLATE_BUILD_FUZZTESTS` | OFF; Google FuzzTest example |
@@ -231,6 +232,27 @@ See [`lib/README.md`](lib/README.md#property-testing-and-fuzzing) for the helper
 compiler-wrapper requirements and vcpkg `pbt` feature.
 
 ## Shaders, plugins and deployment
+
+The `app-qt-debug` and `app-qt-release` presets build the Qt 6 Widgets example
+with matching configure, build, test and workflow presets:
+
+```sh
+cmake --workflow --preset app-qt-debug
+# Equivalent individual steps:
+cmake --preset app-qt-release
+cmake --build --preset app-qt-release --parallel 4
+ctest --preset app-qt-release
+# Launch the window on a desktop:
+./out/build/app-qt-release/examples/qt/qt_widgets_example
+```
+
+Install Qt 6 Core/Gui/Widgets development packages and tools. For a separate Qt
+SDK, pass `-DCMAKE_PREFIX_PATH=/path/to/Qt/6.x/platform` on configuration.
+The example uses the `qt-widgets` target policy and exercises AUTOMOC, AUTOUIC
+and AUTORCC. Its smoke test uses `QT_QPA_PLATFORM=offscreen` and exits automatically,
+so CTest requires no display server. Ordinary presets keep the Qt example disabled.
+QML/Quick applications can use the existing `qt-qml-app` policy on their targets;
+these two presets select the Widgets example.
 
 CUDA targets use `cuda`, `cuda-debug`, `cuda-profiled`, `cuda-fast-math`, or the
 `runtime-cuda` composition after enabling the `cuda` project capability.

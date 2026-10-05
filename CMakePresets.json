@@ -334,6 +334,14 @@
       }
     },
     {
+      "name": "app-qt-debug",
+      "inherits": "app-debug",
+      "description": "Debug build with the Qt 6 Widgets example",
+      "cacheVariables": {
+        "BOILERPLATE_BUILD_QT_EXAMPLE": "ON"
+      }
+    },
+    {
       "name": "app-cuda-debug",
       "inherits": "app-debug",
       "description": "Debug build with the CUDA project capability; apply CUDA policies per target",
@@ -347,6 +355,14 @@
       "inherits": "app-base",
       "cacheVariables": {
         "BOILERPLATE_PROFILE": "release"
+      }
+    },
+    {
+      "name": "app-qt-release",
+      "inherits": "app-release",
+      "description": "Release build with the Qt 6 Widgets example",
+      "cacheVariables": {
+        "BOILERPLATE_BUILD_QT_EXAMPLE": "ON"
       }
     },
     {
@@ -593,12 +609,20 @@
       "configurePreset": "app-debug"
     },
     {
+      "name": "app-qt-debug",
+      "configurePreset": "app-qt-debug"
+    },
+    {
       "name": "app-cuda-debug",
       "configurePreset": "app-cuda-debug"
     },
     {
       "name": "app-release",
       "configurePreset": "app-release"
+    },
+    {
+      "name": "app-qt-release",
+      "configurePreset": "app-qt-release"
     },
     {
       "name": "app-cuda-release",
@@ -802,6 +826,16 @@
       }
     },
     {
+      "name": "app-qt-debug",
+      "configurePreset": "app-qt-debug",
+      "output": {
+        "outputOnFailure": true
+      },
+      "execution": {
+        "noTestsAction": "error"
+      }
+    },
+    {
       "name": "app-cuda-debug",
       "configurePreset": "app-cuda-debug",
       "output": {
@@ -814,6 +848,16 @@
     {
       "name": "app-release",
       "configurePreset": "app-release",
+      "output": {
+        "outputOnFailure": true
+      },
+      "execution": {
+        "noTestsAction": "error"
+      }
+    },
+    {
+      "name": "app-qt-release",
+      "configurePreset": "app-qt-release",
       "output": {
         "outputOnFailure": true
       },
@@ -972,6 +1016,23 @@
       ]
     },
     {
+      "name": "app-qt-debug",
+      "steps": [
+        {
+          "type": "configure",
+          "name": "app-qt-debug"
+        },
+        {
+          "type": "build",
+          "name": "app-qt-debug"
+        },
+        {
+          "type": "test",
+          "name": "app-qt-debug"
+        }
+      ]
+    },
+    {
       "name": "app-cuda-debug",
       "steps": [
         {
@@ -1002,6 +1063,23 @@
         {
           "type": "test",
           "name": "app-release"
+        }
+      ]
+    },
+    {
+      "name": "app-qt-release",
+      "steps": [
+        {
+          "type": "configure",
+          "name": "app-qt-release"
+        },
+        {
+          "type": "build",
+          "name": "app-qt-release"
+        },
+        {
+          "type": "test",
+          "name": "app-qt-release"
         }
       ]
     },
