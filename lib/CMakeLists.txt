@@ -6,6 +6,10 @@ if(CMAKE_SOURCE_DIR STREQUAL CMAKE_CURRENT_SOURCE_DIR)
   include(CTest)
 endif()
 include("${CMAKE_CURRENT_LIST_DIR}/cmake/Boilerplate.cmake")
+if(CMAKE_SOURCE_DIR STREQUAL CMAKE_CURRENT_SOURCE_DIR AND
+   (COMMAND boilerplate_add_application OR COMMAND boilerplate_add_host OR COMMAND boilerplate_add_plugin))
+  message(FATAL_ERROR "Standalone lib slice must not load application/hosting/plugin APIs")
+endif()
 get_property(_boilerplate_project_configured GLOBAL PROPERTY BOILERPLATE_PROJECT_CONFIGURED)
 if(NOT _boilerplate_project_configured)
   boilerplate_project(
@@ -82,14 +86,6 @@ if(_boilerplate_ninja)
       -P "${CMAKE_CURRENT_SOURCE_DIR}/tests/cmake/verify_examples.cmake"
     USES_TERMINAL VERBATIM)
 
-  add_custom_target(boilerplate_check_delivery
-    COMMAND ${CMAKE_COMMAND} "-DCHECK_BINARY=${CMAKE_BINARY_DIR}/delivery-check"
-      "-DCHECK_COMPILER=${CMAKE_CXX_COMPILER}"
-      -P "${CMAKE_CURRENT_SOURCE_DIR}/tests/cmake/verify_delivery.cmake"
-    COMMAND ${CMAKE_COMMAND} "-DCHECK_BINARY=${CMAKE_BINARY_DIR}/delivery-check-multi"
-      "-DCHECK_COMPILER=${CMAKE_CXX_COMPILER}" "-DCHECK_GENERATOR=Ninja Multi-Config"
-      -P "${CMAKE_CURRENT_SOURCE_DIR}/tests/cmake/verify_delivery.cmake"
-    USES_TERMINAL VERBATIM)
   add_custom_target(boilerplate_check_cuda
     COMMAND ${CMAKE_COMMAND} "-DCHECK_BINARY=${CMAKE_BINARY_DIR}/cuda-check"
       "-DCHECK_COMPILER=${CMAKE_CXX_COMPILER}"

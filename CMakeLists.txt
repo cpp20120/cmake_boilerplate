@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.26)
 
 # Toolchain/dependency-provider choices that must exist before project().
-include(lib/cmake/Bootstrap.cmake)
+include(cmake/Bootstrap.cmake)
 boilerplate_bootstrap()
 
 project(TEST_PROJECT VERSION 1.0.0 DESCRIPTION "C++ application and library template" LANGUAGES CXX)
@@ -31,7 +31,7 @@ if(ENABLE_FUZZING)
   set(BOILERPLATE_BUILD_FUZZERS ON CACHE BOOL "Build fuzzers")
 endif()
 
-include(lib/cmake/Boilerplate.cmake)
+include(cmake/Boilerplate.cmake)
 
 # Project capabilities are lifecycle/tooling concerns. Target compile/link
 # semantics remain in POLICIES. Lists are intentionally composable rather than a
@@ -64,6 +64,48 @@ boilerplate_project(
 
 boilerplate_project_has_capability(testing _project_testing)
 add_subdirectory(lib)
+
+# Execution/application regressions intentionally live above the standalone
+# library slice. They validate the full semantic graph without making lib/
+# depend on hosting or deployment machinery.
+find_program(_boilerplate_ninja ninja)
+if(_boilerplate_ninja)
+  add_custom_target(boilerplate_check_execution_model
+    COMMAND ${CMAKE_COMMAND} "-DCHECK_BINARY=${CMAKE_BINARY_DIR}/application-model-check"
+      "-DCHECK_COMPILER=${CMAKE_CXX_COMPILER}"
+      -P "${CMAKE_CURRENT_SOURCE_DIR}/tests/cmake/verify_application_model.cmake"
+    COMMAND ${CMAKE_COMMAND} "-DCHECK_BINARY=${CMAKE_BINARY_DIR}/application-model-check-multi"
+      "-DCHECK_COMPILER=${CMAKE_CXX_COMPILER}" "-DCHECK_GENERATOR=Ninja Multi-Config"
+      -P "${CMAKE_CURRENT_SOURCE_DIR}/tests/cmake/verify_application_model.cmake"
+    USES_TERMINAL VERBATIM)
+
+  set(_delivery_check_available TRUE)
+  if(CMAKE_SYSTEM_NAME STREQUAL "Linux")
+    find_program(_boilerplate_patchelf patchelf)
+    if(NOT _boilerplate_patchelf)
+      set(_delivery_check_available FALSE)
+    endif()
+  endif()
+  if(_delivery_check_available)
+    add_custom_target(boilerplate_check_delivery
+      COMMAND ${CMAKE_COMMAND} "-DCHECK_BINARY=${CMAKE_BINARY_DIR}/delivery-check"
+        "-DCHECK_COMPILER=${CMAKE_CXX_COMPILER}"
+        -P "${CMAKE_CURRENT_SOURCE_DIR}/tests/cmake/verify_delivery.cmake"
+      COMMAND ${CMAKE_COMMAND} "-DCHECK_BINARY=${CMAKE_BINARY_DIR}/delivery-check-multi"
+        "-DCHECK_COMPILER=${CMAKE_CXX_COMPILER}" "-DCHECK_GENERATOR=Ninja Multi-Config"
+        -P "${CMAKE_CURRENT_SOURCE_DIR}/tests/cmake/verify_delivery.cmake"
+      USES_TERMINAL VERBATIM)
+  else()
+    add_custom_target(boilerplate_check_delivery
+      COMMAND ${CMAKE_COMMAND} -E echo
+        "boilerplate_check_delivery skipped: patchelf is required for Linux runtime-dependency relocation"
+      VERBATIM)
+  endif()
+
+  add_custom_target(boilerplate_check_full)
+  add_dependencies(boilerplate_check_full boilerplate_check_cmake
+    boilerplate_check_execution_model boilerplate_check_delivery)
+endif()
 if(NOT BOILERPLATE_LIBRARIES_ONLY)
   if(BOILERPLATE_BUILD_APPLICATION)
     add_subdirectory(src)

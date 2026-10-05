@@ -21,7 +21,6 @@ foreach(_variant IN ITEMS low high)
     INCLUDE_DIRS "${TEST_SOURCE_DIR}/includes" DEFINES "FACTOR=${_factor}"
     COMPILER "${TEST_COMPILER}" BACKEND "${TEST_BACKEND}" COPY_TO_RUNTIME)
 endforeach()
-boilerplate_install_application(shader_app NO_RUNTIME_DEPENDENCIES)
 file(GENERATE OUTPUT "${CMAKE_CURRENT_BINARY_DIR}/paths-$<CONFIG>.cmake" CONTENT
   "set(outputs [==[$<TARGET_GENEX_EVAL:shader_app,$<TARGET_PROPERTY:shader_app,BOILERPLATE_SHADER_OUTPUTS>>]==])\nset(runtime [==[$<TARGET_FILE_DIR:shader_app>/shaders]==])\nset(executable [==[$<TARGET_FILE:shader_app>]==])\nset(resources [==[$<TARGET_PROPERTY:shader_app,BOILERPLATE_INSTALL_RESOURCE_DIR>]==])\n")
 boilerplate_finalize_project()

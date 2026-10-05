@@ -1,9 +1,14 @@
 # Reusable CMake API
 
 Recipes, knobs and preset commands are in the [root README](../README.md).
-Copy `cmake/` into a project, call `project()` and `include(CTest)`, then include
+This directory is the **standalone library/core slice**. Copy `cmake/` into a
+library or tool project, call `project()` and `include(CTest)`, then include
 `cmake/Boilerplate.cmake` in the common parent directory. CMake 3.26+ is required.
-The root application and standalone `lib/` entry points use the same modules.
+
+The higher-level application/host/plugin execution model intentionally lives in
+the repository-root `cmake/` layer and is not loaded by this slice. A library can
+therefore be extracted, built, tested, installed and consumed without bringing
+application hosting machinery with it.
 
 ## Targets
 
@@ -16,8 +21,8 @@ boilerplate_add_library(my_math
   PRIVATE_LIBRARIES some_dependency
   PACKAGE_CONFIG cmake/MyMathConfig.cmake.in)
 
-boilerplate_add_executable(my_app
-  SOURCES src/main.cpp LIBRARIES my_math::my_math INSTALL)
+boilerplate_add_executable(my_tool
+  SOURCES tools/main.cpp LIBRARIES my_math::my_math INSTALL)
 
 boilerplate_add_test(my_test
   SOURCES tests/math.cpp LIBRARIES my_math::my_math
@@ -54,14 +59,22 @@ exported functions/classes. Static/shared are real CMake library types. Aliases:
 Per-library `<NAME>_BUILD_SHARED/STATIC` override global defaults; at least one is
 required for each declared library. The preferred alias selects shared if available.
 
+### Library/core boundary
+
+`boilerplate_add_library()` and `boilerplate_add_executable()` are the reusable
+core artifact APIs. The core also owns project capabilities, target policies,
+shaders, workloads, testing and packaging primitives. It deliberately does not
+define `boilerplate_add_application()`, `boilerplate_add_host()`,
+`boilerplate_add_plugin()` or application deployment. Those are layered above
+this directory by the full repository framework.
+
 Installation puts each library's headers under `include/<name>`, exports native
 artifacts and package configs, and propagates static instrumentation link requirements.
 Start custom package configs from `LibraryConfig.cmake.in` and add dependencies with
 `find_dependency()`. The examples use identical `include.hpp` names only in isolation;
 real projects should give public headers distinct names. Installed PGO/ThinLTO
 artifacts may require matching compiler/profile inputs; plain release packages are
-more portable. Application install RPATH depends on the final layout: the root
-example sets it to the sibling library directory; the generic helper does not guess.
+more portable.
 
 For existing owned targets call `boilerplate_apply_target_policy(target)` in their
 source directory. `boilerplate_apply_optimization(target)` is kept as a compatible
@@ -74,10 +87,6 @@ there is no separate dependency graph or custom package manager.
 
 The `cuda` project capability enables CUDA; [CUDA target policies](cmake/Cuda.md)
 provide `cuda`, `cuda-debug`, `cuda-profiled`, `cuda-fast-math` and `runtime-cuda`.
-
-For GLSL/HLSL variants, MODULE plugins, a versioned ABI/reload example, and
-relocatable application installation with runtime dependencies and resources,
-see [Shaders, plugins and application delivery](cmake/Delivery.md).
 
 The same reusable `cmake/` tree now covers whole-project concerns without turning them
 into target flags. Include `Bootstrap.cmake` before `project()` when using its in-source

@@ -2,44 +2,53 @@
 
 ```text
 .
-├── CMakeLists.txt                 # thin application/project composition root
-├── CMakePresets.json              # toolchain/configuration selections
-├── Dockerfile                     # external dev/build/test/runtime workflow
-├── .dockerignore
-├── tools/container.py             # tiny Docker CLI wrapper; no CMake coupling
+├── CMakeLists.txt                 # full product/workspace composition root
+├── cmake/                         # execution/application layer; depends on lib/cmake
+│   ├── Bootstrap.cmake            # facade over the standalone core bootstrap
+│   ├── Boilerplate.cmake          # full facade: core + semantic execution layer
+│   ├── SemanticTargets.cmake      # shared semantic-artifact mechanics
+│   ├── Runtime.cmake              # private runtime images
+│   ├── Application.cmake          # hosted application images + happy-path sugar
+│   ├── Hosting.cmake              # HOST artifact + typed hosting edges
+│   ├── Plugins.cmake              # runtime-loaded extensions
+│   ├── Deployment.cmake           # application/host private deployment closure
+│   ├── Delivery.md
+│   └── host/                      # native generic app-host payload + bootstrap ABI
 ├── lib/
 │   ├── CMakeLists.txt             # standalone reusable-library entry point
 │   ├── CMakePresets.json
-│   ├── README.md                  # reusable API reference
-│   ├── cmake/                     # copy this subtree into another project
-│   │   ├── Bootstrap.cmake        # pre-project toolchain/provider + in-source guard
+│   ├── README.md                  # library/core API reference
+│   ├── cmake/                     # independently reusable core; no host/app includes
+│   │   ├── Bootstrap.cmake
 │   │   ├── Boilerplate.cmake
-│   │   ├── ProjectCapabilities.cmake # project lifecycle composition engine
-│   │   ├── project/               # docs/analysis/tests/package/cache/build-info/etc.
-│   │   │   └── Documentation.cmake # native CMake/Doxygen integration; no Python wrapper
-│   │   ├── TargetPolicies.cmake   # target compile/link composition engine
-│   │   ├── RuntimePolicies.cmake  # runtime / DagFlow-like / webserver-like
-│   │   ├── QtPolicies.cmake       # Qt6 capabilities + deploy helper
-│   │   ├── GraphicsPolicies.cmake # Vulkan/GLFW/GLEW/GLM/ImGui policies
-│   │   ├── Shaders.cmake          # GLSL/HLSL variants and compiler depfiles
-│   │   ├── Plugins.cmake          # MODULE targets and export headers
-│   │   ├── Deployment.cmake       # runtime dependencies, resources and shaders
-│   │   ├── Harness.cmake          # optional Python research-harness bridge
-│   │   ├── harness/               # dependency-free Python execution core
-│   │   └── ...                    # libraries, workloads, PGO, scenarios, packages
-│   ├── library1/                  # dependency-free + local/variant policies
-│   ├── library2/                  # Threads package dependency + PCH + own policies
-│   ├── bench/                     # example benchmarks
-│   └── tests/                     # smoke + infrastructure regression fixtures
-├── src/                           # example application
-├── tests/                         # application tests/fuzzing
-├── shaders/                       # example assets; shader helper lives in lib/cmake
-├── examples/                      # example workloads and plugins/ ABI/reload host
-└── .github/workflows/
+│   │   ├── Artifacts.cmake        # role registry/typed-link constraints
+│   │   ├── Library.cmake
+│   │   ├── ProjectCapabilities.cmake
+│   │   ├── TargetPolicies.cmake
+│   │   ├── RuntimePolicies.cmake  # target tuning policies, not runtime artifacts
+│   │   ├── Shaders.cmake
+│   │   ├── Harness.cmake
+│   │   ├── project/
+│   │   └── ...
+│   ├── library1/
+│   ├── library2/
+│   ├── bench/
+│   └── tests/                     # only library/core regressions
+├── src/                           # replaceable sample standalone executable
+├── tests/
+│   └── cmake/                     # full execution/application regression fixtures
+├── examples/                      # allocator, Qt and generic plugin-host examples
+└── tools/
 ```
 
-The reusable boundary is `lib/cmake/`: bootstrap, whole-project capabilities,
-target policies and experiment workflows ship together. Ordinary inclusion has
-no Python, Qt, Vulkan, Doxygen, GoogleTest or Google Benchmark dependency;
-optional tools/packages are discovered only when the corresponding capability,
-policy or helper is used.
+The dependency direction is one-way: the root `cmake/` execution layer consumes
+`lib/cmake/`, never the reverse. `lib/` can therefore be copied or configured as a
+standalone library workspace. The full framework keeps the same core policies and
+project capabilities, then adds hosted applications, runtimes, plugins, process
+hosts and deployment topology only when that facade is included.
+
+The execution graph keeps composition separate from placement. `APPLICATION ->
+PLUGIN` is an extension-set edge; `HOST -> APPLICATION` and `HOST -> PLUGIN` are
+execution-placement edges. Plugins without an explicit host inherit the application's
+hosts (co-hosted/in-process by topology). Explicit plugin hosts override that default
+placement and are pulled into the application's deployment closure automatically.

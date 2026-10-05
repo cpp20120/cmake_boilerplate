@@ -36,26 +36,47 @@ are retained. Use fresh build trees when migrating from the older global flags.
 
 ## What to copy
 
-Reusable implementation: **[`lib/cmake`](lib/cmake/Boilerplate.cmake)**.
-The libraries, executable, allocator example and benchmarks are replaceable examples.
-The [API reference](lib/README.md) explains embedding the modules in a new project.
+There are now two deliberate reusable layers:
+
+- **`lib/cmake/`** — standalone library/tool core. It has no application, host,
+  plugin-hosting or application-deployment dependency and can be extracted with
+  `lib/` as an independent project. See the [library/core API](lib/README.md).
+- **`cmake/` + `lib/cmake/`** — full component/execution framework. The root
+  layer adds `Runtime`, `Application`, `Host`, `Plugin` and deployment semantics
+  on top of the same core. Keep the checked-in relative layout, or set
+  `BOILERPLATE_CORE_MODULE_DIR` before including the full facade.
+
+Library-only project:
 
 ```cmake
 cmake_minimum_required(VERSION 3.26)
-include(cmake/Bootstrap.cmake) # copied from lib/cmake; before project()
+include(cmake/Bootstrap.cmake)
 boilerplate_bootstrap()
-project(MyProject VERSION 1.0.0 LANGUAGES CXX)
-include(CTest)                 # when this top-level project owns tests
+project(MyLibrary VERSION 1.0.0 LANGUAGES CXX)
 include(cmake/Boilerplate.cmake)
-
-boilerplate_project(
-  TOP_LEVEL_CAPABILITIES developer
-  EMBEDDED_CAPABILITIES project-minimal)
+boilerplate_project(CAPABILITIES developer)
 boilerplate_add_library(core SOURCES src/core.cpp INCLUDE_DIR include)
-boilerplate_add_executable(my_app SOURCES src/main.cpp LIBRARIES core::core INSTALL)
-if(BUILD_TESTING)
-  boilerplate_add_test(core_test SOURCES tests/core.cpp LIBRARIES core::core)
-endif()
+boilerplate_finalize_project()
+```
+
+Full hosted application, with the repository layout preserved:
+
+```cmake
+cmake_minimum_required(VERSION 3.26)
+include(cmake/Bootstrap.cmake)
+boilerplate_bootstrap()
+project(MyProduct VERSION 1.0.0 LANGUAGES CXX)
+include(cmake/Boilerplate.cmake)
+boilerplate_project(CAPABILITIES developer)
+
+boilerplate_add_library(core SOURCES lib/core.cpp INCLUDE_DIR include)
+boilerplate_add_runtime(engine SOURCES src/engine.cpp LIBRARIES core::core)
+boilerplate_add_application(editor SOURCES src/editor.cpp RUNTIMES engine)
+
+# Additional process realization of the same application image.
+boilerplate_add_host(editor_cli KIND CONSOLE)
+boilerplate_host_application(editor_cli editor)
+
 boilerplate_finalize_project()
 ```
 
@@ -123,8 +144,8 @@ Find installed packages with `CMAKE_PREFIX_PATH` or use a package-manager toolch
 via `CMAKE_TOOLCHAIN_FILE` **on the initial configure**. Default presets do not
 require vcpkg. Disabled components do not search for their optional dependencies.
 There are no unconditional clang-tidy/IWYU/ccache invocations or global optimization
-flags. The obsolete root-level `cmake/` scripts have been removed. The single reusable
-implementation lives in `lib/cmake/`, including shader compilation and packaging.
+flags. The reusable core lives in `lib/cmake/`; the root `cmake/` directory is now a
+thin higher-level execution layer rather than a duplicate build implementation.
 
 With `BOILERPLATE_DEPENDENCY_PROVIDER=vcpkg`, an explicit `CMAKE_TOOLCHAIN_FILE`
 takes priority. Otherwise bootstrap and `build_all.*` resolve vcpkg in this order:
@@ -277,11 +298,30 @@ See [CUDA profiles and checks](lib/cmake/Cuda.md) for device architectures,
 runtime linkage, compatibility limits and a real nvcc regression check.
 
 Shader helpers support GLSL/SPIR-V and HLSL/DXC, named variants and transitive
-include dependencies. `boilerplate_add_plugin()` creates policy-aware MODULE
-targets; `examples/plugins` demonstrates a versioned C ABI and explicit reload.
-`boilerplate_install_application()` installs executable/plugin dependencies,
-resources and shaders together. See the [delivery API](lib/cmake/Delivery.md)
-for examples, platform requirements and regression targets.
+include dependencies. The full application layer is semantic rather than CMake-type
+driven: `boilerplate_add_application()` creates a hosted application image,
+`boilerplate_add_runtime()` creates a private linkable runtime image, and
+`boilerplate_add_plugin()` creates a runtime-loaded extension. `HOST` is an
+orthogonal execution role: create one with `boilerplate_add_host()` and attach a
+typed edge with `boilerplate_host_application()` or `boilerplate_host_plugin()`.
+The compatibility helper `boilerplate_add_apphost()` remains sugar for the common
+application case.
+
+Plugin composition and plugin placement are deliberately separate. An
+`APPLICATION -> PLUGIN` edge says that the plugin belongs to the application's
+extension set. With no explicit plugin host it follows the application's hosts
+(the normal in-process/co-hosted case); a `HOST -> PLUGIN` edge gives it explicit
+execution placement, for example a dedicated sandbox/plugin process. The framework
+deploys the resulting topology but does not impose a universal plugin callback ABI:
+the application/runtime or custom plugin host owns loading and negotiation.
+
+Ordinary `boilerplate_add_library()` targets stay consumer-facing and belong to the
+standalone core slice; `boilerplate_add_executable()` remains available for genuine
+standalone tools. `boilerplate_install_application()` deploys from the application
+root into a private module graph (`bin/`, `lib/<app>/`, `lib/<app>/plugins/`,
+`share/<app>/`), while `boilerplate_install_host()` supports standalone/custom host
+roots such as plugin hosts. See the [delivery API](cmake/Delivery.md) and the
+`boilerplate_check_execution_model` regression target.
 
 ## Optimization profiles
 

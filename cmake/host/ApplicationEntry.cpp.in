@@ -1,0 +1,16 @@
+#include <boilerplate/application_api.hpp>
+#include "@BOILERPLATE_APPLICATION_EXPORT_HEADER@"
+
+int boilerplate_application_main(int argc, char** argv);
+
+namespace {
+const BoilerplateApplicationApi api{
+    boilerplate_application_abi_version,
+    sizeof(BoilerplateApplicationApi),
+    &boilerplate_application_main};
+}
+
+extern "C" @BOILERPLATE_APPLICATION_EXPORT_MACRO@ const BoilerplateApplicationApi*
+boilerplate_application_query(std::uint32_t version, std::uint32_t size) {
+  return version == api.version && size == api.size ? &api : nullptr;
+}
