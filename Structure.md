@@ -3,6 +3,7 @@
 ```text
 .
 ├── CMakeLists.txt                 # full product/workspace composition root
+├── toolchains/                    # target platform/compiler/SDK selection, independent of capabilities
 ├── cmake/                         # execution/application layer; depends on lib/cmake
 │   ├── Bootstrap.cmake            # facade over the standalone core bootstrap
 │   ├── Boilerplate.cmake          # full facade: core + semantic execution layer

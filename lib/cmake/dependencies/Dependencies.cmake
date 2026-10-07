@@ -253,13 +253,27 @@ function(boilerplate_add_reference name)
   endif()
   set(_test)
   if(ARG_TEST)
+    if(CMAKE_CROSSCOMPILING AND NOT CMAKE_CROSSCOMPILING_EMULATOR)
+      message(FATAL_ERROR "Reference ${name}: TEST in a cross build requires CMAKE_CROSSCOMPILING_EMULATOR")
+    endif()
     set(_test TEST_AFTER_INSTALL FALSE TEST_BEFORE_INSTALL TRUE)
+  endif()
+  set(_platform_args)
+  if(CMAKE_CROSSCOMPILING)
+    foreach(_key IN ITEMS CMAKE_TOOLCHAIN_FILE CMAKE_SYSROOT CMAKE_C_COMPILER CMAKE_CXX_COMPILER
+        CMAKE_FIND_ROOT_PATH CMAKE_CROSSCOMPILING_EMULATOR ${CMAKE_TRY_COMPILE_PLATFORM_VARIABLES})
+      if(DEFINED ${_key})
+        string(REPLACE ";" "|" _value "${${_key}}")
+        list(APPEND _platform_args "-D${_key}:STRING=${_value}")
+      endif()
+    endforeach()
   endif()
   ExternalProject_Add(${name} SOURCE_DIR "${ARG_SOURCE_DIR}"
     BINARY_DIR "${CMAKE_BINARY_DIR}/references/${name}/build"
     INSTALL_DIR "${CMAKE_BINARY_DIR}/references/${name}/install"
     DOWNLOAD_COMMAND "" UPDATE_COMMAND "" EXCLUDE_FROM_ALL TRUE BUILD_ALWAYS TRUE
-    CMAKE_ARGS "-DCMAKE_INSTALL_PREFIX=<INSTALL_DIR>" ${ARG_CMAKE_ARGS}
+    LIST_SEPARATOR "|"
+    CMAKE_ARGS "-DCMAKE_INSTALL_PREFIX=<INSTALL_DIR>" ${_platform_args} ${ARG_CMAKE_ARGS}
     ${_install} ${_test})
 endfunction()
 
@@ -281,4 +295,3 @@ function(boilerplate_add_google_comparison name)
       -P "${CMAKE_CURRENT_FUNCTION_LIST_DIR}/../benchmark/GoogleBenchmarkCompare.cmake"
     USES_TERMINAL VERBATIM)
 endfunction()
-

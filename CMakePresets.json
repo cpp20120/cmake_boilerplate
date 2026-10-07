@@ -539,6 +539,63 @@
         "VCPKG_TARGET_TRIPLET": "arm64-osx-boilerplate-shared",
         "CMAKE_OSX_ARCHITECTURES": "arm64"
       }
+    },
+    {
+      "name": "native-linux-clang",
+      "inherits": "app-release",
+      "toolchainFile": "${sourceDir}/toolchains/native-linux-clang.cmake",
+      "binaryDir": "${sourceDir}/out/build/native-linux-clang",
+      "cacheVariables": {
+        "BOILERPLATE_DEPENDENCY_PROVIDER": "system",
+        "BOILERPLATE_ENABLE_NATIVE": "OFF",
+        "BOILERPLATE_PACKAGE_GENERATORS": "TGZ"
+      }
+    },
+    {
+      "name": "linux-arm64",
+      "inherits": "app-release",
+      "toolchainFile": "${sourceDir}/toolchains/linux-aarch64.cmake",
+      "binaryDir": "${sourceDir}/out/build/linux-arm64",
+      "cacheVariables": {
+        "BOILERPLATE_DEPENDENCY_PROVIDER": "system",
+        "BOILERPLATE_ENABLE_NATIVE": "OFF",
+        "BOILERPLATE_PACKAGE_GENERATORS": "TGZ"
+      }
+    },
+    {
+      "name": "windows-x64-from-linux",
+      "inherits": "app-release",
+      "toolchainFile": "${sourceDir}/toolchains/llvm-mingw-x64.cmake",
+      "binaryDir": "${sourceDir}/out/build/windows-x64-from-linux",
+      "cacheVariables": {
+        "BOILERPLATE_DEPENDENCY_PROVIDER": "system",
+        "BOILERPLATE_ENABLE_NATIVE": "OFF",
+        "BOILERPLATE_PACKAGE_GENERATORS": "TGZ"
+      }
+    },
+    {
+      "name": "android-arm64",
+      "inherits": "app-release",
+      "toolchainFile": "${sourceDir}/toolchains/android-arm64.cmake",
+      "binaryDir": "${sourceDir}/out/build/android-arm64",
+      "cacheVariables": {
+        "BOILERPLATE_DEPENDENCY_PROVIDER": "system",
+        "BOILERPLATE_ENABLE_NATIVE": "OFF",
+        "BOILERPLATE_PACKAGE_GENERATORS": "TGZ"
+      }
+    },
+    {
+      "name": "wasm32-emscripten",
+      "inherits": "app-release",
+      "toolchainFile": "${sourceDir}/toolchains/wasm32-emscripten.cmake",
+      "binaryDir": "${sourceDir}/out/build/wasm32-emscripten",
+      "cacheVariables": {
+        "BOILERPLATE_DEPENDENCY_PROVIDER": "system",
+        "BOILERPLATE_ENABLE_NATIVE": "OFF",
+        "BOILERPLATE_PACKAGE_GENERATORS": "TGZ",
+        "BOILERPLATE_BUILD_SHARED": "OFF",
+        "BOILERPLATE_BUILD_STATIC": "ON"
+      }
     }
   ],
   "buildPresets": [
@@ -749,6 +806,26 @@
     {
       "name": "vcpkg-macos-arm64-shared",
       "configurePreset": "vcpkg-macos-arm64-shared"
+    },
+    {
+      "name": "native-linux-clang",
+      "configurePreset": "native-linux-clang"
+    },
+    {
+      "name": "linux-arm64",
+      "configurePreset": "linux-arm64"
+    },
+    {
+      "name": "windows-x64-from-linux",
+      "configurePreset": "windows-x64-from-linux"
+    },
+    {
+      "name": "android-arm64",
+      "configurePreset": "android-arm64"
+    },
+    {
+      "name": "wasm32-emscripten",
+      "configurePreset": "wasm32-emscripten"
     }
   ],
   "testPresets": [
@@ -1041,6 +1118,41 @@
       },
       "execution": {
         "noTestsAction": "error"
+      }
+    },
+    {
+      "name": "native-linux-clang",
+      "configurePreset": "native-linux-clang",
+      "output": {
+        "outputOnFailure": true
+      }
+    },
+    {
+      "name": "linux-arm64",
+      "configurePreset": "linux-arm64",
+      "output": {
+        "outputOnFailure": true
+      }
+    },
+    {
+      "name": "windows-x64-from-linux",
+      "configurePreset": "windows-x64-from-linux",
+      "output": {
+        "outputOnFailure": true
+      }
+    },
+    {
+      "name": "android-arm64",
+      "configurePreset": "android-arm64",
+      "output": {
+        "outputOnFailure": true
+      }
+    },
+    {
+      "name": "wasm32-emscripten",
+      "configurePreset": "wasm32-emscripten",
+      "output": {
+        "outputOnFailure": true
       }
     }
   ],

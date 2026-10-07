@@ -15,7 +15,7 @@ function(boilerplate_project_tool output description)
   # Do not reuse a previous lookup (or the legacy shared cache entry): each
   # caller asks for a different tool, including optional tools that are absent.
   set(_tool _tool-NOTFOUND)
-  find_program(_tool NAMES ${ARG_NAMES} NO_CACHE)
+  find_program(_tool NAMES ${ARG_NAMES} NO_CACHE NO_CMAKE_FIND_ROOT_PATH)
   if(NOT _tool AND BOILERPLATE_REQUIRE_PROJECT_TOOLS)
     message(FATAL_ERROR "${description} capability requires one of: ${ARG_NAMES}")
   elseif(NOT _tool)

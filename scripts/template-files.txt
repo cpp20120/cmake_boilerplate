@@ -5,6 +5,7 @@
 .cmake-format.yaml
 .dockerignore
 .github/workflows/cmake-multi-platform.yml
+.github/workflows/cross.yml
 .github/workflows/template.yml
 .gitignore
 CMakeLists.txt
@@ -88,6 +89,7 @@ lib/cmake/packaging/Plugins.cmake
 lib/cmake/packaging/VcpkgPackaging.cmake
 lib/cmake/packaging/VcpkgPortfile.cmake.in
 lib/cmake/platforms/CudaPolicies.cmake
+lib/cmake/platforms/Execution.cmake
 lib/cmake/platforms/GraphicsPolicies.cmake
 lib/cmake/platforms/NormalizeShaderDepfile.cmake
 lib/cmake/platforms/QtPolicies.cmake
@@ -125,6 +127,11 @@ lib/tests/cmake/control-flow/include/flow.hpp
 lib/tests/cmake/control-flow/main.cpp
 lib/tests/cmake/control-flow/verify_cfg.cmake
 lib/tests/cmake/control-flow/verify_failure.cmake
+lib/tests/cmake/cross/CMakeLists.txt
+lib/tests/cmake/cross/consumer/CMakeLists.txt
+lib/tests/cmake/cross/include/math.hpp
+lib/tests/cmake/cross/main.cpp
+lib/tests/cmake/cross/math.cpp
 lib/tests/cmake/cuda/CMakeLists.txt
 lib/tests/cmake/cuda/cpu.cpp
 lib/tests/cmake/cuda/device.cu
@@ -160,6 +167,7 @@ lib/tests/cmake/verify.cmake
 lib/tests/cmake/verify_bootstrap.cmake
 lib/tests/cmake/verify_capabilities.cmake
 lib/tests/cmake/verify_control_flow.cmake
+lib/tests/cmake/verify_cross.cmake
 lib/tests/cmake/verify_cuda.cmake
 lib/tests/cmake/verify_delivery.cmake
 lib/tests/cmake/verify_examples.cmake
@@ -220,6 +228,13 @@ tests/fuzztest/fuzztest_example.cpp
 tests/property_test/CMakeLists.txt
 tests/property_test/property_test.cpp
 tests/test_main.cpp
+toolchains/README.md
+toolchains/TargetRoots.cmake
+toolchains/android-arm64.cmake
+toolchains/linux-aarch64.cmake
+toolchains/llvm-mingw-x64.cmake
+toolchains/native-linux-clang.cmake
+toolchains/wasm32-emscripten.cmake
 tools/container.ps1
 tools/container.sh
 vcpkg-configuration.json

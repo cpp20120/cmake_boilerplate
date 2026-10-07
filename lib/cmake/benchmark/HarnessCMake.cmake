@@ -4,6 +4,9 @@ if(NOT HARNESS_CONFIG OR NOT EXISTS "${HARNESS_CONFIG}")
   message(FATAL_ERROR "Pass -DHARNESS_CONFIG=<generated harness config>")
 endif()
 include("${HARNESS_CONFIG}")
+if(HARNESS_EXECUTION_BLOCKED)
+  message(FATAL_ERROR "Cross harness requires CMAKE_CROSSCOMPILING_EMULATOR or the target CROSSCOMPILING_EMULATOR property")
+endif()
 
 function(_json_quote out value)
   string(REPLACE "\\" "\\\\" _v "${value}")
@@ -433,7 +436,7 @@ foreach(_round RANGE 0 ${_round_last})
       string(JOIN "," _events ${HARNESS_PERF_EVENTS})
       list(APPEND _command "${_perf}" stat -x ";" -o "${_perf_file}" -e "${_events}" --)
     endif()
-    list(APPEND _command "${HARNESS_BINARY}" ${_args})
+    list(APPEND _command ${HARNESS_EMULATOR} "${HARNESS_BINARY}" ${_args})
 
     string(TIMESTAMP _start "%s%f" UTC)
     execute_process(COMMAND "${CMAKE_COMMAND}" -E env ${_env} -- ${_command}

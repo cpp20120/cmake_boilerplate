@@ -29,7 +29,7 @@ function(_boilerplate_project_coverage_finalize)
     get_filename_component(_compiler_dir "${CMAKE_CXX_COMPILER}" DIRECTORY)
     string(REGEX MATCH "^[0-9]+" _compiler_major "${CMAKE_CXX_COMPILER_VERSION}")
     find_program(_llvm_cov NAMES "llvm-cov-${_compiler_major}" llvm-cov
-      HINTS "${_compiler_dir}" NO_CACHE)
+      HINTS "${_compiler_dir}" NO_CACHE NO_CMAKE_FIND_ROOT_PATH)
     if(NOT _llvm_cov)
       message(FATAL_ERROR "Clang coverage-report requires llvm-cov or BOILERPLATE_COVERAGE_GCOV_TOOL")
     endif()

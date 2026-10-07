@@ -160,7 +160,7 @@ function(boilerplate_add_googletest target)
   _boilerplate_collect_policy_args(_policy_args "${ARG_POLICIES}" "${ARG_POLICY_OPTIONS}")
   boilerplate_add_executable(${target} SOURCES ${ARG_SOURCES} LIBRARIES ${ARG_LIBRARIES} ${_main} ${_policy_args})
   include(GoogleTest)
-  gtest_discover_tests(${target} TEST_PREFIX "${target}." DISCOVERY_MODE PRE_TEST
+  boilerplate_discover_tests(${target} TEST_PREFIX "${target}." DISCOVERY_MODE PRE_TEST
     PROPERTIES TIMEOUT 30 LABELS "unit;google;${ARG_LABELS}")
   # Aggregate dependency without a duplicate test running the whole binary.
   if(NOT TARGET boilerplate_tests)
@@ -192,7 +192,7 @@ function(boilerplate_add_property_test target)
   boilerplate_add_executable(${target} SOURCES ${ARG_SOURCES}
     LIBRARIES ${ARG_LIBRARIES} rapidcheck rapidcheck_gtest GTest::gtest_main ${_policy_args})
   include(GoogleTest)
-  gtest_discover_tests(${target} TEST_PREFIX "${target}." DISCOVERY_MODE PRE_TEST
+  boilerplate_discover_tests(${target} TEST_PREFIX "${target}." DISCOVERY_MODE PRE_TEST
     PROPERTIES TIMEOUT 30 LABELS "unit;property;pbt;rapidcheck;${ARG_LABELS}")
   if(NOT TARGET boilerplate_tests)
     add_custom_target(boilerplate_tests)
@@ -259,6 +259,10 @@ function(boilerplate_add_fuzzer target)
   target_compile_definitions(${target} PRIVATE FUZZING_BUILD_MODE_UNSAFE_FOR_PRODUCTION=1)
 
   get_filename_component(_compiler_name "${CMAKE_CXX_COMPILER}" NAME)
+  boilerplate_target_execution(${target} _runnable _emulator)
+  if(CMAKE_CROSSCOMPILING AND NOT ARG_BACKEND STREQUAL "libfuzzer")
+    message(FATAL_ERROR "Cross fuzzing with ${ARG_BACKEND} requires a backend-specific target runner; use a native build or libfuzzer")
+  endif()
   set(_run_target "fuzz_${target}")
   set(_smoke_name "${target}")
   set(_dictionary_arg)
@@ -280,9 +284,11 @@ function(boilerplate_add_fuzzer target)
       list(APPEND _run_args "-dict=${_dict}")
       list(APPEND _smoke_args "-dict=${_dict}")
     endif()
-    add_custom_target(${_run_target}
-      COMMAND "$<TARGET_FILE:${target}>" ${_run_args}
-      DEPENDS ${target} USES_TERMINAL VERBATIM)
+    if(_runnable)
+      add_custom_target(${_run_target}
+        COMMAND ${_emulator} "$<TARGET_FILE:${target}>" ${_run_args}
+        DEPENDS ${target} USES_TERMINAL VERBATIM)
+    endif()
     if(BUILD_TESTING)
       boilerplate_register_check(${_smoke_name} ${target} ARGS ${_smoke_args}
         LABELS fuzz smoke libfuzzer TIMEOUT 30)
@@ -293,8 +299,8 @@ function(boilerplate_add_fuzzer target)
       message(FATAL_ERROR
         "AFL++ backend requires configuring CMAKE_CXX_COMPILER to an AFL++ wrapper (for example afl-clang-fast++ or afl-clang-lto++).")
     endif()
-    find_program(BOILERPLATE_AFL_FUZZ NAMES afl-fuzz REQUIRED)
-    find_program(BOILERPLATE_AFL_SHOWMAP NAMES afl-showmap REQUIRED)
+    find_program(BOILERPLATE_AFL_FUZZ NAMES afl-fuzz REQUIRED NO_CMAKE_FIND_ROOT_PATH)
+    find_program(BOILERPLATE_AFL_SHOWMAP NAMES afl-showmap REQUIRED NO_CMAKE_FIND_ROOT_PATH)
     # AFL++ recognizes -fsanitize=fuzzer and injects its libFuzzer-compatible
     # persistent driver for LLVMFuzzerTestOneInput().
     target_compile_options(${target} PRIVATE -fsanitize=fuzzer-no-link ${_san_flags})
@@ -324,7 +330,7 @@ function(boilerplate_add_fuzzer target)
       message(FATAL_ERROR
         "honggfuzz backend requires configuring CMAKE_CXX_COMPILER to hfuzz-clang++/hfuzz-g++ before project().")
     endif()
-    find_program(BOILERPLATE_HONGGFUZZ NAMES honggfuzz REQUIRED)
+    find_program(BOILERPLATE_HONGGFUZZ NAMES honggfuzz REQUIRED NO_CMAKE_FIND_ROOT_PATH)
     # hfuzz-* adds sanitizer coverage and libhfuzz, including the persistent
     # LLVMFuzzerTestOneInput driver. Keep optional ASan/UBSan target-scoped.
     target_compile_options(${target} PRIVATE ${_san_flags})
@@ -352,7 +358,9 @@ function(boilerplate_add_fuzzer target)
   endif()
 
   set_property(GLOBAL APPEND PROPERTY BOILERPLATE_FUZZ_TARGETS ${target})
-  set_property(GLOBAL APPEND PROPERTY BOILERPLATE_FUZZ_RUN_TARGETS ${_run_target})
+  if(TARGET ${_run_target})
+    set_property(GLOBAL APPEND PROPERTY BOILERPLATE_FUZZ_RUN_TARGETS ${_run_target})
+  endif()
   if(BUILD_TESTING)
     set_property(GLOBAL APPEND PROPERTY BOILERPLATE_FUZZ_SMOKE_TESTS ${_smoke_name})
   endif()
@@ -393,7 +401,7 @@ function(boilerplate_add_fuzztest target)
   endif()
 
   include(GoogleTest)
-  gtest_discover_tests(${target} TEST_PREFIX "${target}." DISCOVERY_MODE PRE_TEST
+  boilerplate_discover_tests(${target} TEST_PREFIX "${target}." DISCOVERY_MODE PRE_TEST
     PROPERTIES TIMEOUT 30 LABELS "unit;property;fuzztest;${ARG_LABELS}")
   if(NOT TARGET boilerplate_tests)
     add_custom_target(boilerplate_tests)
@@ -401,10 +409,11 @@ function(boilerplate_add_fuzztest target)
   add_dependencies(boilerplate_tests ${target})
   set_property(GLOBAL APPEND PROPERTY BOILERPLATE_FUZZTEST_TARGETS ${target})
 
-  if(ARG_FUZZ_TEST AND NOT ARG_MODE STREQUAL "unit")
+  boilerplate_target_execution(${target} _runnable _emulator)
+  if(ARG_FUZZ_TEST AND NOT ARG_MODE STREQUAL "unit" AND _runnable)
     set(_run_target "fuzz_${target}")
     add_custom_target(${_run_target}
-      COMMAND "$<TARGET_FILE:${target}>" "--fuzz=${ARG_FUZZ_TEST}"
+      COMMAND ${_emulator} "$<TARGET_FILE:${target}>" "--fuzz=${ARG_FUZZ_TEST}"
       DEPENDS ${target} USES_TERMINAL VERBATIM)
     set_property(GLOBAL APPEND PROPERTY BOILERPLATE_FUZZ_RUN_TARGETS ${_run_target})
   endif()
@@ -435,7 +444,7 @@ function(boilerplate_pgo_workload target)
       get_filename_component(_compiler_dir "${CMAKE_CXX_COMPILER}" DIRECTORY)
       string(REGEX MATCH "^[0-9]+" _compiler_major "${CMAKE_CXX_COMPILER_VERSION}")
       find_program(BOILERPLATE_LLVM_PROFDATA NAMES llvm-profdata-${_compiler_major} llvm-profdata
-        HINTS "${_compiler_dir}" REQUIRED)
+        HINTS "${_compiler_dir}" REQUIRED NO_CMAKE_FIND_ROOT_PATH)
       set(BOILERPLATE_PGO_MERGED_PROFILE "${_pgo_dir}/merged.profdata"
         CACHE FILEPATH "Output of boilerplate_pgo_merge")
       set(_merge ${CMAKE_COMMAND} "-DPROFILE_DIR=${_pgo_dir}"
@@ -456,6 +465,9 @@ function(boilerplate_pgo_workload target)
   set(_workload "boilerplate_pgo_workload_${_next}")
   set(_content)
   boilerplate_append_setting(_content EXECUTABLE "$<TARGET_FILE:${target}>")
+  boilerplate_target_execution(${target} _runnable _emulator)
+  boilerplate_append_setting(_content EXECUTION_BLOCKED "$<NOT:$<BOOL:${_runnable}>>")
+  boilerplate_append_setting(_content EMULATOR "${_emulator}")
   boilerplate_append_setting(_content ARGS "${ARGN}")
   boilerplate_append_setting(_content ENVIRONMENT "${_boilerplate_pgo_environment}")
   if(NOT _boilerplate_pgo_workdir)

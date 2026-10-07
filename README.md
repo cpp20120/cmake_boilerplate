@@ -35,6 +35,11 @@ independent process harness and dependency-free correctness tests.
 
 ## Start
 
+Cross compilation is selected by toolchain presets: `linux-arm64`,
+`windows-x64-from-linux`, `android-arm64`, `wasm32-emscripten`. Capabilities and
+target policies remain independent. See [SDK requirements, host tools and emulator
+execution](toolchains/README.md).
+
 Run from the repository root:
 
 ```sh
