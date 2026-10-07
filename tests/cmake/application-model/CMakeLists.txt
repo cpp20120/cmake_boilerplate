@@ -47,8 +47,8 @@ boilerplate_add_plugin(sample_inproc_plugin
 
 boilerplate_add_host(sample_plugin_host
   SOURCES plugin_host.cpp
-  LIBRARIES ${CMAKE_DL_LIBS}
   POLICIES minimal)
+target_link_libraries(sample_plugin_host PRIVATE ${CMAKE_DL_LIBS})
 boilerplate_host_plugin(sample_plugin_host sample_plugin)
 
 _boilerplate_get_effective_plugin_hosts(sample_app sample_inproc_plugin _inproc_hosts)

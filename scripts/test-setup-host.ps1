@@ -31,3 +31,6 @@ try {
 } finally {
     Remove-Item -LiteralPath $work -Recurse -Force
 }
+# Expected failures above leave LASTEXITCODE nonzero. GitHub Actions propagates
+# it from its PowerShell wrapper even when every assertion passed.
+exit 0
