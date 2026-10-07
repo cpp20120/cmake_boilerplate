@@ -146,7 +146,7 @@ function(boilerplate_apply_optimization target)
     add_custom_command(TARGET ${target} POST_BUILD
       COMMAND ${CMAKE_COMMAND} "-DRUNTIME_FILES=$<TARGET_RUNTIME_DLLS:${target}>"
         "-DDESTINATION=$<TARGET_FILE_DIR:${target}>"
-        -P "${CMAKE_CURRENT_FUNCTION_LIST_DIR}/CopyRuntimeLibraries.cmake"
+        -P "${CMAKE_CURRENT_FUNCTION_LIST_DIR}/../packaging/CopyRuntimeLibraries.cmake"
       VERBATIM)
   endif()
 

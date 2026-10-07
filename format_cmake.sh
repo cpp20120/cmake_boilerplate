@@ -37,6 +37,14 @@ else
         "${find_exclude_args[@]}" -print)
 fi
 
+# This source directory deliberately shares the name of an excluded build tree.
+module_build_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/lib/cmake/build"
+if [[ -d "$module_build_dir" ]]; then
+    while IFS= read -r -d '' file; do
+        files+=("$file")
+    done < <(find "$module_build_dir" -type f -name '*.cmake' -print0)
+fi
+
 if [ ${#files[@]} -eq 0 ]; then
     echo "No CMake files found matching criteria" >&2
     exit 0

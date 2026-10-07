@@ -73,7 +73,7 @@ function(boilerplate_add_application_module target)
     add_custom_command(TARGET ${target} POST_BUILD
       COMMAND "${CMAKE_COMMAND}" "-DRUNTIME_FILES=$<TARGET_RUNTIME_DLLS:${target}>"
         "-DDESTINATION=$<TARGET_FILE_DIR:${target}>"
-        -P "${_core_modules}/CopyRuntimeLibraries.cmake" VERBATIM)
+        -P "${_core_modules}/packaging/CopyRuntimeLibraries.cmake" VERBATIM)
   endif()
 
   set(_application_libraries)

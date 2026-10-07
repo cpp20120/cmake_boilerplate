@@ -311,7 +311,7 @@ Without a working GPU/driver, override the architecture as above. CUDA policies
 are still selected per target; the Debug preset alone does not enable device
 debugging (`cuda-debug`). The sample application remains CPU-only; the explicit
 `boilerplate_check_cuda` target builds the CUDA fixtures.
-See [CUDA profiles and checks](lib/cmake/Cuda.md) for device architectures,
+See [CUDA profiles and checks](lib/cmake/docs/Cuda.md) for device architectures,
 runtime linkage, compatibility limits and a real nvcc regression check.
 
 Shader helpers support GLSL/SPIR-V and HLSL/DXC, named variants and transitive
@@ -367,7 +367,7 @@ and the supplied PGO/fuzzer profiles. Unsupported combinations fail at configure
 
 ## General research harness
 
-For repeatable runtime/server experiments, `lib/cmake/Harness.cmake` exposes a
+For repeatable runtime/server experiments, `lib/cmake/benchmark/Harness.cmake` exposes a
 self-contained CMake process harness shipped inside the reusable `lib/cmake/` tree.
 Running the harness does not require Python.
 
@@ -384,10 +384,9 @@ boilerplate_add_harness(runtime_matrix
 The generic runner owns subprocess lifecycle, process-group timeout/kill, CPU topology
 and affinity, SHA256 provenance, raw logs, randomized rounds, JSON metric summaries,
 invariant checks and optional Linux `perf stat` parsing. Domain semantics stay in the
-project adapter/cases file. The extracted Python package also provides reusable paired
-A/B ordering/statistics and source-tree hashing for research scripts. See
-[`lib/cmake/harness/README.md`](lib/cmake/harness/README.md) and
-[`MIGRATION.md`](lib/cmake/harness/MIGRATION.md).
+project adapter/cases file. See the
+[harness guide](lib/cmake/benchmark/README.md) and
+[CMake module map](lib/cmake/README.md).
 
 ## Custom harness AND Google Benchmark
 
@@ -506,7 +505,7 @@ build/object paths for generate/use, with no LLVM merge step.
 
 ```sh
 cmake '-DPRESETS=app-debug;app-release;lib-static;lib-shared' -DJOBS=4 \
-  -P lib/cmake/BuildMatrix.cmake
+  -P lib/cmake/build/BuildMatrix.cmake
 # Or the thin shell/PowerShell wrapper:
 ./build_all.sh '-DPRESETS=app-debug;app-release' -DJOBS=4
 ```
@@ -571,7 +570,7 @@ For two successful process-harness outputs with matching scenario/arguments:
 
 ```sh
 cmake -DBASELINE=/path/before/result.json -DCANDIDATE=/path/after/result.json \
-  -DMAX_REGRESSION_PERCENT=10 -P lib/cmake/CompareResults.cmake
+  -DMAX_REGRESSION_PERCENT=10 -P lib/cmake/benchmark/CompareResults.cmake
 ```
 
 This compares median end-to-end time; the threshold is optional and must account for
@@ -670,3 +669,147 @@ The same entry points are available under `scripts/`.
 The benchmark/process harness runs in CMake; bootstrap does not check Python.
 See [host setup](scripts/README.md) for package managers, the tool matrix and
 separately provisioned Python/SDK workflows.
+
+
+
+### Visual Project scheme
+
+```mermaid
+
+flowchart LR
+    subgraph Build["Build artifacts"]
+        APP["TEST_PROJECT"]
+        L1["library1_shared"]
+        L2["library2_shared"]
+        L1S["library1_shared_smoke"]
+        L2S["library2_shared_smoke"]
+        AC["application_checks"]
+
+        APP --> L1
+        APP --> L2
+        L1S --> L1
+        L2S --> L2
+    end
+
+    subgraph Testing["Testing"]
+        CHECK["check"]
+        BCHECK["boilerplate_check"]
+        BTESTS["boilerplate_tests"]
+
+        CHECK --> BCHECK
+        BCHECK --> BTESTS
+
+        BTESTS --> APP
+        BTESTS --> AC
+        BTESTS --> L1S
+        BTESTS --> L2S
+    end
+
+    subgraph Regression["Infrastructure regressions"]
+        FULL["boilerplate_check_full"]
+        CMAKE["boilerplate_check_cmake"]
+        EXEC["boilerplate_check_execution_model"]
+        DELIVERY["boilerplate_check_delivery"]
+
+        CUDA["boilerplate_check_cuda"]
+        SHADERS["boilerplate_check_shaders"]
+        FLOW["boilerplate_check_control_flow"]
+
+        FULL --> CMAKE
+        FULL --> EXEC
+        FULL --> DELIVERY
+    end
+
+    subgraph Infrastructure["Project infrastructure"]
+        CONFIG["boilerplate_config"]
+        BUILDINFO["boilerplate_build_info<br/>INTERFACE"]
+    end
+```
+
+
+
+### Capablity graph
+
+```mermaid
+flowchart TB
+    FULL["full"]
+    DEV["developer"]
+    QUALITY["quality"]
+    DIST["distribution"]
+    CI["ci"]
+
+    FULL --> DEV
+    FULL --> QUALITY
+    FULL --> DOCS
+    FULL --> DIST
+
+    DEV --> COMPILE["compile-commands"]
+    DEV --> CACHE["compiler-cache"]
+    DEV --> FORMAT["formatting"]
+    DEV --> STATIC["static-analysis"]
+    DEV --> TEST["testing"]
+    DEV --> BUILDINFO["build-info"]
+    DEV --> DIAG["diagnostics"]
+
+    QUALITY --> TEST
+    QUALITY --> PROP["property-testing"]
+    QUALITY --> FUZZ["fuzzing"]
+    QUALITY --> STATIC
+
+    PROP --> TEST
+    FUZZ --> TEST
+    COVERAGE["coverage-report"] --> TEST
+
+    DIST --> BUILDINFO
+    DIST --> REPRO["reproducible-build"]
+    DIST --> PACKAGE["packaging"]
+    DIST --> DIAG
+
+    CI --> COMPILE
+    CI --> TEST
+    CI --> STATIC
+    CI --> BUILDINFO
+    CI --> DIAG
+
+    MIN["project-minimal"]
+    CUDA["cuda"]
+    WEB["web-deployment"]
+    DOCS["docs"]
+
+```
+
+
+### Configure/finalize semantics
+
+```mermaid
+flowchart LR
+    subgraph Configure["configure phase"]
+        CC["compile-commands"]
+        CACHE["compiler-cache"]
+        SA["static-analysis"]
+        TEST["testing"]
+        REPRO["reproducible-build"]
+        INFO["build-info"]
+        CUDA["cuda"]
+    end
+
+    subgraph Targets["project target graph"]
+        TARGETS["add_library / add_executable / policies / registration"]
+    end
+
+    subgraph Finalize["finalize phase"]
+        FORMAT["formatting"]
+        SA2["static-analysis"]
+        TEST2["testing"]
+        PROP["property-testing"]
+        FUZZ["fuzzing"]
+        COV["coverage-report"]
+        DOCS["docs"]
+        PACKAGE["packaging"]
+        DIAG["diagnostics"]
+        WEB["web-deployment"]
+    end
+
+    Configure --> TARGETS
+    TARGETS --> Finalize
+```

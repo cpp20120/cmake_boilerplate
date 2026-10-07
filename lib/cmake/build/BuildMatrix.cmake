@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.26)
-include("${CMAKE_CURRENT_LIST_DIR}/VcpkgDiscovery.cmake")
+include("${CMAKE_CURRENT_LIST_DIR}/../dependencies/VcpkgDiscovery.cmake")
 # Small orchestrator: presets remain the sole source of build policy.
 if(NOT SOURCE_DIR)
   set(SOURCE_DIR "${CMAKE_CURRENT_SOURCE_DIR}")

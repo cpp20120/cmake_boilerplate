@@ -54,7 +54,7 @@ function(boilerplate_add_plugin target)
     add_custom_command(TARGET ${target} POST_BUILD
       COMMAND "${CMAKE_COMMAND}" "-DRUNTIME_FILES=$<TARGET_RUNTIME_DLLS:${target}>"
         "-DDESTINATION=$<TARGET_FILE_DIR:${target}>"
-        -P "${_core_modules}/CopyRuntimeLibraries.cmake" VERBATIM)
+        -P "${_core_modules}/packaging/CopyRuntimeLibraries.cmake" VERBATIM)
   endif()
   boilerplate_get_target_setting(${target} CFI _cfi)
   boilerplate_get_target_setting(${target} CFI_DIAGNOSTICS _diagnostics)

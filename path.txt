@@ -1,4 +1,0 @@
-CMAKE_GENERATOR=Ninja
-C=/usr/bin/clang
-CXX=/usr/bin/clang++
-LDFLAGS=-fuse-ld=lld

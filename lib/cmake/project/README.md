@@ -59,7 +59,7 @@ CONFIGURE_HOOKS ... FINALIZE_HOOKS ...)`.
 
 ## Dependency provider
 
-[Capability fixes and checks](../CapabilityChecks.md) documents the tool,
+[Capability fixes and checks](../docs/CapabilityChecks.md) documents the tool,
 coverage, CUDA, dependency and Doxygen controls and their regression checks.
 
 `Bootstrap.cmake` exposes `BOILERPLATE_DEPENDENCY_PROVIDER`:

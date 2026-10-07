@@ -57,7 +57,8 @@ CMakeUserPresets.json
 build_ninja/
 cmake_install.cmake
 cmake-build-*/
-build/
+out/
+/build/
 out/
 
 # Local dependency-manager checkouts and installed packages

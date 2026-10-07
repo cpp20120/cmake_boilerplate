@@ -14,7 +14,7 @@ foreach(_mode IN ITEMS success fail timeout)
     "set(WORKING_DIRECTORY [==[${CHECK_BINARY}/work dir]==])\n"
     "set(RESULT_ROOT [==[${_root}]==])\nset(TIMEOUT 1)\nset(REPEATS 2)\nset(WARMUP 1)\n")
   execute_process(COMMAND "${CMAKE_COMMAND}" "-DRUN_CONFIG=${CHECK_BINARY}/${_mode}.cmake"
-    -P "${CMAKE_CURRENT_LIST_DIR}/../../cmake/RunWorkload.cmake"
+    -P "${CMAKE_CURRENT_LIST_DIR}/../../cmake/benchmark/RunWorkload.cmake"
     RESULT_VARIABLE _result OUTPUT_VARIABLE _stdout ERROR_VARIABLE _stderr)
   file(GLOB _reports "${_root}/*/result.json")
   list(LENGTH _reports _count)
@@ -47,10 +47,10 @@ math(EXPR _slower "${_median}*2")
 string(JSON _json SET "${_json}" summary median_us ${_slower})
 file(WRITE "${CHECK_BINARY}/slower.json" "${_json}")
 execute_process(COMMAND "${CMAKE_COMMAND}" "-DBASELINE=${_base}" "-DCANDIDATE=${_base}"
-  -DMAX_REGRESSION_PERCENT=0 -P "${CMAKE_CURRENT_LIST_DIR}/../../cmake/CompareResults.cmake"
+  -DMAX_REGRESSION_PERCENT=0 -P "${CMAKE_CURRENT_LIST_DIR}/../../cmake/benchmark/CompareResults.cmake"
   RESULT_VARIABLE _equal_result OUTPUT_QUIET ERROR_QUIET)
 execute_process(COMMAND "${CMAKE_COMMAND}" "-DBASELINE=${_base}" "-DCANDIDATE=${CHECK_BINARY}/slower.json"
-  -DMAX_REGRESSION_PERCENT=10 -P "${CMAKE_CURRENT_LIST_DIR}/../../cmake/CompareResults.cmake"
+  -DMAX_REGRESSION_PERCENT=10 -P "${CMAKE_CURRENT_LIST_DIR}/../../cmake/benchmark/CompareResults.cmake"
   RESULT_VARIABLE _slower_result OUTPUT_QUIET ERROR_QUIET)
 if(NOT _equal_result EQUAL 0 OR _slower_result EQUAL 0)
   message(FATAL_ERROR "Comparison threshold handling failed")

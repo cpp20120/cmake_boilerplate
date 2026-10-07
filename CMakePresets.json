@@ -1045,7 +1045,7 @@
     }
   ],
   "include": [
-    "lib/cmake/LibraryPresets.json"
+    "lib/cmake/build/LibraryPresets.json"
   ],
   "workflowPresets": [
     {

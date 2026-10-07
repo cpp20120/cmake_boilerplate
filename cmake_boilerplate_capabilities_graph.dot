@@ -1,0 +1,235 @@
+digraph BoilerplateCapabilities {
+  graph [
+    rankdir=LR,
+    splines=true,
+    overlap=false,
+    ranksep=1.0,
+    nodesep=0.35,
+    fontname="DejaVu Sans"
+  ];
+  node [fontname="DejaVu Sans", fontsize=11, shape=box, style="rounded,filled", color="#4a5568", fillcolor="#f7fafc"];
+  edge [fontname="DejaVu Sans", fontsize=10, color="#4a5568", arrowsize=0.8];
+
+  // Compositions
+  subgraph cluster_compositions {
+    label="Capability compositions";
+    color="#90cdf4";
+    style="rounded";
+
+    full [label="full", fillcolor="#bee3f8", penwidth=1.4];
+    developer [label="developer", fillcolor="#bee3f8", penwidth=1.4];
+    quality [label="quality", fillcolor="#bee3f8", penwidth=1.4];
+    distribution [label="distribution", fillcolor="#bee3f8", penwidth=1.4];
+    ci [label="ci", fillcolor="#bee3f8", penwidth=1.4];
+  }
+
+  // Primitive capabilities
+  subgraph cluster_primitives {
+    label="Primitive capabilities";
+    color="#9ae6b4";
+    style="rounded";
+
+    project_minimal [label="project-minimal", fillcolor="#c6f6d5"];
+    compile_commands [label="compile-commands", fillcolor="#c6f6d5"];
+    compiler_cache [label="compiler-cache", fillcolor="#c6f6d5"];
+    formatting [label="formatting", fillcolor="#c6f6d5"];
+    static_analysis [label="static-analysis", fillcolor="#c6f6d5"];
+    testing [label="testing", fillcolor="#c6f6d5"];
+    property_testing [label="property-testing", fillcolor="#c6f6d5"];
+    fuzzing [label="fuzzing", fillcolor="#c6f6d5"];
+    coverage_report [label="coverage-report", fillcolor="#c6f6d5"];
+    docs [label="docs", fillcolor="#c6f6d5"];
+    packaging [label="packaging", fillcolor="#c6f6d5"];
+    reproducible_build [label="reproducible-build", fillcolor="#c6f6d5"];
+    build_info [label="build-info", fillcolor="#c6f6d5"];
+    diagnostics [label="diagnostics", fillcolor="#c6f6d5"];
+    cuda [label="cuda", fillcolor="#c6f6d5"];
+    web_deployment [label="web-deployment", fillcolor="#c6f6d5"];
+  }
+
+  // Hooks
+  subgraph cluster_hooks {
+    label="Configure / finalize hooks";
+    color="#f6ad55";
+    style="rounded";
+
+    node [shape=component, style="filled", fillcolor="#feebc8"];
+
+    h_compile [label="_boilerplate_project_compile_commands()\nconfigure"];
+    h_cache [label="_boilerplate_project_compiler_cache()\nconfigure"];
+    h_format [label="_boilerplate_project_formatting_finalize()\nfinalize"];
+    h_sa_cfg [label="_boilerplate_project_static_analysis_configure()\nconfigure"];
+    h_sa_fin [label="_boilerplate_project_static_analysis_finalize()\nfinalize"];
+    h_test_cfg [label="_boilerplate_project_testing_configure()\nconfigure"];
+    h_test_fin [label="_boilerplate_project_testing_finalize()\nfinalize"];
+    h_prop [label="_boilerplate_project_property_testing_finalize()\nfinalize"];
+    h_fuzz [label="_boilerplate_project_fuzzing_finalize()\nfinalize"];
+    h_cov [label="_boilerplate_project_coverage_finalize()\nfinalize"];
+    h_docs [label="_boilerplate_project_docs_finalize()\nfinalize"];
+    h_pkg [label="_boilerplate_project_packaging_finalize()\nfinalize"];
+    h_repr [label="_boilerplate_project_reproducible_configure()\nconfigure"];
+    h_info [label="_boilerplate_project_build_info_configure()\nconfigure"];
+    h_diag [label="_boilerplate_project_diagnostics_finalize()\nfinalize"];
+    h_cuda [label="_boilerplate_project_cuda_configure()\nconfigure"];
+    h_web [label="_boilerplate_project_web_finalize()\nfinalize"];
+  }
+
+  // Generated target / artifact nodes
+  subgraph cluster_outputs {
+    label="Generated targets / artifacts";
+    color="#d6bcfa";
+    style="rounded";
+
+    node [shape=folder, style="filled", fillcolor="#e9d8fd"];
+
+    t_compile_json [label="compile_commands.json\n(cache/export)"];
+    t_compiler_launcher [label="CMAKE_<LANG>_COMPILER_LAUNCHER\n(cache/export)"];
+    t_format [label="format"];
+    t_format_check [label="format-check"];
+    t_format_cmake [label="format-cmake"];
+    t_format_cmake_check [label="format-cmake-check"];
+    t_format_all [label="format-all"];
+    t_format_check_all [label="format-check-all"];
+    t_analyze [label="analyze"];
+    t_analyze_ct [label="analyze-clang-tidy"];
+    t_analyze_cpp [label="analyze-cppcheck"];
+    t_analyze_iwyu [label="analyze-iwyu"];
+    t_analyze_clazy [label="analyze-clazy"];
+    t_ctest [label="CTest enabled\n(BUILD_TESTING, dashboards)"];
+    t_boilerplate_tests [label="boilerplate_tests"];
+    t_boilerplate_check [label="boilerplate_check"];
+    t_check [label="check"];
+    t_prop_agg [label="boilerplate_property_tests"];
+    t_prop_check [label="property-check"];
+    t_fuzzers [label="boilerplate_fuzzers"];
+    t_fuzzsmoke [label="fuzz-smoke"];
+    t_fuzztests [label="boilerplate_fuzztests"];
+    t_fuzzruns [label="fuzz_<target>*\n(run targets)"];
+    t_coverage [label="coverage-report"];
+    t_docs [label="docs"];
+    t_pkg_targets [label="package / package_source\n(+ CPack generator targets)"];
+    t_repro [label="BOILERPLATE_REPRODUCIBLE=ON\nSOURCE_DATE_EPOCH wiring"];
+    t_build_info [label="boilerplate_build_info\ninterface target"];
+    t_build_info_files [label="generated/boilerplate/build_info.hpp\nbuild-info-<config>.json"];
+    t_diag [label="boilerplate_config"];
+    t_cuda_lang [label="CUDA language enabled\nCMAKE_CUDA_* cache"];
+    t_web [label="web-dist"];
+  }
+
+  // Inheritance / composition edges
+  edge [color="#2b6cb0", penwidth=1.4];
+  full -> developer [label="inherits"];
+  full -> quality [label="inherits"];
+  full -> docs [label="inherits"];
+  full -> distribution [label="inherits"];
+
+  developer -> compile_commands [label="inherits"];
+  developer -> compiler_cache [label="inherits"];
+  developer -> formatting [label="inherits"];
+  developer -> static_analysis [label="inherits"];
+  developer -> testing [label="inherits"];
+  developer -> build_info [label="inherits"];
+  developer -> diagnostics [label="inherits"];
+
+  quality -> testing [label="inherits"];
+  quality -> property_testing [label="inherits"];
+  quality -> fuzzing [label="inherits"];
+  quality -> static_analysis [label="inherits"];
+
+  distribution -> build_info [label="inherits"];
+  distribution -> reproducible_build [label="inherits"];
+  distribution -> packaging [label="inherits"];
+  distribution -> diagnostics [label="inherits"];
+
+  ci -> compile_commands [label="inherits"];
+  ci -> testing [label="inherits"];
+  ci -> static_analysis [label="inherits"];
+  ci -> build_info [label="inherits"];
+  ci -> diagnostics [label="inherits"];
+
+  property_testing -> testing [label="inherits"];
+  fuzzing -> testing [label="inherits"];
+  coverage_report -> testing [label="inherits"];
+
+  // Capability -> hook edges
+  edge [color="#dd6b20", style=dashed, penwidth=1.2];
+  compile_commands -> h_compile;
+  compiler_cache -> h_cache;
+  formatting -> h_format;
+  static_analysis -> h_sa_cfg;
+  static_analysis -> h_sa_fin;
+  testing -> h_test_cfg;
+  testing -> h_test_fin;
+  property_testing -> h_prop;
+  fuzzing -> h_fuzz;
+  coverage_report -> h_cov;
+  docs -> h_docs;
+  packaging -> h_pkg;
+  reproducible_build -> h_repr;
+  build_info -> h_info;
+  diagnostics -> h_diag;
+  cuda -> h_cuda;
+  web_deployment -> h_web;
+
+  // Hook -> output edges
+  edge [color="#6b46c1", style=solid, penwidth=1.2];
+  h_compile -> t_compile_json [label="sets"];
+  h_cache -> t_compiler_launcher [label="sets"];
+
+  h_format -> t_format;
+  h_format -> t_format_check;
+  h_format -> t_format_cmake;
+  h_format -> t_format_cmake_check;
+  h_format -> t_format_all;
+  h_format -> t_format_check_all;
+
+  h_sa_cfg -> t_compile_json [label="forces export"];
+  h_sa_fin -> t_analyze;
+  h_sa_fin -> t_analyze_ct;
+  h_sa_fin -> t_analyze_cpp;
+  h_sa_fin -> t_analyze_iwyu;
+  h_sa_fin -> t_analyze_clazy;
+
+  h_test_cfg -> t_ctest [label="include(CTest)"];
+  h_test_fin -> t_boilerplate_tests;
+  h_test_fin -> t_boilerplate_check;
+  h_test_fin -> t_check;
+
+  h_prop -> t_prop_agg;
+  h_prop -> t_prop_check;
+
+  h_fuzz -> t_fuzzers;
+  h_fuzz -> t_fuzzsmoke;
+  h_fuzz -> t_fuzztests;
+  h_fuzz -> t_fuzzruns;
+
+  h_cov -> t_coverage;
+  h_docs -> t_docs;
+  h_pkg -> t_pkg_targets;
+  h_repr -> t_repro [label="sets"];
+  h_info -> t_build_info;
+  h_info -> t_build_info_files;
+  h_diag -> t_diag;
+  h_cuda -> t_cuda_lang [label="sets"];
+  h_web -> t_web;
+
+  // Some target aggregation relationships
+  edge [color="#805ad5", penwidth=1.0, style=dotted, constraint=false];
+  t_format_all -> t_format;
+  t_format_all -> t_format_cmake;
+  t_format_check_all -> t_format_check;
+  t_format_check_all -> t_format_cmake_check;
+  t_analyze -> t_analyze_ct;
+  t_analyze -> t_analyze_cpp;
+  t_analyze -> t_analyze_iwyu;
+  t_analyze -> t_analyze_clazy;
+  t_boilerplate_check -> t_boilerplate_tests;
+  t_check -> t_boilerplate_check;
+  t_prop_check -> t_prop_agg;
+  t_fuzzsmoke -> t_fuzzers;
+  t_coverage -> t_boilerplate_tests;
+
+  // Keep some ordering stable
+  {rank=same; developer; quality; distribution; ci;}
+  {rank=same; compile_commands; compiler_cache; formatting; static_analysis; testing; property_testing; fuzzing; coverage_report; docs; packaging; reproducible_build; build_info; diagnostics; cuda; web_deployment; project_minimal;}
+}

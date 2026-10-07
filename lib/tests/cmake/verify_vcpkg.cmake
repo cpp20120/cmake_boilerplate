@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.26)
 if(NOT CHECK_BINARY)
   message(FATAL_ERROR "Pass -DCHECK_BINARY=<temporary build directory>")
 endif()
-include("${CMAKE_CURRENT_LIST_DIR}/../../cmake/VcpkgPackaging.cmake")
+include("${CMAKE_CURRENT_LIST_DIR}/../../cmake/packaging/VcpkgPackaging.cmake")
 set(_ports "${CHECK_BINARY}/ports")
 boilerplate_vcpkg_port(local-example VERSION 1.2.3
   DESCRIPTION "A \"quoted\" description\nwith a newline"
@@ -29,7 +29,7 @@ if(NOT _portfile MATCHES "vcpkg_extract_source_archive" OR
 endif()
 # Invalid hashes must fail at configure time, before producing a broken port.
 file(WRITE "${CHECK_BINARY}/invalid.cmake"
-  "include(\"${CMAKE_CURRENT_LIST_DIR}/../../cmake/VcpkgPackaging.cmake\")\nboilerplate_vcpkg_port(bad VERSION 1 URL https://example.invalid/a SHA512 0 LICENSE_FILE LICENSE PACKAGES bad)\n")
+  "include(\"${CMAKE_CURRENT_LIST_DIR}/../../cmake/packaging/VcpkgPackaging.cmake\")\nboilerplate_vcpkg_port(bad VERSION 1 URL https://example.invalid/a SHA512 0 LICENSE_FILE LICENSE PACKAGES bad)\n")
 execute_process(COMMAND "${CMAKE_COMMAND}" -P "${CHECK_BINARY}/invalid.cmake"
   RESULT_VARIABLE _result OUTPUT_VARIABLE _out ERROR_VARIABLE _err)
 if(_result EQUAL 0 OR NOT _err MATCHES "128-digit SHA512")

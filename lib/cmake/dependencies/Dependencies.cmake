@@ -278,7 +278,7 @@ function(boilerplate_add_google_comparison name)
       "-DBASELINE=${ARG_BASELINE}"
       "-DCANDIDATE=${ARG_CANDIDATE}"
       "-DMAX_REGRESSION_PERCENT=${ARG_MAX_REGRESSION_PERCENT}"
-      -P "${CMAKE_CURRENT_FUNCTION_LIST_DIR}/GoogleBenchmarkCompare.cmake"
+      -P "${CMAKE_CURRENT_FUNCTION_LIST_DIR}/../benchmark/GoogleBenchmarkCompare.cmake"
     USES_TERMINAL VERBATIM)
 endfunction()
 

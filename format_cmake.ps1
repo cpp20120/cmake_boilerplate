@@ -21,6 +21,12 @@ else {
     Where-Object { $_.FullName -replace '[\\/]', '/' -notmatch "[\\/]($excludeRegex)[\\/]" }
 }
 
+# This source directory deliberately shares the name of an excluded build tree.
+$moduleBuildDir = Join-Path $PSScriptRoot 'lib/cmake/build'
+if (Test-Path -LiteralPath $moduleBuildDir) {
+    $files = @($files) + @(Get-ChildItem -LiteralPath $moduleBuildDir -File -Recurse -Filter '*.cmake')
+}
+
 if ($files.Count -gt 0) {
     cmake-format --version > $null
 

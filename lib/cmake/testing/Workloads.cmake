@@ -441,7 +441,7 @@ function(boilerplate_pgo_workload target)
       set(_merge ${CMAKE_COMMAND} "-DPROFILE_DIR=${_pgo_dir}"
         "-DPROFILE_OUTPUT=${BOILERPLATE_PGO_MERGED_PROFILE}"
         "-DPROFDATA=${BOILERPLATE_LLVM_PROFDATA}"
-        -P "${CMAKE_CURRENT_FUNCTION_LIST_DIR}/MergeProfiles.cmake")
+        -P "${CMAKE_CURRENT_FUNCTION_LIST_DIR}/../benchmark/MergeProfiles.cmake")
       add_custom_target(boilerplate_pgo_merge_only COMMAND ${_merge} USES_TERMINAL VERBATIM)
       add_custom_target(boilerplate_pgo_merge COMMAND ${_merge}
         DEPENDS boilerplate_pgo_train USES_TERMINAL VERBATIM)
@@ -477,7 +477,7 @@ function(boilerplate_pgo_workload target)
   set(_config "${CMAKE_CURRENT_BINARY_DIR}/scenarios/$<CONFIG>/${_workload}.cmake")
   file(GENERATE OUTPUT "${_config}" CONTENT "${_content}")
   add_custom_target(${_workload} COMMAND ${CMAKE_COMMAND} "-DRUN_CONFIG=${_config}"
-    -P "${CMAKE_CURRENT_FUNCTION_LIST_DIR}/RunWorkload.cmake"
+    -P "${CMAKE_CURRENT_FUNCTION_LIST_DIR}/../benchmark/RunWorkload.cmake"
     DEPENDS ${target} USES_TERMINAL VERBATIM)
   # Training order is deterministic even with a parallel build.
   if(_count GREATER 0)

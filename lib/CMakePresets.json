@@ -6,6 +6,6 @@
     "patch": 0
   },
   "include": [
-    "cmake/LibraryPresets.json"
+    "cmake/build/LibraryPresets.json"
   ]
 }

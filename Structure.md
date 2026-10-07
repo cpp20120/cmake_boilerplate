@@ -21,15 +21,14 @@
 │   ├── cmake/                     # independently reusable core; no host/app includes
 │   │   ├── Bootstrap.cmake
 │   │   ├── Boilerplate.cmake
-│   │   ├── Artifacts.cmake        # role registry/typed-link constraints
-│   │   ├── Library.cmake
-│   │   ├── ProjectCapabilities.cmake
-│   │   ├── TargetPolicies.cmake
-│   │   ├── RuntimePolicies.cmake  # target tuning policies, not runtime artifacts
-│   │   ├── Shaders.cmake
-│   │   ├── Harness.cmake
-│   │   ├── project/
-│   │   └── ...
+│   │   ├── build/                # profiles, target policies, artifact roles, matrix
+│   │   ├── testing/              # CTest, fuzzing, coverage, workload declarations
+│   │   ├── benchmark/            # process harness, scenarios, comparison, PGO runner
+│   │   ├── packaging/            # library exports, runtime delivery, CPack, vcpkg ports
+│   │   ├── dependencies/         # providers and vcpkg discovery
+│   │   ├── platforms/            # runtime, CUDA, Qt, graphics/shader policies
+│   │   ├── project/              # lifecycle, developer tools, generated metadata
+│   │   └── docs/                 # capability, CUDA and delivery guides
 │   ├── library1/
 │   ├── library2/
 │   ├── bench/

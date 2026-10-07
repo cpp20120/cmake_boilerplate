@@ -1,5 +1,5 @@
 include_guard(GLOBAL)
-include("${CMAKE_CURRENT_LIST_DIR}/VcpkgDiscovery.cmake")
+include("${CMAKE_CURRENT_LIST_DIR}/dependencies/VcpkgDiscovery.cmake")
 
 # Pre-project bootstrap. Include this module before project() when a dependency
 # provider needs to select a toolchain (notably vcpkg). Ordinary/system builds

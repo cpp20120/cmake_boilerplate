@@ -85,7 +85,7 @@ there is no separate dependency graph or custom package manager.
 
 ## Project capabilities and lifecycle
 
-The `cuda` project capability enables CUDA; [CUDA target policies](cmake/Cuda.md)
+The `cuda` project capability enables CUDA; [CUDA target policies](cmake/docs/Cuda.md)
 provide `cuda`, `cuda-debug`, `cuda-profiled`, `cuda-fast-math` and `runtime-cuda`.
 
 The same reusable `cmake/` tree now covers whole-project concerns without turning them
@@ -363,14 +363,12 @@ Source-aware mechanics stay explicit rather than becoming fake booleans. Use
 use Qt's native generated deployment script. `unity` remains an ordinary target
 policy because it needs no project-specific input.
 
-## General Python process harness
+## General CMake process harness
 
-`Scenarios.cmake` remains a zero-Python lightweight runner suitable for smoke tests,
-PGO registration and simple named workloads. More serious benchmark/stress campaigns
-use the optional Python harness under `cmake/harness/`: CMake owns target construction and
-passes resolved build-policy metadata; Python owns process lifecycle, CPU affinity,
-randomized rounds, command/provenance logs, JSON parsing, statistics and optional
-Linux `perf stat` counters.
+`benchmark/Scenarios.cmake` provides lightweight smoke tests, PGO registration and
+named workloads. `benchmark/Harness.cmake` adds case matrices, CPU affinity,
+randomized rounds, provenance, JSON metrics and optional Linux `perf stat` counters.
+Both runners execute through CMake without a Python runtime.
 
 ```cmake
 boilerplate_add_harness(runtime_matrix
@@ -385,11 +383,8 @@ boilerplate_add_harness(runtime_matrix
 The cases JSON contains project semantics (`scenario`, workers, task counts encoded
 as executable arguments); the harness itself knows nothing about DAGs, HTTP, shards,
 frames or allocators. Running `run_runtime_matrix` creates a self-contained result
-directory with `manifest.json`, `commands.json`, `runs.jsonl`, `summary.json`, and
-stdout/stderr logs. The Python package also exposes `CommandRunner`, `digest`,
-`physical_cpus`, `parse_perf_stat`, and `save_json` so project-specific research
-scripts can progressively drop their duplicated plumbing without being forced into
-the declarative case runner. See `cmake/harness/README.md`.
+directory with provenance, command records, metric summaries and stdout/stderr logs.
+See the [harness guide](cmake/benchmark/README.md).
 
 ## Benchmarks and named scenarios
 
@@ -480,21 +475,21 @@ an explicit `run_<name>`. Instrument linked code when seeking coverage there.
 
 ## File map
 
-| Module | Responsibility |
+The stable entry points are `cmake/Bootstrap.cmake` and `cmake/Boilerplate.cmake`.
+Copy the whole `cmake/` tree, including its subdirectories.
+
+| Directory under `cmake/` | Responsibility |
 | --- | --- |
-| `BuildProfiles.cmake` | Named profiles and compiler/mode validation |
-| `TargetPolicies.cmake` | Named target-policy composition, inheritance, overrides and domain hooks |
-| `RuntimePolicies.cmake`, `QtPolicies.cmake`, `GraphicsPolicies.cmake` | Built-in runtime archetypes and optional Qt/graphics capabilities |
-| `ProjectOptions.cmake`, `TargetOptions.cmake` | Target-scoped language, warnings, tools, hardening, coverage, optimizer/sanitizer/PGO flags |
-| `Library.cmake`, `LibraryConfig.cmake.in` | Library variants, export headers, relocatable CMake packages |
-| `Dependencies.cmake` | Optional Google packages, allocator adapters, ExternalProject, upstream comparison |
-| `Workloads.cmake` | Custom/Google benchmarks, plain/Google tests, fuzzers, PGO |
-| `Scenarios.cmake`, `RunWorkload.cmake` | Lightweight CMake-only named scenarios and PGO/smoke process runner |
-| `Harness.cmake`, `cmake/harness/` | Optional Python matrix runner, provenance, affinity, statistics and perf counters |
-| `Bootstrap.cmake`, `ProjectCapabilities.cmake`, `project/*.cmake` | Pre-project bootstrap plus project lifecycle/tooling capabilities |
-| `BuildMatrix.cmake`, `BuildInfo.cmake` | Preset sequencing and compatibility include for build metadata |
-| `CompareResults.cmake` | Matching process-result median comparison |
-| `LibraryPresets.json` | Shared standalone/root library presets and workflows |
+| `build/` | Profiles, target policies/options, artifact roles, control-flow checks, build matrix and shared presets |
+| `testing/` | Workload target registration, CTest, property tests, fuzzing and coverage |
+| `benchmark/` | Harness, scenarios, process execution, result comparison and PGO profile merging |
+| `packaging/` | Library variants/exports, config templates, vcpkg ports, CPack and delivery helpers |
+| `dependencies/` | Dependency providers, allocators, ExternalProject and vcpkg discovery |
+| `platforms/` | Runtime, CUDA, Qt, graphics and shader policies |
+| `project/` | Lifecycle, developer tools, formatting, analysis, documentation and metadata |
+| `docs/` | Capability, CUDA and delivery guides |
+
+See the [module layout and migration notes](cmake/README.md) for direct script paths.
 
 ## Publishing libraries through vcpkg
 

@@ -116,7 +116,7 @@ execute_process(COMMAND "${CMAKE_COMMAND}" -E env --unset=VCPKG_ROOT
   --unset=CMAKE_TOOLCHAIN_FILE --unset=VSINSTALLDIR --unset=HOME
   --unset=USERPROFILE --unset=LOCALAPPDATA "PATH="
   "${CMAKE_COMMAND}" "-DSOURCE_DIR=${_fixture}/matrix" -DPRESETS=vcpkg-auto
-  -DRUN_TESTS=OFF -DINSTALL_ARTIFACTS=OFF -P "${_modules}/BuildMatrix.cmake"
+  -DRUN_TESTS=OFF -DINSTALL_ARTIFACTS=OFF -P "${_modules}/build/BuildMatrix.cmake"
   RESULT_VARIABLE _result OUTPUT_VARIABLE _output ERROR_VARIABLE _error)
 if(NOT _result EQUAL 0)
   message(FATAL_ERROR "Matrix discovery failed: ${_output}${_error}")
