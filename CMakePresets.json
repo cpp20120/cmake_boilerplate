@@ -505,6 +505,40 @@
         "BOILERPLATE_BUILD_FUZZTESTS": "ON",
         "BOILERPLATE_FUZZTEST_MODE": "fuzzing"
       }
+    },
+    {
+      "name": "vcpkg-linux-shared",
+      "inherits": "vcpkg-release",
+      "description": "Linux with shared vcpkg dependencies using the project overlay triplet",
+      "cacheVariables": {
+        "VCPKG_TARGET_TRIPLET": "x64-linux-boilerplate-shared"
+      }
+    },
+    {
+      "name": "vcpkg-windows-shared",
+      "inherits": "vcpkg-windows-release",
+      "description": "windows x64 with shared vcpkg dependencies using the project overlay triplet",
+      "cacheVariables": {
+        "VCPKG_TARGET_TRIPLET": "x64-windows-boilerplate-shared"
+      }
+    },
+    {
+      "name": "vcpkg-macos-x64-shared",
+      "inherits": "vcpkg-macos-release",
+      "description": "macos x64 with shared vcpkg dependencies using the project overlay triplet",
+      "cacheVariables": {
+        "VCPKG_TARGET_TRIPLET": "x64-osx-boilerplate-shared",
+        "CMAKE_OSX_ARCHITECTURES": "x86_64"
+      }
+    },
+    {
+      "name": "vcpkg-macos-arm64-shared",
+      "inherits": "vcpkg-macos-release",
+      "description": "macos arm64 with shared vcpkg dependencies using the project overlay triplet",
+      "cacheVariables": {
+        "VCPKG_TARGET_TRIPLET": "arm64-osx-boilerplate-shared",
+        "CMAKE_OSX_ARCHITECTURES": "arm64"
+      }
     }
   ],
   "buildPresets": [
@@ -699,6 +733,22 @@
     {
       "name": "app-vcpkg-all",
       "configurePreset": "app-vcpkg-all"
+    },
+    {
+      "name": "vcpkg-linux-shared",
+      "configurePreset": "vcpkg-linux-shared"
+    },
+    {
+      "name": "vcpkg-windows-shared",
+      "configurePreset": "vcpkg-windows-shared"
+    },
+    {
+      "name": "vcpkg-macos-x64-shared",
+      "configurePreset": "vcpkg-macos-x64-shared"
+    },
+    {
+      "name": "vcpkg-macos-arm64-shared",
+      "configurePreset": "vcpkg-macos-arm64-shared"
     }
   ],
   "testPresets": [

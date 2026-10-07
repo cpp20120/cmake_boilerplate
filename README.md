@@ -616,3 +616,20 @@ The library boilerplate can generate local or archive-backed overlay ports with
 `boilerplate_vcpkg_port()`, including triplet-controlled shared/static builds and
 CMake package fixups. See [vcpkg packaging](lib/README.md#publishing-libraries-through-vcpkg)
 for the API and ready-to-install `library1` / `library2` examples.
+
+Project-owned overlays live in `vcpkg/ports/` and `vcpkg/triplets/`, registered by
+`vcpkg-configuration.json`. Existing vcpkg presets pick them up through the root
+manifest; `vcpkg-linux-shared` demonstrates the custom Linux shared triplet.
+See [the overlay layout and commands](vcpkg/README.md).
+
+### Prepare a development host
+
+Use `./setup-host.sh --install` on Linux/macOS or
+`.\setup-host.ps1 --install` on Windows to install the build, editor, analysis,
+formatting, documentation and packaging tools plus vcpkg. Activate
+`out/host-tools/env.sh` (Unix) or `out/host-tools/env.ps1` (PowerShell) afterwards.
+The installers use only Bash/PowerShell; there is no Python, pip or venv bootstrap.
+`--dry-run` shows commands; `--check` reports missing native tools.
+`--check-harness` separately checks an existing Python for the optional harness.
+See [host setup](scripts/README.md) for package managers, the tool matrix and
+separately provisioned Python/SDK workflows.

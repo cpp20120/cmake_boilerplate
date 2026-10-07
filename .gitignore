@@ -61,7 +61,8 @@ build/
 out/
 
 # Local dependency-manager checkouts and installed packages
-vcpkg/
+external/vcpkg/
+third_party/vcpkg/
 vcpkg_installed/
 
 # Coverage and PGO output

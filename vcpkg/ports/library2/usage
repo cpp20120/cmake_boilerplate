@@ -1,0 +1,4 @@
+library2 provides CMake targets:
+
+    find_package(library2 CONFIG REQUIRED)
+    target_link_libraries(main PRIVATE library2::library2)

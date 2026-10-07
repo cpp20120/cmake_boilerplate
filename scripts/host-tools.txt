@@ -1,0 +1,26 @@
+# label|command|apt|dnf|pacman|brew|winget
+Git|git|git|git|git|git|Git.Git
+CMake|cmake|cmake|cmake|cmake|cmake|Kitware.CMake
+Ninja|ninja|ninja-build|ninja-build|ninja|ninja|Ninja-build.Ninja
+Clang|clang++|clang|clang|clang|llvm|LLVM.LLVM
+clangd|clangd|clangd|clang-tools-extra|clang|llvm|LLVM.clangd
+clang-tidy|clang-tidy|clang-tidy|clang-tools-extra|clang|llvm|LLVM.LLVM
+clang-format|clang-format|clang-format|clang-tools-extra|clang|llvm|LLVM.LLVM
+LLD|ld.lld|lld|lld|lld|lld|LLVM.LLVM
+LLVM coverage|llvm-cov|llvm|llvm|llvm|llvm|LLVM.LLVM
+LLVM profiles|llvm-profdata|llvm|llvm|llvm|llvm|LLVM.LLVM
+ccache|ccache|ccache|ccache|ccache|ccache|Ccache.Ccache
+sccache|sccache|sccache|sccache|sccache|sccache|Mozilla.sccache
+cppcheck|cppcheck|cppcheck|cppcheck|cppcheck|cppcheck|Cppcheck.Cppcheck
+Clazy|clazy-standalone|clazy|clazy|clazy|clazy|-
+lcov|lcov|lcov|lcov|lcov|lcov|-
+genhtml|genhtml|lcov|lcov|lcov|lcov|-
+Doxygen|doxygen|doxygen|doxygen|doxygen|doxygen|DimitriVanHeesch.Doxygen
+Graphviz|dot|graphviz|graphviz|graphviz|graphviz|Graphviz.Graphviz
+glslc|glslc|glslc|glslc|shaderc|shaderc|KhronosGroup.VulkanSDK
+glslang|glslangValidator|glslang-tools|glslang|glslang|glslang|KhronosGroup.VulkanSDK
+patchelf|patchelf|patchelf|patchelf|patchelf|-|-
+RPM packaging|rpmbuild|rpm|rpm-build|rpm-tools|-|-
+NSIS packaging|makensis|-|-|-|-|NSIS.NSIS
+AFL++|afl-fuzz|afl++|afl++|afl++|afl++|-
+honggfuzz|honggfuzz|honggfuzz|honggfuzz|honggfuzz|honggfuzz|-
