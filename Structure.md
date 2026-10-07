@@ -28,7 +28,7 @@
 │   │   ├── packaging/            # library exports, runtime delivery, CPack, vcpkg ports
 │   │   ├── dependencies/         # providers and vcpkg discovery
 │   │   ├── platforms/            # runtime, CUDA, Qt, graphics/shader policies
-│   │   ├── project/              # lifecycle, developer tools, generated metadata
+│   │   ├── project/              # lifecycle, components, developer tools, generated metadata
 │   │   └── docs/                 # capability, CUDA and delivery guides
 │   ├── library1/
 │   ├── library2/
@@ -52,3 +52,22 @@ PLUGIN` is an extension-set edge; `HOST -> APPLICATION` and `HOST -> PLUGIN` are
 execution-placement edges. Plugins without an explicit host inherit the application's
 hosts (co-hosted/in-process by topology). Explicit plugin hosts override that default
 placement and are pulled into the application's deployment closure automatically.
+
+## Scale model
+
+One CMake configure owns one boilerplate project/workspace lifecycle. Large repositories
+are split into optional registered components, and each component owns ordinary CMake
+targets. This matches the practical shape of large CMake trees without multiplying
+capability/finalize contexts:
+
+```text
+workspace (capabilities + configure/finalize)
+├── component/repository subtree
+│   └── targets (roles + policies)
+├── component/repository subtree
+│   └── targets (roles + policies)
+└── ...
+```
+
+Components can also be configured standalone by becoming the top-level project in that
+separate build tree.

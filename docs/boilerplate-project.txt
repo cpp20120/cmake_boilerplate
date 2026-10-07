@@ -1,0 +1,17 @@
+Boilerplate project summary
+  project: TEST_PROJECT 1.0.0
+  mode: top-level
+  capabilities: developer;docs
+  capabilities (expanded): compile-commands;compiler-cache;formatting;static-analysis;testing;build-info;diagnostics;developer;docs
+  generator: Ninja
+  compiler: Clang 22.1.8
+  system: Linux x86_64
+  dependency provider: system
+  targets:
+    - boilerplate_build_info [INTERFACE_LIBRARY] role=UNCLASSIFIED policies=<project-defaults>
+    - library1_shared [SHARED_LIBRARY] role=LIBRARY policies=example-library1;example-library1-shared
+    - library2_shared [SHARED_LIBRARY] role=LIBRARY policies=example-library2;example-library2-shared
+    - library1_shared_smoke [EXECUTABLE] role=EXECUTABLE policies=<project-defaults>
+    - library2_shared_smoke [EXECUTABLE] role=EXECUTABLE policies=<project-defaults>
+    - TEST_PROJECT [EXECUTABLE] role=EXECUTABLE policies=<project-defaults>
+    - application_checks [EXECUTABLE] role=EXECUTABLE policies=<project-defaults>

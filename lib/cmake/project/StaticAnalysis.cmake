@@ -9,7 +9,7 @@ function(_boilerplate_project_static_analysis_finalize)
   # A source-tree glob also includes disabled benchmarks and standalone test
   # consumers, which have no compile command or dependencies in this build.
   # Analyze the intersection with sources of the configured targets.
-  boilerplate_collect_targets("${CMAKE_SOURCE_DIR}" _targets)
+  boilerplate_collect_project_targets(_targets)
   set(_compiled_sources)
   foreach(_target IN LISTS _targets)
     get_target_property(_target_sources ${_target} SOURCES)

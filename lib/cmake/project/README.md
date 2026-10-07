@@ -57,6 +57,37 @@ Capabilities are named compositions, not mutually-exclusive project profiles. De
 project-local ones with `boilerplate_define_project_capability(... INHERITS ...
 CONFIGURE_HOOKS ... FINALIZE_HOOKS ...)`.
 
+
+## Components and large workspaces
+
+`boilerplate_project()` remains intentionally single-instance for one CMake configure.
+Large source trees scale below it with components rather than by creating nested project
+lifecycles:
+
+```text
+workspace lifecycle
+├── component A
+│   ├── target
+│   └── target
+├── component B
+│   └── target
+└── unscoped framework/workspace targets
+```
+
+Use `boilerplate_add_component(name SOURCE_DIR ... [BINARY_DIR ...] [FOLDER ...]
+[EXCLUDE_FROM_ALL] [SYSTEM])` as an `add_subdirectory()` replacement when the root wants
+to name and group a subtree. `boilerplate_component(name ...)` registers the current
+directory instead and is useful when the same subtree can be configured standalone.
+Framework artifact constructors automatically call `boilerplate_register_target()`; raw
+CMake targets only need explicit registration when they should belong to a component.
+Project-wide workflows still inspect unregistered raw targets. Finalization freezes the
+semantic target graph and caches the complete recursive target walk, so multiple finalize
+hooks do not repeatedly traverse a large directory tree.
+
+The registry is intentionally metadata, not a second dependency graph. Link/dependency
+edges remain ordinary CMake target edges, target policies remain target-local, and project
+capabilities remain workspace-wide. This avoids a `ProjectContext` cross product at scale.
+
 ## Dependency provider
 
 [Capability fixes and checks](../docs/CapabilityChecks.md) documents the tool,

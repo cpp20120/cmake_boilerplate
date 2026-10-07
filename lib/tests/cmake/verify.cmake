@@ -75,6 +75,31 @@ run("${CMAKE_COMMAND}" -S "${CMAKE_CURRENT_LIST_DIR}/consumer" -B "${CHECK_BINAR
 run("${CMAKE_COMMAND}" --build "${CHECK_BINARY}/consumer" --parallel 2)
 run("${CMAKE_CTEST_COMMAND}" --test-dir "${CHECK_BINARY}/consumer" --output-on-failure)
 
+# Workspace-scale component model: one lifecycle owns multiple component
+# subtrees, while an individual component remains directly configurable.
+run("${CMAKE_COMMAND}" -S "${CMAKE_CURRENT_LIST_DIR}/components"
+  -B "${CHECK_BINARY}/components" -G Ninja "-DTOOLKIT_DIR=${_toolkit}" ${_compiler_args}
+  -DBOILERPLATE_COMPILER_CACHE=none)
+run("${CMAKE_COMMAND}" --build "${CHECK_BINARY}/components" --parallel 2)
+run("${CHECK_BINARY}/components/app/component_app")
+file(READ "${CHECK_BINARY}/components/boilerplate-project.txt" _component_summary)
+foreach(_expected IN ITEMS "core: targets=" "app: targets=" "component=core" "component=app")
+  string(FIND "${_component_summary}" "${_expected}" _index)
+  if(_index LESS 0)
+    message(FATAL_ERROR "Workspace diagnostics lost '${_expected}': ${_component_summary}")
+  endif()
+endforeach()
+
+run("${CMAKE_COMMAND}" -S "${CMAKE_CURRENT_LIST_DIR}/components/core"
+  -B "${CHECK_BINARY}/component-standalone" -G Ninja "-DTOOLKIT_DIR=${_toolkit}" ${_compiler_args}
+  -DBOILERPLATE_COMPILER_CACHE=none)
+run("${CMAKE_COMMAND}" --build "${CHECK_BINARY}/component-standalone" --parallel 2)
+file(READ "${CHECK_BINARY}/component-standalone/boilerplate-project.txt" _standalone_summary)
+string(FIND "${_standalone_summary}" "core: targets=" _standalone_component)
+if(_standalone_component LESS 0)
+  message(FATAL_ERROR "Standalone component did not register itself: ${_standalone_summary}")
+endif()
+
 # Configure-only PGO check: no fake profile is passed to a compiler.
 if(CHECK_CLANG)
   file(WRITE "${CHECK_BINARY}/dependency.profdata" "configure-only fixture")

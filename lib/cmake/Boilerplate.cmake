@@ -2,6 +2,7 @@
 include_guard(GLOBAL)
 include("${CMAKE_CURRENT_LIST_DIR}/platforms/Execution.cmake")
 include("${CMAKE_CURRENT_LIST_DIR}/build/BuildProfiles.cmake")
+include("${CMAKE_CURRENT_LIST_DIR}/project/Components.cmake")
 include("${CMAKE_CURRENT_LIST_DIR}/build/Artifacts.cmake")
 include("${CMAKE_CURRENT_LIST_DIR}/project/ProjectCapabilities.cmake")
 include("${CMAKE_CURRENT_LIST_DIR}/build/ProjectOptions.cmake")

@@ -69,14 +69,16 @@ are retained. Use fresh build trees when migrating from the older global flags.
 
 
 ```
-Project
-├─ Capabilities        -> project workflows/lifecycle
-└─ Targets
-   ├─ Library
-   ├─ Runtime
-   ├─ Application
-   │  └─ Host(s)
-   └─ Plugin(s)
+Workspace / project configure
+├─ Capabilities        -> one project-wide workflow/lifecycle
+├─ Components          -> optional scale boundary for source-tree ownership
+│  └─ Targets
+│     ├─ Library
+│     ├─ Runtime
+│     ├─ Application
+│     │  └─ Host(s)
+│     └─ Plugin(s)
+└─ Unscoped targets    -> small projects may skip components entirely
 
 Target
 └─ Policies            -> compile/link/build semantics
@@ -175,6 +177,7 @@ Pass `-DNAME=value` at configure time. Lists use semicolons; quote the whole arg
 | `BOILERPLATE_EMBEDDED_PROJECT_CAPABILITIES` | `project-minimal`; behavior under `add_subdirectory()` |
 | `BOILERPLATE_DEPENDENCY_PROVIDER` | `system`; `none|system|vcpkg|fetchcontent|cpm` bootstrap metadata/toolchain mode |
 | `BOILERPLATE_COMPILER_CACHE` | `auto`; `sccache|ccache|none` project launcher policy |
+| `BOILERPLATE_DIAGNOSTICS_VERBOSE` | OFF; keep configure output compact, full graph stays in `boilerplate-project.txt` / `boilerplate_config` |
 | `BUILD_DOCS`, `ENABLE_PACKAGING` | OFF; append `docs` / `packaging` project capabilities in this example root |
 | `BOILERPLATE_FETCH_DEPENDENCIES` | OFF; explicitly permit pinned FetchContent fallback |
 | `BOILERPLATE_PBT_BACKEND` | `rapidcheck`; property-testing backend |
@@ -204,8 +207,7 @@ the `vcpkg` executable in `PATH` (following symlinks), `vcpkg/` under `HOME`,
 Candidates must contain `scripts/buildsystems/vcpkg.cmake`; an invalid explicit
 root fails instead of silently selecting another installation. The selected root
 is printed during configuration. Nothing is downloaded by discovery itself.
-The Visual Studio `CMakeSettings.json` configurations use this same bootstrap;
-no machine-specific drive/path is required. Use a fresh build directory when
+Use a fresh build directory when
 switching an already cached toolchain.
 
 ## Project capabilities
@@ -248,6 +250,63 @@ is project lifecycle. `boilerplate_enable_qt_deployment(target)` attaches Qt's n
 script when available.
  PCH and shaders remain explicit source-aware helpers instead of artificial
 boolean capabilities; unity builds are a target policy.
+
+## Workspace components for large trees
+
+Components are an **optional grouping layer**, not another project lifecycle. A large
+monorepo still calls `boilerplate_project()` once, configures many component subtrees,
+and calls `boilerplate_finalize_project()` once. Small projects can keep ordinary
+`add_subdirectory()` and do not pay for or learn this layer.
+
+```cmake
+boilerplate_project(CAPABILITIES developer)
+
+boilerplate_add_component(core
+  SOURCE_DIR libs/core
+  FOLDER "components/core")
+boilerplate_add_component(network
+  SOURCE_DIR libs/network
+  FOLDER "components/network")
+boilerplate_add_component(server
+  SOURCE_DIR apps/server
+  FOLDER "components/apps/server")
+
+boilerplate_finalize_project()
+```
+
+Targets created by the framework inside a component are registered automatically and
+receive `BOILERPLATE_COMPONENT`. `FOLDER` supplies IDE grouping for Visual Studio and
+other folder-aware generators. `boilerplate_list_components()` and
+`boilerplate_component_targets()` expose the registry to diagnostics or project-local
+tooling. A raw `add_library()` / `add_executable()` remains an escape hatch; call
+`boilerplate_register_target(target [COMPONENT name])` when a raw target should join the
+component ownership registry. Project-wide finalizers still see the complete CMake graph,
+including unregistered escape-hatch targets; once finalization begins that graph is frozen
+and its recursive target walk is cached for subsequent analysis/diagnostic hooks.
+
+A component that must also build standalone owns a lifecycle **only when it is the CMake
+root**:
+
+```cmake
+cmake_minimum_required(VERSION 3.26)
+if(CMAKE_SOURCE_DIR STREQUAL CMAKE_CURRENT_SOURCE_DIR)
+  project(Storage VERSION 1.0 LANGUAGES CXX)
+  include(cmake/Boilerplate.cmake)
+  boilerplate_project(CAPABILITIES developer)
+  boilerplate_component(storage FOLDER "components/storage")
+endif()
+
+boilerplate_add_library(storage ...)
+
+if(CMAKE_SOURCE_DIR STREQUAL CMAKE_CURRENT_SOURCE_DIR)
+  boilerplate_finalize_project()
+endif()
+```
+
+When embedded through `boilerplate_add_component(storage SOURCE_DIR libs/storage)`, the
+parent lifecycle is reused and the component identity is inherited by the whole subtree.
+This keeps the scale model `one workspace lifecycle -> many components -> many targets`
+instead of creating a second capability/hook engine per directory.
 
 ## Per-target policies
 
@@ -659,8 +718,9 @@ is optional; no configure/build/test target requires a Docker daemon.
 ## Validation and platform limits
 
 `boilerplate_check_cmake` builds a differently named generic fixture, tests installed
-shared/static packages after relocation, checks late PGO source dependencies, and then
-runs the two intentionally different example-library package/relocation consumers.
+shared/static packages after relocation, checks late PGO source dependencies, configures
+a 128-component workspace regression, and then runs the two intentionally different
+example-library package/relocation consumers.
 `boilerplate_harness_checks` covers quoted arguments, environment, cwd, warmups,
 repetitions, JSON output, process failures and timeout propagation.
 Linux/Clang/GCC are exercised locally. Windows/macOS paths and custom multi-config

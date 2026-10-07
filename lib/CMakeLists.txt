@@ -16,9 +16,13 @@ if(NOT _boilerplate_project_configured)
     TOP_LEVEL_CAPABILITIES compile-commands testing build-info diagnostics
     EMBEDDED_CAPABILITIES project-minimal)
 endif()
+if(CMAKE_SOURCE_DIR STREQUAL CMAKE_CURRENT_SOURCE_DIR)
+  boilerplate_component(libraries FOLDER "components/libraries"
+    DESCRIPTION "Standalone reusable library workspace")
+endif()
 
-add_subdirectory(library1)
-add_subdirectory(library2)
+boilerplate_add_component(library1 SOURCE_DIR library1 FOLDER "components/libraries/library1")
+boilerplate_add_component(library2 SOURCE_DIR library2 FOLDER "components/libraries/library2")
 
 option(BOILERPLATE_GENERATE_VCPKG_PORTS "Generate example vcpkg overlay ports" OFF)
 if(BOILERPLATE_GENERATE_VCPKG_PORTS)
@@ -95,6 +99,8 @@ if(_boilerplate_ninja)
       -P "${CMAKE_CURRENT_SOURCE_DIR}/tests/cmake/verify_vcpkg.cmake"
     COMMAND ${CMAKE_COMMAND} "-DCHECK_BINARY=${CMAKE_BINARY_DIR}/cmake-check"
       -P "${CMAKE_CURRENT_SOURCE_DIR}/tests/cmake/verify_bootstrap.cmake"
+    COMMAND ${CMAKE_COMMAND} "-DCHECK_BINARY=${CMAKE_BINARY_DIR}/component-scale-check"
+      -P "${CMAKE_CURRENT_SOURCE_DIR}/tests/cmake/verify_components.cmake"
     COMMAND ${CMAKE_COMMAND} "-DCHECK_BINARY=${CMAKE_BINARY_DIR}/cmake-check"
       "-DCHECK_COMPILER=${CMAKE_CXX_COMPILER}" ${_check_clang}
       -P "${CMAKE_CURRENT_SOURCE_DIR}/tests/cmake/verify.cmake"

@@ -137,6 +137,20 @@ component-aware CPack packaging (`Runtime`, `Development`, `Documentation`). A t
 still opt back out with `POLICIES minimal`. Coverage keeps instrumentation (`coverage`
 target policy) separate from report generation (`coverage-report` project capability).
 
+## Components and workspace scale
+
+For large trees, keep one `boilerplate_project()` / `boilerplate_finalize_project()`
+lifecycle and group subtrees with `boilerplate_add_component()`. The grouping is optional:
+small library projects behave exactly as before. Targets created by the core helpers are
+registered automatically for component ownership. Analysis/diagnostics still inspect the
+complete CMake target graph; finalization freezes and caches that graph so multiple hooks
+do not repeatedly walk a hundred-directory build tree.
+
+A subtree that is also a standalone repository can call `boilerplate_component()` only in
+its top-level branch; when embedded, the parent's `boilerplate_add_component()` supplies
+the inherited component identity. Components do not own separate capabilities or target
+policy defaults.
+
 ## Target policies and composition
 
 `BOILERPLATE_PROFILE` remains a **project/configuration default** used by presets

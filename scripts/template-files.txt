@@ -96,6 +96,7 @@ lib/cmake/platforms/QtPolicies.cmake
 lib/cmake/platforms/RuntimePolicies.cmake
 lib/cmake/platforms/Shaders.cmake
 lib/cmake/project/BuildInfo.cmake
+lib/cmake/project/Components.cmake
 lib/cmake/project/Cuda.cmake
 lib/cmake/project/DeveloperTools.cmake
 lib/cmake/project/Diagnostics.cmake
@@ -120,6 +121,13 @@ lib/library2/cmake/Library2Config.cmake.in
 lib/library2/cmake/Policies.cmake
 lib/library2/include/include.hpp
 lib/library2/src/lib.cpp
+lib/tests/cmake/components/CMakeLists.txt
+lib/tests/cmake/components/app/CMakeLists.txt
+lib/tests/cmake/components/app/main.cpp
+lib/tests/cmake/components/core/CMakeLists.txt
+lib/tests/cmake/components/core/core.cpp
+lib/tests/cmake/components/core/include/core.hpp
+lib/tests/cmake/components/raw.cpp
 lib/tests/cmake/consumer/CMakeLists.txt
 lib/tests/cmake/control-flow/CMakeLists.txt
 lib/tests/cmake/control-flow/flow.cpp
@@ -166,6 +174,7 @@ lib/tests/cmake/shaders/shader.vert
 lib/tests/cmake/verify.cmake
 lib/tests/cmake/verify_bootstrap.cmake
 lib/tests/cmake/verify_capabilities.cmake
+lib/tests/cmake/verify_components.cmake
 lib/tests/cmake/verify_control_flow.cmake
 lib/tests/cmake/verify_cross.cmake
 lib/tests/cmake/verify_cuda.cmake
