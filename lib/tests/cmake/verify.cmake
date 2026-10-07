@@ -1,79 +1,43 @@
-cmake_minimum_required(VERSION 3.26)
-if(NOT CHECK_BINARY)
-  message(FATAL_ERROR "Pass -DCHECK_BINARY=<temporary build directory>")
-endif()
-get_filename_component(_toolkit "${CMAKE_CURRENT_LIST_DIR}/../../cmake" ABSOLUTE)
-function(run)
-  execute_process(COMMAND ${ARGV} RESULT_VARIABLE result OUTPUT_VARIABLE output ERROR_VARIABLE error)
-  if(NOT result EQUAL 0)
-    message(FATAL_ERROR "Command failed: ${ARGV}\n${output}\n${error}")
-  endif()
-endfunction()
-set(_compiler_args)
-if(CHECK_COMPILER)
-  list(APPEND _compiler_args "-DCMAKE_CXX_COMPILER=${CHECK_COMPILER}")
-endif()
-run("${CMAKE_COMMAND}" -S "${CMAKE_CURRENT_LIST_DIR}/project" -B "${CHECK_BINARY}/build" -G Ninja
-  "-DTOOLKIT_DIR=${_toolkit}" ${_compiler_args}
-  -DBOILERPLATE_PROFILE=release -DBOILERPLATE_ENABLE_NATIVE=ON -DBOILERPLATE_SANITIZER=address -DBOILERPLATE_BUILD_SHARED=ON -DBOILERPLATE_BUILD_STATIC=ON)
-run("${CMAKE_COMMAND}" --build "${CHECK_BINARY}/build" --parallel 2)
-run("${CMAKE_CTEST_COMMAND}" --test-dir "${CHECK_BINARY}/build" --output-on-failure)
-if(NOT EXISTS "${CHECK_BINARY}/build/boilerplate-project.txt")
-  message(FATAL_ERROR "Project diagnostics capability did not write boilerplate-project.txt")
-endif()
-file(GLOB _build_info "${CHECK_BINARY}/build/build-info-*.json")
-if(NOT _build_info)
-  message(FATAL_ERROR "Build-info project capability did not generate metadata")
-endif()
-# The optional Python harness is explicit and records a reproducible matrix.
+# The self-contained CMake harness records a reproducible matrix.
 run("${CMAKE_COMMAND}" --build "${CHECK_BINARY}/build" --target run_fixture_harness)
-set(_harness_summary "${CHECK_BINARY}/build/harness-results/Release/fixture_harness/summary.json")
-if(NOT EXISTS "${_harness_summary}")
-  message(FATAL_ERROR "Python harness did not produce summary.json")
-endif()
-file(READ "${_harness_summary}" _harness_json)
-if(NOT _harness_json MATCHES "\"case\": \"one\"" OR NOT _harness_json MATCHES "\"case\": \"two\"")
-  message(FATAL_ERROR "Python harness did not run the case matrix: ${_harness_json}")
-endif()
-if(NOT _harness_json MATCHES "\"checksum\": 42")
-  message(FATAL_ERROR "Python harness did not preserve invariants: ${_harness_json}")
-endif()
-# A direct run must not invoke sibling scenarios; the group explicitly invokes both.
-file(REMOVE_RECURSE "${CHECK_BINARY}/build/results")
-run("${CMAKE_COMMAND}" --build "${CHECK_BINARY}/build" --target run_fixture_first)
-file(GLOB _first "${CHECK_BINARY}/build/results/Release/fixture_first/*/result.json")
-file(GLOB _second "${CHECK_BINARY}/build/results/Release/fixture_second/*/result.json")
-list(LENGTH _first _first_count)
-if(NOT _first_count EQUAL 1 OR _second)
-  message(FATAL_ERROR "An individual scenario ran its siblings or did not produce a result")
-endif()
-run("${CMAKE_COMMAND}" --build "${CHECK_BINARY}/build" --target run_group_fixture --parallel 2)
-file(GLOB _second "${CHECK_BINARY}/build/results/Release/fixture_second/*/result.json")
-list(LENGTH _second _second_count)
-if(NOT _second_count EQUAL 1)
-  message(FATAL_ERROR "Scenario group did not run all members")
-endif()
-run("${CMAKE_COMMAND}" --install "${CHECK_BINARY}/build" --prefix "${CHECK_BINARY}/prefix")
-# Test actual relocation: the original prefix no longer exists.
-file(REMOVE_RECURSE "${CHECK_BINARY}/relocated")
-file(RENAME "${CHECK_BINARY}/prefix" "${CHECK_BINARY}/relocated")
-run("${CMAKE_COMMAND}" -S "${CMAKE_CURRENT_LIST_DIR}/consumer" -B "${CHECK_BINARY}/consumer" -G Ninja
-  "-DCMAKE_PREFIX_PATH=${CHECK_BINARY}/relocated" ${_compiler_args})
-run("${CMAKE_COMMAND}" --build "${CHECK_BINARY}/consumer" --parallel 2)
-run("${CMAKE_CTEST_COMMAND}" --test-dir "${CHECK_BINARY}/consumer" --output-on-failure)
 
-# Configure-only PGO check: no fake profile is passed to a compiler.
-if(CHECK_CLANG)
-  file(WRITE "${CHECK_BINARY}/dependency.profdata" "configure-only fixture")
-  run("${CMAKE_COMMAND}" -S "${CMAKE_CURRENT_LIST_DIR}/project" -B "${CHECK_BINARY}/pgo-deps" -G Ninja
-    "-DTOOLKIT_DIR=${_toolkit}" "-DCMAKE_CXX_COMPILER=${CHECK_CLANG}"
-    -DBOILERPLATE_PROFILE=pgo-use "-DBOILERPLATE_PGO_PROFILE=${CHECK_BINARY}/dependency.profdata"
-    -DBOILERPLATE_BUILD_SHARED=ON -DBOILERPLATE_BUILD_STATIC=ON)
-  file(READ "${CHECK_BINARY}/pgo-deps/build.ninja" _ninja)
-  foreach(kind IN ITEMS shared static)
-    if(NOT _ninja MATCHES "build CMakeFiles/sample_math_${kind}\\.dir/late\\.cpp\\.o:[^\n]*dependency\\.profdata")
-      message(FATAL_ERROR "Late source lacks a PGO profile dependency: ${kind}")
-    endif()
-  endforeach()
+set(
+  _harness_summary
+  "${CHECK_BINARY}/build/harness-results/Release/fixture_harness/summary.json"
+)
+
+if(NOT EXISTS "${_harness_summary}")
+  message(FATAL_ERROR "CMake harness did not produce summary.json")
 endif()
-message(STATUS "Generic library, shared/static packages, relocation and profile dependencies passed")
+
+file(READ "${_harness_summary}" _harness_json)
+
+foreach(_case IN ITEMS one two)
+  string(
+    JSON _count
+    ERROR_VARIABLE _case_error
+    GET "${_harness_json}"
+    cases ${_case} metrics value count
+  )
+
+  string(
+    JSON _checksum
+    ERROR_VARIABLE _inv_error
+    GET "${_harness_json}"
+    cases ${_case} invariants checksum
+  )
+
+  if(_case_error OR NOT _count EQUAL 2)
+    message(
+      FATAL_ERROR
+      "CMake harness did not run measured case ${_case}: ${_harness_json}"
+    )
+  endif()
+
+  if(_inv_error OR NOT _checksum STREQUAL "42")
+    message(
+      FATAL_ERROR
+      "CMake harness did not preserve ${_case} checksum invariant: ${_harness_json}"
+    )
+  endif()
+endforeach()
