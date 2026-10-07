@@ -1,24 +1,11 @@
 include_guard(GLOBAL)
 
 set(BOILERPLATE_HARNESS_RESULTS_DIR "${CMAKE_BINARY_DIR}/harness-results" CACHE PATH
-  "Output root for the optional Python process harness")
-set(BOILERPLATE_HARNESS_SCRIPT "${CMAKE_CURRENT_LIST_DIR}/harness/run.py" CACHE FILEPATH
-  "Path to the boilerplate process harness entry point")
+  "Output root for the self-contained CMake process harness")
 
-function(_boilerplate_harness_append_list output flag)
-  set(_result "${${output}}")
-  foreach(_value IN LISTS ARGN)
-    list(APPEND _result "${flag}=${_value}")
-  endforeach()
-  set(${output} "${_result}" PARENT_SCOPE)
-endfunction()
-
-# Register an explicit process benchmark/stress harness without making Python a
-# dependency of ordinary builds. The target is built by CMake; Python owns only
-# execution, provenance, affinity, logs and statistics.
 function(boilerplate_add_harness name)
-  cmake_parse_arguments(PARSE_ARGV 1 ARG "RANDOMIZE;PERF" 
-    "TARGET;CASES;PARSER;ROUNDS;WARMUP_RUNS;TIMEOUT;OUTPUT_DIR;WORKING_DIRECTORY;AFFINITY;CPU_COUNT;CPUS;SEED"
+  cmake_parse_arguments(PARSE_ARGV 1 ARG "RANDOMIZE;PERF"
+    "TARGET;CASES;CASE_GROUP;PARSER;ROUNDS;WARMUP_RUNS;TIMEOUT;OUTPUT_DIR;WORKING_DIRECTORY;AFFINITY;CPU_COUNT;CPUS;SEED"
     "ARGS;ENVIRONMENT;METRICS;INVARIANTS;PERF_EVENTS;METADATA;LABELS")
   if(ARG_UNPARSED_ARGUMENTS OR ARG_KEYWORDS_MISSING_VALUES OR NOT ARG_TARGET OR NOT TARGET ${ARG_TARGET})
     message(FATAL_ERROR "boilerplate_add_harness(${name}): TARGET must name an existing target; invalid arguments: ${ARG_UNPARSED_ARGUMENTS};${ARG_KEYWORDS_MISSING_VALUES}")
@@ -29,6 +16,9 @@ function(boilerplate_add_harness name)
   endif()
   if(ARG_CASES AND ARG_ARGS)
     message(FATAL_ERROR "boilerplate_add_harness(${name}): use CASES or ARGS, not both")
+  endif()
+  if(ARG_CASE_GROUP AND NOT ARG_CASES)
+    message(FATAL_ERROR "boilerplate_add_harness(${name}): CASE_GROUP requires CASES")
   endif()
   if(ARG_CASES)
     get_filename_component(ARG_CASES "${ARG_CASES}" ABSOLUTE BASE_DIR "${CMAKE_CURRENT_SOURCE_DIR}")
@@ -67,71 +57,64 @@ function(boilerplate_add_harness name)
       OR NOT ARG_TIMEOUT MATCHES "^[0-9]+([.][0-9]+)?$" OR NOT ARG_CPU_COUNT MATCHES "^[0-9]+$")
     message(FATAL_ERROR "boilerplate_add_harness(${name}): invalid rounds/warmup/timeout/cpu-count")
   endif()
-
-  find_package(Python3 COMPONENTS Interpreter REQUIRED)
-  if(NOT EXISTS "${BOILERPLATE_HARNESS_SCRIPT}")
-    message(FATAL_ERROR "Boilerplate harness script not found: ${BOILERPLATE_HARNESS_SCRIPT}")
-  endif()
   if(NOT ARG_OUTPUT_DIR)
     set(ARG_OUTPUT_DIR "${BOILERPLATE_HARNESS_RESULTS_DIR}/$<CONFIG>/${name}")
   endif()
-
-  set(_command "${CMAKE_COMMAND}" -E env PYTHONDONTWRITEBYTECODE=1
-    "${Python3_EXECUTABLE}" "${BOILERPLATE_HARNESS_SCRIPT}" run
-    --name "${name}"
-    --binary "$<TARGET_FILE:${ARG_TARGET}>"
-    --output "${ARG_OUTPUT_DIR}"
-    --parser "${ARG_PARSER}"
-    --rounds "${ARG_ROUNDS}"
-    --warmup-runs "${ARG_WARMUP_RUNS}"
-    --timeout "${ARG_TIMEOUT}"
-    --affinity "${ARG_AFFINITY}"
-    --cpu-count "${ARG_CPU_COUNT}"
-    --seed "${ARG_SEED}"
-    --overwrite)
-  if(ARG_CASES)
-    list(APPEND _command --cases "${ARG_CASES}")
+  if(NOT ARG_WORKING_DIRECTORY)
+    set(ARG_WORKING_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}")
   else()
-    _boilerplate_harness_append_list(_command --arg ${ARG_ARGS})
+    get_filename_component(ARG_WORKING_DIRECTORY "${ARG_WORKING_DIRECTORY}" ABSOLUTE BASE_DIR "${CMAKE_CURRENT_SOURCE_DIR}")
   endif()
-  if(ARG_WORKING_DIRECTORY)
-    get_filename_component(_workdir "${ARG_WORKING_DIRECTORY}" ABSOLUTE BASE_DIR "${CMAKE_CURRENT_SOURCE_DIR}")
-    list(APPEND _command --working-directory "${_workdir}")
-  endif()
-  if(ARG_CPUS)
-    list(APPEND _command --cpus "${ARG_CPUS}")
-  endif()
-  if(ARG_RANDOMIZE)
-    list(APPEND _command --randomize)
-  endif()
-  _boilerplate_harness_append_list(_command --env ${ARG_ENVIRONMENT})
-  _boilerplate_harness_append_list(_command --metric ${ARG_METRICS})
-  _boilerplate_harness_append_list(_command --invariant ${ARG_INVARIANTS})
-  if(ARG_PERF OR ARG_PERF_EVENTS)
-    _boilerplate_harness_append_list(_command --perf-event ${ARG_PERF_EVENTS})
+  if(ARG_PERF AND NOT ARG_PERF_EVENTS)
+    set(ARG_PERF_EVENTS cycles instructions branches branch-misses cache-misses)
   endif()
 
   get_target_property(_policies ${ARG_TARGET} BOILERPLATE_POLICIES)
   if(NOT _policies)
-    set(_policies "project-defaults")
+    set(_policies project-defaults)
   else()
     string(REPLACE ";" "," _policies "${_policies}")
   endif()
-  list(APPEND _command "--meta=target=${ARG_TARGET}" "--meta=policies=${_policies}"
-    "--meta=compiler=${CMAKE_CXX_COMPILER_ID}-${CMAKE_CXX_COMPILER_VERSION}"
-    "--meta=generator=${CMAKE_GENERATOR}" "--meta=project=${PROJECT_NAME}")
+  set(_metadata "target=${ARG_TARGET}" "policies=${_policies}"
+    "compiler=${CMAKE_CXX_COMPILER_ID}-${CMAKE_CXX_COMPILER_VERSION}"
+    "generator=${CMAKE_GENERATOR}" "project=${PROJECT_NAME}")
   foreach(_setting IN ITEMS CXX_STANDARD SANITIZER CFI CFI_DIAGNOSTICS WINDOWS_CFG LTO_MODE PGO_MODE ENABLE_NATIVE
       ENABLE_NO_SEMANTIC_INTERPOSITION ENABLE_GC_SECTIONS ENABLE_NO_PLT USE_LLD ENABLE_ICF FRAME_POINTERS REPRODUCIBLE HARDENING COVERAGE)
     boilerplate_get_target_setting(${ARG_TARGET} ${_setting} _value)
-    list(APPEND _command "--meta=${_setting}=${_value}")
+    list(APPEND _metadata "${_setting}=${_value}")
   endforeach()
-  _boilerplate_harness_append_list(_command --meta ${ARG_METADATA})
+  list(APPEND _metadata ${ARG_METADATA})
 
+  set(_content)
+  boilerplate_append_setting(_content HARNESS_NAME "${name}")
+  boilerplate_append_setting(_content HARNESS_BINARY "$<TARGET_FILE:${ARG_TARGET}>")
+  boilerplate_append_setting(_content HARNESS_OUTPUT "${ARG_OUTPUT_DIR}")
+  boilerplate_append_setting(_content HARNESS_CASES "${ARG_CASES}")
+  boilerplate_append_setting(_content HARNESS_CASE_GROUP "${ARG_CASE_GROUP}")
+  boilerplate_append_setting(_content HARNESS_ROUNDS "${ARG_ROUNDS}")
+  boilerplate_append_setting(_content HARNESS_WARMUP "${ARG_WARMUP_RUNS}")
+  boilerplate_append_setting(_content HARNESS_TIMEOUT "${ARG_TIMEOUT}")
+  boilerplate_append_setting(_content HARNESS_PARSER "${ARG_PARSER}")
+  boilerplate_append_setting(_content HARNESS_ARGS "${ARG_ARGS}")
+  boilerplate_append_setting(_content HARNESS_ENV "${ARG_ENVIRONMENT}")
+  boilerplate_append_setting(_content HARNESS_METRICS "${ARG_METRICS}")
+  boilerplate_append_setting(_content HARNESS_INVARIANTS "${ARG_INVARIANTS}")
+  boilerplate_append_setting(_content HARNESS_PERF_EVENTS "${ARG_PERF_EVENTS}")
+  boilerplate_append_setting(_content HARNESS_METADATA "${_metadata}")
+  boilerplate_append_setting(_content HARNESS_WORKING_DIRECTORY "${ARG_WORKING_DIRECTORY}")
+  boilerplate_append_setting(_content HARNESS_AFFINITY "${ARG_AFFINITY}")
+  boilerplate_append_setting(_content HARNESS_CPU_COUNT "${ARG_CPU_COUNT}")
+  boilerplate_append_setting(_content HARNESS_CPUS "${ARG_CPUS}")
+  boilerplate_append_setting(_content HARNESS_SEED "${ARG_SEED}")
+  boilerplate_append_setting(_content HARNESS_RANDOMIZE "${ARG_RANDOMIZE}")
+  boilerplate_append_setting(_content HARNESS_COMPILER "${CMAKE_CXX_COMPILER_ID}-${CMAKE_CXX_COMPILER_VERSION}")
+  boilerplate_append_setting(_content HARNESS_GENERATOR "${CMAKE_GENERATOR}")
+  boilerplate_append_setting(_content HARNESS_PROJECT "${PROJECT_NAME}")
+
+  set(_config "${CMAKE_CURRENT_BINARY_DIR}/harness/$<CONFIG>/${name}.cmake")
+  file(GENERATE OUTPUT "${_config}" CONTENT "${_content}")
   add_custom_target(run_${name}
-    COMMAND ${_command}
-    DEPENDS ${ARG_TARGET}
-    USES_TERMINAL VERBATIM)
-  # Deliberately no aggregate run target: parallel build schedulers could run
-  # independent measurements concurrently and invalidate the experiment.
+    COMMAND ${CMAKE_COMMAND} "-DHARNESS_CONFIG=${_config}" -P "${CMAKE_CURRENT_FUNCTION_LIST_DIR}/HarnessCMake.cmake"
+    DEPENDS ${ARG_TARGET} USES_TERMINAL VERBATIM)
   set_property(TARGET run_${name} PROPERTY FOLDER "boilerplate/harness")
 endfunction()

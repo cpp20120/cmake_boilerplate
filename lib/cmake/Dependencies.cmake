@@ -263,14 +263,22 @@ function(boilerplate_add_reference name)
     ${_install} ${_test})
 endfunction()
 
-# Use upstream statistics/comparison tooling rather than reimplementing its schema.
+# Compare Google Benchmark JSON directly in CMake. This keeps the framework
+# self-contained; no upstream compare.py/Python runtime is required.
 function(boilerplate_add_google_comparison name)
-  cmake_parse_arguments(PARSE_ARGV 1 ARG "" "SCRIPT;BASELINE;CANDIDATE" "ARGS")
-  if(ARG_UNPARSED_ARGUMENTS OR NOT ARG_SCRIPT OR NOT ARG_BASELINE OR NOT ARG_CANDIDATE)
-    message(FATAL_ERROR "Google comparison requires SCRIPT (upstream tools/compare.py), BASELINE and CANDIDATE")
+  cmake_parse_arguments(PARSE_ARGV 1 ARG "" "BASELINE;CANDIDATE;MAX_REGRESSION_PERCENT" "")
+  if(ARG_UNPARSED_ARGUMENTS OR NOT ARG_BASELINE OR NOT ARG_CANDIDATE)
+    message(FATAL_ERROR "Google comparison requires BASELINE and CANDIDATE JSON files")
   endif()
-  find_package(Python3 REQUIRED COMPONENTS Interpreter)
+  if(NOT DEFINED ARG_MAX_REGRESSION_PERCENT OR ARG_MAX_REGRESSION_PERCENT STREQUAL "")
+    set(ARG_MAX_REGRESSION_PERCENT 0)
+  endif()
   add_custom_target(${name}
-    COMMAND "${Python3_EXECUTABLE}" "${ARG_SCRIPT}" benchmarks "${ARG_BASELINE}" "${ARG_CANDIDATE}" ${ARG_ARGS}
+    COMMAND "${CMAKE_COMMAND}"
+      "-DBASELINE=${ARG_BASELINE}"
+      "-DCANDIDATE=${ARG_CANDIDATE}"
+      "-DMAX_REGRESSION_PERCENT=${ARG_MAX_REGRESSION_PERCENT}"
+      -P "${CMAKE_CURRENT_FUNCTION_LIST_DIR}/GoogleBenchmarkCompare.cmake"
     USES_TERMINAL VERBATIM)
 endfunction()
+
