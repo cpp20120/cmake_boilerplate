@@ -130,7 +130,7 @@ if(NOT fuzztest_policy_probe IN_LIST _fuzztest_targets)
   message(FATAL_ERROR "FuzzTest target was not registered")
 endif()
 
-# Optional Python harness: build is still CMake-owned; execution/provenance is Python-owned.
+# Self-contained harness: CMake owns both the build and process execution.
 boilerplate_add_executable(harness_probe SOURCES harness_probe.cpp POLICIES minimal)
 boilerplate_add_harness(fixture_harness TARGET harness_probe
   CASES "${CMAKE_CURRENT_SOURCE_DIR}/harness_cases.json"
