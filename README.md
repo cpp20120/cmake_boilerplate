@@ -34,6 +34,23 @@ have separate `out/build` directories; stay in the same directory for all steps.
 the same names for all `app-*` and `lib-*` profiles. Old application preset names
 are retained. Use fresh build trees when migrating from the older global flags.
 
+## Mental Model
+
+
+```
+Project
+├─ Capabilities        -> project workflows/lifecycle
+└─ Targets
+   ├─ Library
+   ├─ Runtime
+   ├─ Application
+   │  └─ Host(s)
+   └─ Plugin(s)
+
+Target
+└─ Policies            -> compile/link/build semantics
+```
+
 ## What to copy
 
 There are now two deliberate reusable layers:
