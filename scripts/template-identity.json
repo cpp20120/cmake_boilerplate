@@ -1,0 +1,7 @@
+{
+  "project": "TEST_PROJECT",
+  "package": "testproject",
+  "image": "cmake-boilerplate",
+  "ciImage": "cmake_boilerplate_build",
+  "libraries": "BoilerplateLibraries"
+}

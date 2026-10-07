@@ -1,5 +1,45 @@
 # Native host setup
 
+## Project initializer
+
+`cmake -DNAME=MyProject -DOUTPUT=../MyProject -P scripts/Init.cmake` creates a full
+named copy of the boilerplate using CMake alone. Quote the entire `-DOUTPUT=...`
+argument when a path contains spaces. The output directory must be absent or empty;
+existing projects, including directories containing only hidden files, are rejected.
+
+`template-files.txt` is generated from `git ls-files` through the include/exclude
+rules in `TemplatePolicy.cmake`. Unclassified tracked files cause an error until
+the policy explicitly includes or excludes them. Untracked files never enter the
+payload. Add new source files to Git's index, then update and check the manifest:
+
+```sh
+cmake -DACTION=update -P scripts/TemplateManifest.cmake
+cmake -P scripts/TemplateManifest.cmake
+```
+
+CI checks for missing/extra entries, ordering and duplicates. Manifest maintenance
+requires Git; project generation still works from an unpacked archive with CMake
+alone. Unlisted files are never copied, and all manifest entries are validated
+before the output is created. `template-identity.json` records the current
+project identity so a generated project can also serve as a template. Identity
+substitutions are restricted to known project declarations and container settings;
+the initializer does not replace arbitrary substrings throughout C++/CMake code.
+
+Generation does not initialize Git, fetch dependencies or install host tools. The
+generated project keeps the bootstrap scripts and normal CMake/vcpkg workflows.
+
+The integration check generates a project with a different name, verifies identity
+and overwrite protection, then configures, builds, runs CTest and installs it:
+
+```sh
+cmake -DCHECK_BINARY=/tmp/fresh-template-check -P scripts/test-init.cmake
+```
+
+Use a fresh test directory. Ninja and a native C++ compiler are required for this
+check; `.github/workflows/template.yml` runs it on Linux, Windows and macOS.
+
+## Host bootstrap
+
 The installers are Bash 3.2+ on Linux/macOS and Windows PowerShell 5.1+ / PowerShell
 7 on Windows. They do not use Python, pip or a virtual environment. CMake and Ninja
 are installed through the native package manager.

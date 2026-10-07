@@ -1,5 +1,31 @@
 # CMake boilerplate: libraries, runtimes and applications
 
+Create a named project from this checkout (or an unpacked source archive):
+
+```sh
+cmake -DNAME=MyProject -DOUTPUT=../MyProject -P scripts/Init.cmake
+cd ../MyProject
+cmake --preset app-release
+cmake --build --preset app-release
+ctest --preset app-release
+```
+
+The same commands work in PowerShell. Generation requires only CMake 3.26+;
+builds also need Ninja and a compiler. Use the generated `setup-host.sh` or
+`setup-host.ps1` to provision missing build tools, then activate its environment.
+`OUTPUT` defaults to `./<NAME>` and must be absent or empty. Names start with a
+letter, followed by alphanumeric groups separated by single underscores or hyphens.
+Build-system names such as `install`, `TEST` and `All_Build` are reserved regardless
+of case.
+
+The initializer renames the project/application, application test target,
+standalone library workspace, vcpkg package and container image defaults.
+`MyProject` becomes `my-project` for package/image names. The `boilerplate_*` API,
+presets, example libraries `library1`/`library2` and license remain intact.
+An explicit file manifest excludes Git history, generated docs, local build trees,
+SDK checkouts and personal configuration. No files are downloaded or installed.
+See [initializer maintenance and tests](scripts/README.md#project-initializer).
+
 CMake 3.26+, Ninja for the supplied presets, GCC/Clang or MSVC for ordinary builds.
 The default application and two example libraries require no downloaded packages.
 C++23 is the default; `BOILERPLATE_CXX_STANDARD=17|20|23` selects the language level.
