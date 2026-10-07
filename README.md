@@ -609,3 +609,10 @@ platform validation. Docs, packaging and the external container workflow remain 
 the resolved vcpkg root before configuring a vcpkg preset. A shallow or stale checkout is
 reported with a concrete `git fetch` repair command instead of failing later from
 inside `vcpkg.cmake`.
+
+### Export libraries as vcpkg ports
+
+The library boilerplate can generate local or archive-backed overlay ports with
+`boilerplate_vcpkg_port()`, including triplet-controlled shared/static builds and
+CMake package fixups. See [vcpkg packaging](lib/README.md#publishing-libraries-through-vcpkg)
+for the API and ready-to-install `library1` / `library2` examples.

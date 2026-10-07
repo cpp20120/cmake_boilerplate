@@ -20,6 +20,21 @@ endif()
 add_subdirectory(library1)
 add_subdirectory(library2)
 
+option(BOILERPLATE_GENERATE_VCPKG_PORTS "Generate example vcpkg overlay ports" OFF)
+if(BOILERPLATE_GENERATE_VCPKG_PORTS)
+  foreach(_library IN ITEMS library1 library2)
+    boilerplate_vcpkg_port(${_library}
+      VERSION 1.0.0
+      DESCRIPTION "Boilerplate ${_library} example"
+      SOURCE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/.."
+      SOURCE_SUBDIR "lib/${_library}"
+      SPDX_LICENSE MIT
+      LICENSE_FILE LICENSE
+      PACKAGES ${_library})
+  endforeach()
+endif()
+
+
 # The two example libraries intentionally exercise different consumer-local
 # policy packs. Keep this as a configure-time regression so future refactors do
 # not collapse them back into one hidden global policy.
@@ -76,6 +91,8 @@ if(_boilerplate_ninja)
     set(_check_clang "-DCHECK_CLANG=${_boilerplate_clang}")
   endif()
   add_custom_target(boilerplate_check_cmake
+    COMMAND ${CMAKE_COMMAND} "-DCHECK_BINARY=${CMAKE_BINARY_DIR}/vcpkg-check"
+      -P "${CMAKE_CURRENT_SOURCE_DIR}/tests/cmake/verify_vcpkg.cmake"
     COMMAND ${CMAKE_COMMAND} "-DCHECK_BINARY=${CMAKE_BINARY_DIR}/cmake-check"
       -P "${CMAKE_CURRENT_SOURCE_DIR}/tests/cmake/verify_bootstrap.cmake"
     COMMAND ${CMAKE_COMMAND} "-DCHECK_BINARY=${CMAKE_BINARY_DIR}/cmake-check"

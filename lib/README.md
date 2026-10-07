@@ -495,3 +495,56 @@ an explicit `run_<name>`. Instrument linked code when seeking coverage there.
 | `BuildMatrix.cmake`, `BuildInfo.cmake` | Preset sequencing and compatibility include for build metadata |
 | `CompareResults.cmake` | Matching process-result median comparison |
 | `LibraryPresets.json` | Shared standalone/root library presets and workflows |
+
+## Publishing libraries through vcpkg
+
+`boilerplate_vcpkg_port()` generates `vcpkg.json`, `portfile.cmake` and `usage`
+under `<build>/vcpkg-ports/<name>` during configuration. It uses the existing
+install/export rules and selects exactly one library variant from the vcpkg
+triplet. Debug and release CMake exports are fixed up by vcpkg.
+
+Generate and install the example ports from the repository root:
+
+```sh
+cmake -S lib -B out/ports -DBOILERPLATE_GENERATE_VCPKG_PORTS=ON
+vcpkg install library1 library2 --classic --overlay-ports=out/ports/vcpkg-ports
+```
+
+In a manifest consumer, add `library1` / `library2` to `dependencies` and pass
+`-DVCPKG_OVERLAY_PORTS=/absolute/path/to/out/ports/vcpkg-ports` alongside the
+vcpkg toolchain. Consume with `find_package(library1 CONFIG REQUIRED)` and
+`target_link_libraries(app PRIVATE library1::library1)`.
+
+For your own library, include `Boilerplate.cmake` and declare:
+
+```cmake
+boilerplate_vcpkg_port(my-math
+  VERSION 1.2.0
+  DESCRIPTION "My math library"
+  SPDX_LICENSE MIT
+  LICENSE_FILE LICENSE
+  PACKAGES my_math
+  SOURCE_DIR "${PROJECT_SOURCE_DIR}")
+```
+
+`PACKAGES` lists installed CMake package names, which may differ from the lowercase
+vcpkg port name. `SOURCE_DIR` defaults to the current source directory.
+`SOURCE_SUBDIR` optionally selects the CMake project inside that source root;
+`LICENSE_FILE` is always relative to the source root. The source root must also
+contain any shared CMake modules needed by the library.
+
+Optional arguments: `HOMEPAGE`, `DEPENDENCIES fmt zlib` (vcpkg port names),
+`OPTIONS -DMY_FEATURE=ON`, and `OUTPUT_DIRECTORY` (the parent of port directories).
+Dependencies still need matching CMake linkage and `find_dependency()` calls in
+the installed package config; they are not inferred from target names.
+
+For distribution, replace `SOURCE_DIR` with `URL https://…/my-math-1.2.0.tar.gz`
+and `SHA512 <128-digit-archive-hash>`. Compute the hash with
+`cmake -E sha512sum <archive>`. Archives use vcpkg's default extraction behavior
+(one enclosing directory is stripped). Copy the resulting port directory into
+an overlay or private registry; registry baselines/version history are managed
+separately. Local-source ports contain an absolute checkout path and are intended
+for development only: vcpkg does not track changes to that checkout in its binary
+cache, so remove/reinstall the port with `--binarysource=clear` after source edits.
+
+See the official [overlay port documentation](https://learn.microsoft.com/en-us/vcpkg/concepts/overlay-ports).
