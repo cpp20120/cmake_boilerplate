@@ -298,8 +298,6 @@ jobs:
 
       - name: Build and test container workflow
         run: >-
-          cmake
-          -DACTION=test
-          -DIMAGE=cmake_boilerplate_build
-          -DPRESET=app-release
-          -P tools/Container.cmake
+          bash tools/container.sh test
+          --image cmake_boilerplate_build
+          --preset app-release

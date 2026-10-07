@@ -591,18 +591,35 @@ The runtime stage copies the CMake install tree; it does not know the project's 
 build-directory layout. Override `DEBIAN_IMAGE` at Docker build time if another Debian
 13-compatible base is desired.
 
-A dependency-free Python wrapper keeps common container commands short without making
-CMake shell out to Docker:
+Native Bash and PowerShell wrappers keep common container commands short. The host
+only needs Bash or PowerShell and Docker (or Podman); Python and CMake run inside the
+image, not as prerequisites for the wrapper.
 
 ```sh
-python3 tools/container.py dev
-python3 tools/container.py dev --base-image debian:trixie-slim
-python3 tools/container.py shell
-python3 tools/container.py test --preset app-release
-python3 tools/container.py build --preset app-release
-python3 tools/container.py run --no-build
-python3 tools/container.py clean
+bash tools/container.sh dev
+bash tools/container.sh dev --base-image debian:trixie-slim
+bash tools/container.sh shell
+bash tools/container.sh test --preset app-release
+bash tools/container.sh build --preset app-release
+bash tools/container.sh run --no-build -- --example "argument with spaces"
+bash tools/container.sh clean
 ```
+
+PowerShell uses native parameter names:
+
+```powershell
+./tools/container.ps1 dev
+./tools/container.ps1 test -Preset app-release
+./tools/container.ps1 shell -NoBuild
+./tools/container.ps1 run -NoBuild -AppArgs @('--example', 'argument with spaces')
+./tools/container.ps1 clean
+```
+
+Both wrappers support an image name (`--image` / `-Image`), an engine executable
+(`--docker` / `-Docker`), and build flags (`--pull` / `-Pull`, `--no-cache` / `-NoCache`).
+The default image name is `cmake-boilerplate`; dev/test stages use its `:dev`/`:test`
+tags. `shell` and `run` build their image first unless `--no-build` / `-NoBuild` is set.
+`clean` removes these three local image tags. Engine failures return a nonzero exit code.
 
 `--preset` is simply forwarded as `CMAKE_PRESET` to the Docker build. Use another
 preset when the image contains the corresponding toolchain/dependencies. `.dockerignore`
