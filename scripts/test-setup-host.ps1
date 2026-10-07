@@ -12,10 +12,18 @@ try {
     $output = & $engine -NoProfile -File (Join-Path $root 'setup-host.ps1') --dry-run --tools-dir (Join-Path $work "tools ' spaced") --vcpkg-root (Join-Path $work 'sdk spaced')
     Assert ($LASTEXITCODE -eq 0) 'dry-run failed'
     $plan = $output -join "`n"
-    Assert ($plan -notmatch 'pip|venv|python') 'Unexpected Python install command'
+    Assert ((($output | Where-Object { $_ -like '+*' }) -join "`n") -notmatch 'pip|venv|python') 'Unexpected Python install command'
     Assert ($plan -match 'bootstrap-vcpkg.bat') 'Missing bootstrap step'
     Assert (-not (Test-Path (Join-Path $work 'sdk spaced'))) 'dry-run created SDK directory'
     Assert (-not (Test-Path (Join-Path $work "tools ' spaced"))) 'dry-run wrote activation file'
+    foreach ($profile in 'minimal', 'dev', 'ci') {
+        $profileOutput = & $engine -NoProfile -File (Join-Path $root 'setup-host.ps1') -DryRun -Profile $profile -VcpkgRoot (Join-Path $work 'sdk spaced')
+        Assert ($LASTEXITCODE -eq 0) "Profile $profile failed"
+        $profilePlan = $profileOutput -join "`n"
+        Assert ($profilePlan -match 'Summary:') 'Missing summary'
+        Assert (($profilePlan -match 'clangd') -eq ($profile -eq 'dev')) 'Editor profile selection mismatch'
+        if ($profile -eq 'ci') { Assert ($profilePlan -match 'clang-tidy') 'CI analysis tools missing' }
+    }
     $ErrorActionPreference = 'Continue'
     & $engine -NoProfile -File (Join-Path $root 'setup-host.ps1') --dry-run --vcpkg-root (Join-Path $root 'vcpkg') *> $null
     $rejectedOverlay = $LASTEXITCODE -ne 0
@@ -23,10 +31,16 @@ try {
     $rejectedModes = $LASTEXITCODE -ne 0
     & $engine -NoProfile -File (Join-Path $root 'setup-host.ps1') --with-emscripten *> $null
     $rejectedOldSdk = $LASTEXITCODE -ne 0
+    & $engine -NoProfile -File (Join-Path $root 'setup-host.ps1') -DryRun -Profile unknown *> $null
+    Assert ($LASTEXITCODE -ne 0) 'Unknown profile must be rejected'
+    foreach ($removedMode in '--check-harness', '-CheckHarness') {
+        & $engine -NoProfile -File (Join-Path $root 'setup-host.ps1') $removedMode *> $null
+        Assert ($LASTEXITCODE -ne 0) 'Removed Python check must be rejected'
+    }
     $ErrorActionPreference = 'Stop'
     Assert $rejectedOverlay 'Overlay directory must be protected'
     Assert $rejectedModes 'Conflicting modes must be rejected'
-    Assert $rejectedOldSdk 'Removed Python-dependent SDK installation must be rejected'
+    Assert $rejectedOldSdk 'Removed SDK installation option must be rejected'
     Write-Host 'Native PowerShell setup checks passed.'
 } finally {
     Remove-Item -LiteralPath $work -Recurse -Force

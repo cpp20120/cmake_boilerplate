@@ -10,6 +10,7 @@ for tool in bash dirname basename uname; do ln -s "$(command -v "$tool")" "$work
 for tool in apt-get dnf pacman brew sudo git; do
   cat > "$work/bin/$tool" <<'MOCK'
 #!/bin/bash
+if [[ "$1" == -Q ]]; then exit 1; fi
 printf 'unexpected installer execution\n' >> "$SETUP_TEST_MARKER"
 exit 90
 MOCK
@@ -19,6 +20,7 @@ done
 cat > "$work/bin/brew" <<'MOCK'
 #!/bin/bash
 if [[ "$1" == --prefix ]]; then echo /not-installed-brew; exit 0; fi
+if [[ "$1" == list ]]; then exit 1; fi
 printf 'unexpected brew install\n' >> "$SETUP_TEST_MARKER"
 exit 90
 MOCK
@@ -30,19 +32,26 @@ for manager in apt dnf pacman brew; do
   test ! -e "$work/tools with spaces"
   test ! -e "$work/new vcpkg"
   for expected in cmake ninja sccache ccache vcpkg.git; do grep -qi "$expected" "$work/$manager.log"; done
-  if grep -Ei 'pip|venv|python' "$work/$manager.log"; then echo 'Unexpected Python install command'; exit 1; fi
+  if grep '^+' "$work/$manager.log" | grep -Ei 'pip|venv|python'; then echo 'Unexpected Python install command'; exit 1; fi
 done
-for arguments in '--check --install' '--with-emscripten' '--tools-dir'; do
+for arguments in '--check --install' '--with-emscripten' '--tools-dir' '--check --profile unknown' '--check-harness'; do
   # Intentional splitting: these are fixed invalid argument lists.
   if PATH="$work/bin" /bin/bash "$root/setup-host.sh" $arguments > /dev/null 2>&1; then exit 1; fi
 done
 if PATH="$work/bin" /bin/bash "$root/setup-host.sh" --dry-run --vcpkg-root "$root/vcpkg/../vcpkg" > /dev/null 2>&1; then exit 1; fi
-if PATH="$work/bin" /bin/bash "$root/setup-host.sh" --check-harness > "$work/harness.log" 2>&1; then exit 1; fi
-grep -q 'Install it separately' "$work/harness.log"
 # --check must not run a package manager or invoke Python either.
 if PATH="$work/bin" /bin/bash "$root/setup-host.sh" --check --manager apt --vcpkg-root "$work/new vcpkg" > "$work/check.log"; then exit 1; fi
 grep -q 'MISSING.*clangd' "$work/check.log"
 test ! -e "$work/mutated"
+for profile in minimal dev ci; do
+  PATH="$work/bin" /bin/bash "$root/setup-host.sh" --dry-run --manager apt --profile "$profile" \
+    --vcpkg-root "$work/new vcpkg" > "$work/profile-$profile.log"
+  grep -q 'Summary:' "$work/profile-$profile.log"
+done
+! grep -q 'clangd' "$work/profile-minimal.log"
+! grep -q 'clangd' "$work/profile-ci.log"
+grep -q 'clangd' "$work/profile-dev.log"
+grep -q 'clang-tidy' "$work/profile-ci.log"
 # Exercise environment writing and propagation of failed installation/checks.
 # Existing vcpkg is reused and never pulled/reset.
 mkdir -p "$work/sdk ' literal/scripts/buildsystems"
@@ -63,15 +72,34 @@ if [[ -f "$work/env ' literal/env.sh" ]]; then
   test "$observed" = "$work/sdk ' literal"
   grep -q 'Setup incomplete' "$work/install.log"
 fi
-# Reject a transitive Python install before the real package-manager transaction.
-cat > "$work/bin/apt-get" <<'MOCK'
+# An old CMake is upgraded; a second run must not invoke any installer.
+if [[ "$(uname -s)" == Linux ]]; then
+  while IFS='|' read -r label command_name rest; do
+    [[ "$label" == \#* || "$command_name" == @package ]] && continue
+    [[ "$command_name" == git ]] && continue
+    printf '#!/bin/bash\nexit 0\n' > "$work/bin/$command_name"
+    chmod +x "$work/bin/$command_name"
+  done < "$root/scripts/host-tools.txt"
+  printf '#!/bin/bash\necho "install ok installed"\n' > "$work/bin/dpkg-query"
+  printf '#!/bin/bash\necho "cmake version 3.25.0"\n' > "$work/bin/cmake"
+  chmod +x "$work/bin/dpkg-query"
+  export SETUP_TEST_BIN="$work/bin"
+  printf '#!/bin/bash\nexec "$@"\n' > "$work/bin/sudo"
+  cat > "$work/bin/apt-get" <<'MOCK'
 #!/bin/bash
-if [[ "$1" == -s ]]; then echo 'Inst python3 (3.12 example)'; exit 0; fi
-if [[ "$1" == install ]]; then echo 'forbidden transaction' >> "$SETUP_TEST_MARKER"; exit 91; fi
-exit 0
+echo "$*" >> "$SETUP_TEST_MARKER"
+if [[ "$1" == install ]]; then
+  printf '#!/bin/bash\necho "cmake version 3.26.0"\n' > "$SETUP_TEST_BIN/cmake"
+fi
 MOCK
-if PATH="$work/bin" /bin/bash "$root/setup-host.sh" --install --manager apt \
-  --vcpkg-root "$work/sdk ' literal" --tools-dir "$work/guard-env" > "$work/guard.log" 2>&1; then exit 1; fi
-if [[ -f "$work/guard-env/env.sh" ]]; then grep -q 'has a Python dependency' "$work/guard.log"; fi
-test ! -e "$work/mutated"
-echo 'Native shell setup checks passed (Python absent from PATH).'
+  PATH="$work/bin" /bin/bash "$root/setup-host.sh" --install --profile minimal \
+    --vcpkg-root "$work/sdk ' literal" --tools-dir "$work/idempotent-env" > "$work/first.log"
+  grep -q 'INSTALLED.*CMake' "$work/first.log"
+  test -f "$work/mutated"
+  rm "$work/mutated"
+  PATH="$work/bin" /bin/bash "$root/setup-host.sh" --install --profile minimal \
+    --vcpkg-root "$work/sdk ' literal" --tools-dir "$work/idempotent-env" > "$work/second.log"
+  grep -q 'installed=0 missing=0' "$work/second.log"
+  test ! -e "$work/mutated"
+fi
+echo 'Native shell setup checks passed.'

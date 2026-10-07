@@ -367,9 +367,9 @@ and the supplied PGO/fuzzer profiles. Unsupported combinations fail at configure
 
 ## General research harness
 
-For repeatable runtime/server experiments, `lib/cmake/Harness.cmake` exposes an optional
-Python process harness shipped inside the same reusable `lib/cmake/` tree. Python is
-not discovered unless `boilerplate_add_harness()` is actually called.
+For repeatable runtime/server experiments, `lib/cmake/Harness.cmake` exposes a
+self-contained CMake process harness shipped inside the reusable `lib/cmake/` tree.
+Running the harness does not require Python.
 
 ```cmake
 boilerplate_add_harness(runtime_matrix
@@ -658,12 +658,15 @@ See [the overlay layout and commands](vcpkg/README.md).
 
 ### Prepare a development host
 
-Use `./setup-host.sh --install` on Linux/macOS or
-`.\setup-host.ps1 --install` on Windows to install the build, editor, analysis,
-formatting, documentation and packaging tools plus vcpkg. Activate
+Use `./setup-host.sh --install --profile dev` on Linux/macOS or
+`./setup-host.ps1 -Install -Profile dev` on Windows to install missing build,
+editor, analysis, formatting, documentation and packaging tools plus vcpkg. Activate
 `out/host-tools/env.sh` (Unix) or `out/host-tools/env.ps1` (PowerShell) afterwards.
 The installers use only Bash/PowerShell; there is no Python, pip or venv bootstrap.
-`--dry-run` shows commands; `--check` reports missing native tools.
-`--check-harness` separately checks an existing Python for the optional harness.
+`--dry-run` / `-DryRun` shows commands; `--check` / `-Check` reports missing tools.
+Profiles `minimal`, `dev` (default), and `ci` share one tool matrix. Every run reports
+what was already available, what was installed and what is still missing.
+The same entry points are available under `scripts/`.
+The benchmark/process harness runs in CMake; bootstrap does not check Python.
 See [host setup](scripts/README.md) for package managers, the tool matrix and
 separately provisioned Python/SDK workflows.
