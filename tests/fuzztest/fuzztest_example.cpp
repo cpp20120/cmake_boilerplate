@@ -1,7 +1,7 @@
 #include <algorithm>
 #include <vector>
-#include "fuzztest/fuzztest.h"
-#include "gtest/gtest.h"
+#include <fuzztest/fuzztest.h>
+#include <gtest/gtest.h>
 
 void ReverseTwice(std::vector<int> values) {
   const auto original = values;

@@ -1,4 +1,4 @@
-#include "../include/include.hpp"
+#include <project.hpp>
 #include <limits>
 int main() {
   if (proj::func(2, 3) != 5 || proj::func(-2, -3) != -5) return 1;

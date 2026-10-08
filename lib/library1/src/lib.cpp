@@ -1,7 +1,7 @@
 /** @file
  * @brief Implementation of the dependency-free example library.
  */
-#include "../include/include.hpp"
+#include <library1.hpp>
 
 #include <cstdio>
 

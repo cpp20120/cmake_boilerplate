@@ -3,7 +3,7 @@
 #include <iostream>
 #include <string>
 
-#include "../../library1/include/include.hpp"
+#include <library1.hpp>
 
 
 TEST(SumOfNumbersTest, PositiveNumbers) {

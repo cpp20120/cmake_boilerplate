@@ -3,9 +3,9 @@
  * @file
  * @brief Sample application linking both example libraries.
  */
-#include "../include/include.hpp"
-#include "../lib/library1/include/include.hpp"
-#include "../lib/library2/include/include.hpp"
+#include <project.hpp>
+#include <library1.hpp>
+#include <library2.hpp>
 
 
 /**

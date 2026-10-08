@@ -1,6 +1,8 @@
 if(BOILERPLATE_BUILD_TESTS)
   boilerplate_add_test(application_checks SOURCES application_checks.cpp LABELS application)
+  target_include_directories(application_checks PRIVATE "${PROJECT_SOURCE_DIR}/include")
 endif()
 if(BOILERPLATE_BUILD_GOOGLE_TESTS)
   boilerplate_add_googletest(TEST_PROJECT_tests OWN_MAIN SOURCES test_main.cpp LABELS application)
+  target_include_directories(TEST_PROJECT_tests PRIVATE "${PROJECT_SOURCE_DIR}/include")
 endif()

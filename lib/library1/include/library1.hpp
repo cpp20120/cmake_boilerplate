@@ -2,7 +2,7 @@
  * @file
  * @brief Public API of the dependency-free example library.
  */
-#include "library1_export.h"
+#include <library1_export.h>
 #include <type_traits>
 #ifndef LIB1_INCLUDE_HPP
 #define LIB1_INCLUDE_HPP

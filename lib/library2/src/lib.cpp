@@ -1,7 +1,7 @@
 /** @file
  * @brief Implementation of the greeting and worker-thread arithmetic examples.
  */
-#include "../include/include.hpp"
+#include <library2.hpp>
 
 #include <cstdio>
 #include <thread>

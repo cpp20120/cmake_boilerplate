@@ -47,7 +47,7 @@ format_cmake.ps1
 format_cmake.sh
 format_parallel.ps1
 format_parallel.sh
-include/include.hpp
+include/project.hpp
 lib/CMakeLists.txt
 lib/CMakePresets.json
 lib/README.md
@@ -114,12 +114,12 @@ lib/cmake/testing/Testing.cmake
 lib/cmake/testing/Workloads.cmake
 lib/library1/CMakeLists.txt
 lib/library1/cmake/Policies.cmake
-lib/library1/include/include.hpp
+lib/library1/include/library1.hpp
 lib/library1/src/lib.cpp
 lib/library2/CMakeLists.txt
 lib/library2/cmake/Library2Config.cmake.in
 lib/library2/cmake/Policies.cmake
-lib/library2/include/include.hpp
+lib/library2/include/library2.hpp
 lib/library2/src/lib.cpp
 lib/tests/cmake/components/CMakeLists.txt
 lib/tests/cmake/components/app/CMakeLists.txt

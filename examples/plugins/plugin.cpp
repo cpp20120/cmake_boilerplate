@@ -1,5 +1,5 @@
-#include "api.hpp"
-#include "example_plugin_export.h"
+#include <api.hpp>
+#include <example_plugin_export.h>
 
 #ifndef EXAMPLE_PLUGIN_VERSION
 #define EXAMPLE_PLUGIN_VERSION 1

@@ -71,8 +71,8 @@ this directory by the full repository framework.
 Installation puts each library's headers under `include/<name>`, exports native
 artifacts and package configs, and propagates static instrumentation link requirements.
 Start custom package configs from `LibraryConfig.cmake.in` and add dependencies with
-`find_dependency()`. The examples use identical `include.hpp` names only in isolation;
-real projects should give public headers distinct names. Installed PGO/ThinLTO
+`find_dependency()`. The examples expose distinct `<library1.hpp>` and
+`<library2.hpp>` headers through their exported targets. Installed PGO/ThinLTO
 artifacts may require matching compiler/profile inputs; plain release packages are
 more portable.
 

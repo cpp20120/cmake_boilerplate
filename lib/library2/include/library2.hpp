@@ -5,7 +5,7 @@
 #ifndef LIB2_INCLUDE_HPP
 #define LIB2_INCLUDE_HPP
 
-#include "library2_export.h"
+#include <library2_export.h>
 
 /// @brief Greeting, arithmetic and synchronous worker-thread examples.
 namespace lib2 {

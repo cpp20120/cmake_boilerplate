@@ -30,6 +30,9 @@ boilerplate_add_plugin(wrong_plugin SOURCES "${_example}/plugin.cpp" POLICIES mi
 target_include_directories(wrong_plugin PRIVATE "${CMAKE_CURRENT_BINARY_DIR}/generated/example_plugin")
 target_compile_definitions(wrong_plugin PRIVATE EXAMPLE_PLUGIN_VERSION=2 EXAMPLE_PLUGIN_EXPORTS)
 boilerplate_add_plugin(empty_plugin SOURCES empty.cpp POLICIES minimal)
+foreach(_target IN ITEMS example_plugin wrong_plugin plugin_host)
+  target_include_directories(${_target} PRIVATE "${_example}")
+endforeach()
 file(GENERATE OUTPUT "${CMAKE_CURRENT_BINARY_DIR}/paths-$<CONFIG>.cmake" CONTENT
   "set(host [==[$<TARGET_FILE:plugin_host>]==])\nset(host_role [==[$<TARGET_PROPERTY:plugin_host,BOILERPLATE_ARTIFACT_ROLE>]==])\nset(hosted_plugins [==[$<TARGET_PROPERTY:plugin_host,BOILERPLATE_HOSTED_PLUGINS>]==])\nset(plugin [==[$<TARGET_FILE:example_plugin>]==])\nset(wrong [==[$<TARGET_FILE:wrong_plugin>]==])\nset(empty [==[$<TARGET_FILE:empty_plugin>]==])\nset(installed_host [==[${CMAKE_INSTALL_BINDIR}/$<TARGET_FILE_NAME:plugin_host>]==])\nset(installed_plugin [==[$<TARGET_PROPERTY:plugin_host,BOILERPLATE_INSTALL_PLUGIN_DIR>/$<TARGET_FILE_NAME:example_plugin>]==])\nset(resource [==[$<TARGET_PROPERTY:plugin_host,BOILERPLATE_INSTALL_RESOURCE_DIR>/message.txt]==])\n")
 boilerplate_finalize_project()

@@ -2,8 +2,8 @@
  * @file
  * @brief Header-only arithmetic used by the sample application.
  */
-#ifndef INCLUDE_HPP
-#define INCLUDE_HPP
+#ifndef PROJECT_ARITHMETIC_HPP
+#define PROJECT_ARITHMETIC_HPP
 
 /// @brief Helpers belonging to the sample application.
 namespace proj {

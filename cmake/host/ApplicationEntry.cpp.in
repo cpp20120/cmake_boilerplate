@@ -1,5 +1,5 @@
 #include <boilerplate/application_api.hpp>
-#include "@BOILERPLATE_APPLICATION_EXPORT_HEADER@"
+#include <@BOILERPLATE_APPLICATION_EXPORT_HEADER@>
 
 int boilerplate_application_main(int argc, char** argv);
 

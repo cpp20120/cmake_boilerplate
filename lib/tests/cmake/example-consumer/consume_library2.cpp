@@ -1,4 +1,4 @@
-#include "include.hpp"
+#include <library2.hpp>
 
 int main() {
   if (lib2::sum_of_numbers(20, 22) != 42) return 1;

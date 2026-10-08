@@ -1,4 +1,8 @@
-#include "include.hpp"
+#ifdef SAMPLE_LIBRARY1
+#include <library1.hpp>
+#else
+#include <library2.hpp>
+#endif
 
 int main() {
   // Return codes keep the checks active in optimized builds with NDEBUG.

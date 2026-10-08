@@ -3,7 +3,7 @@
 #include <QTimer>
 #include <QWidget>
 
-#include "ui_window.h"
+#include <ui_window.h>
 
 class Window final : public QWidget {
   Q_OBJECT
@@ -40,4 +40,4 @@ int main(int argc, char **argv) {
   return app.exec();
 }
 
-#include "main.moc"
+#include <main.moc>
