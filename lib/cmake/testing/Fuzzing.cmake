@@ -7,6 +7,7 @@ set(BOILERPLATE_FUZZ_SANITIZER "address-undefined" CACHE STRING
   "Sanitizer used for byte-fuzz targets: none, address, undefined, address-undefined")
 set_property(CACHE BOILERPLATE_FUZZ_SANITIZER PROPERTY STRINGS none address undefined address-undefined)
 set(BOILERPLATE_FUZZ_RUNTIME 60 CACHE STRING "Default explicit fuzz campaign duration in seconds")
+set(BOILERPLATE_FUZZ_TIMEOUT 15 CACHE STRING "libFuzzer timeout per input in seconds")
 set(BOILERPLATE_FUZZ_SMOKE_LABEL "fuzz" CACHE STRING "CTest label used by fuzz smoke tests")
 
 function(_boilerplate_project_fuzzing_finalize)

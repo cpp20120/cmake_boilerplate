@@ -543,14 +543,15 @@ cmake --preset app-fuzz
 cmake --build --preset app-fuzz
 ctest --preset app-fuzz -L fuzz           # bounded -runs=1 smoke
 # Explicit longer fuzzing:
-cmake --build --preset app-fuzz --target run_fuzz_target
+cmake --build --preset app-fuzz --target fuzz_fuzz_target
 ```
 
 Plain checks return nonzero on failure (work with NDEBUG). GoogleTest uses CMake's
 `GoogleTest` discovery module. libFuzzer uses Clang's sanitizer runtime, keeps corpus
 under the build tree and has bounded explicit run targets. To fuzz a linked library,
-instrument its code too; instrumenting the fuzz entry alone does not add coverage
-to separately compiled dependencies. Sanitizer smoke validation in restricted
+build a separate instrumented archive with `boilerplate_add_fuzz_library()` and
+link it into `boilerplate_add_fuzzer()`. The normal library stays separate;
+instrumenting the fuzz entry alone does not cover compiled dependencies. Sanitizer smoke validation in restricted
 ptrace environments may need `ASAN_OPTIONS=detect_leaks=0`; this disables leak
 checking only for that invocation, not in the presets.
 

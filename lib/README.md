@@ -478,14 +478,38 @@ it does not replace Google's result schema or statistical comparison.
 
 ```cmake
 boilerplate_use_allocator(my_app ALLOCATOR mimalloc PREFIX MY_APP)
-boilerplate_add_fuzzer(parser_fuzz SOURCES fuzz/parser.cpp LIBRARIES parser)
+# Separate copy: coverage reaches library code without instrumenting production targets.
+boilerplate_add_fuzz_library(parser_fuzz_runtime SOURCES src/parser.cpp)
+target_include_directories(parser_fuzz_runtime PUBLIC include)
+boilerplate_add_fuzzer(parser_fuzz SOURCES fuzz/parser.cpp LIBRARIES parser_fuzz_runtime
+  SEED_CORPUS fuzz/seeds MAX_LEN 4096 RUN_SECONDS 60)
 ```
 
 Allocator choice defaults to `BOILERPLATE_ALLOCATOR`; PREFIX defaults to
-`BOILERPLATE`. The application implements allocation/free branches using the generated
-compile definitions. No allocator replacement is automatic. Fuzzers use Clang
-libFuzzer + address/undefined sanitizers, a build-tree corpus, a bounded smoke and
-an explicit `run_<name>`. Instrument linked code when seeking coverage there.
+`BOILERPLATE`. The application implements allocation/free branches using the
+compile definitions. No allocator replacement is automatic.
+
+`boilerplate_add_fuzz_library` creates a private static archive with coverage,
+selected fuzz sanitizers, debug information and frame pointers. It is not
+installed/exported and does not supply a fuzzer main. Link it only into matching
+fuzz drivers. `boilerplate_add_fuzzer` instruments the driver and supplies the
+engine. Both accept `BACKEND`, `POLICIES`, `POLICY_OPTIONS`, `SOURCES` and `LIBRARIES`.
+The default backend is `BOILERPLATE_FUZZ_BACKEND` (`libfuzzer`, `aflpp`, `honggfuzz`).
+AFL++/honggfuzz require their compiler wrappers at configure time. Fuzz archives
+and their drivers must agree on backend and `BOILERPLATE_FUZZ_SANITIZER`.
+
+`SEED_CORPUS` copies read-only inputs into a mutable build-tree corpus. `CORPUS`
+instead chooses an existing mutable working directory; these options are exclusive.
+The helpers register `boilerplate_fuzzers` (build), `fuzz-smoke` (CTest seed replay),
+and `fuzz_<target>` (explicit campaign). `BOILERPLATE_FUZZ_RUNTIME` defaults to 60
+seconds; `BOILERPLATE_FUZZ_TIMEOUT` bounds each libFuzzer input to 15 seconds.
+`BOILERPLATE_FUZZ_SMOKE_LABEL` adds a configurable CTest label.
+
+Run the instrumentation/isolation regression with `boilerplate_check_fuzz` in a
+standalone library build, or `cmake -DCHECK_BINARY=/tmp/fuzz-check -P
+lib/tests/cmake/verify_fuzz.cmake` from the repository root. It checks that UB in
+a linked fuzz archive fails, ordinary libraries stay uninstrumented, seed inputs
+are preserved and incompatible settings are rejected.
 
 ## File map
 

@@ -109,6 +109,15 @@ if(_boilerplate_ninja)
       -P "${CMAKE_CURRENT_SOURCE_DIR}/tests/cmake/verify_examples.cmake"
     USES_TERMINAL VERBATIM)
 
+  if(_boilerplate_clang)
+    add_custom_target(boilerplate_check_fuzz
+      COMMAND ${CMAKE_COMMAND} "-DCHECK_BINARY=${CMAKE_BINARY_DIR}/fuzz-check"
+        "-DCHECK_COMPILER=${_boilerplate_clang}"
+        -P "${CMAKE_CURRENT_SOURCE_DIR}/tests/cmake/verify_fuzz.cmake"
+      USES_TERMINAL VERBATIM)
+    add_dependencies(boilerplate_check_cmake boilerplate_check_fuzz)
+  endif()
+
   add_custom_target(boilerplate_check_cuda
     COMMAND ${CMAKE_COMMAND} "-DCHECK_BINARY=${CMAKE_BINARY_DIR}/cuda-check"
       "-DCHECK_COMPILER=${CMAKE_CXX_COMPILER}"
