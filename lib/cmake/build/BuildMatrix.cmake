@@ -163,8 +163,59 @@ foreach(_preset IN LISTS PRESETS)
       endif()
     endif()
     if(NOT PACKAGE_FORMAT STREQUAL "ARCH")
-      # CPack uses install() staging, never installs into the host prefix.
-      run("${CMAKE_COMMAND}" --build --preset "${_preset}" --target package ${_parallel})
+      # CPackRPM refuses whitespace in CPACK_TOPLEVEL_DIRECTORY, even though
+      # configure, build and install support paths with spaces. When RPM is
+      # selected, stage its CPack output at a safe /tmp path and copy the
+      # completed RPM back to the standard distributables directory.
+      set(_rpm_selected FALSE)
+      if(PACKAGE_FORMAT STREQUAL "RPM")
+        set(_rpm_selected TRUE)
+      elseif(NOT PACKAGE_FORMAT AND CMAKE_HOST_SYSTEM_NAME STREQUAL "Linux")
+        boilerplate_linux_family(_family)
+        if(_family STREQUAL "rpm")
+          # Without rpmbuild, automatic packaging intentionally falls back to
+          # TGZ, just as Packaging.cmake does at configure time.
+          find_program(_rpm_tool rpmbuild)
+          if(_rpm_tool)
+            set(_rpm_selected TRUE)
+          endif()
+        endif()
+      endif()
+      if(_rpm_selected AND _package_directory MATCHES "[ \t]")
+        set(_cpack_config "${SOURCE_DIR}/out/build/${_preset}/CPackConfig.cmake")
+        if(NOT EXISTS "${_cpack_config}")
+          message(FATAL_ERROR "Missing CPack configuration: ${_cpack_config}")
+        endif()
+        file(MAKE_DIRECTORY "${_package_directory}")
+        # The default RPM-family generator set is TGZ;RPM. Preserve the TGZ
+        # in the regular output folder; explicit --package-format RPM omits it.
+        if(NOT PACKAGE_FORMAT)
+          run("${CMAKE_CPACK_COMMAND}" --config "${_cpack_config}"
+            -G TGZ -B "${_package_directory}")
+        endif()
+        string(RANDOM LENGTH 16 ALPHABET "0123456789abcdef" _rpm_nonce)
+        set(_rpm_staging "/tmp/boilerplate-cpack-rpm-${_rpm_nonce}")
+        file(MAKE_DIRECTORY "${_rpm_staging}")
+        execute_process(
+          COMMAND "${CMAKE_CPACK_COMMAND}" --config "${_cpack_config}"
+            -G RPM -B "${_rpm_staging}"
+          WORKING_DIRECTORY "${SOURCE_DIR}/out/build/${_preset}"
+          RESULT_VARIABLE _rpm_rc)
+        if(NOT "${_rpm_rc}" STREQUAL "0")
+          file(REMOVE_RECURSE "${_rpm_staging}")
+          message(FATAL_ERROR "CPack RPM generation failed (${_rpm_rc})")
+        endif()
+        file(GLOB _rpm_files "${_rpm_staging}/*.rpm")
+        if(NOT _rpm_files)
+          file(REMOVE_RECURSE "${_rpm_staging}")
+          message(FATAL_ERROR "CPack reported success but generated no RPM")
+        endif()
+        file(COPY ${_rpm_files} DESTINATION "${_package_directory}")
+        file(REMOVE_RECURSE "${_rpm_staging}")
+      else()
+        # CPack uses install() staging, never installs into the host prefix.
+        run("${CMAKE_COMMAND}" --build --preset "${_preset}" --target package ${_parallel})
+      endif()
       file(REMOVE_RECURSE "${_package_directory}/_CPack_Packages")
     endif()
     if(_arch)

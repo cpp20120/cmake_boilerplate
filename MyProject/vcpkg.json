@@ -1,0 +1,33 @@
+{
+  "builtin-baseline" : "3b6ec96bfa4d7dacd8ab1a97676a82c9cb18111e",
+  "features" : 
+  {
+    "benchmarks" : 
+    {
+      "dependencies" : [ "benchmark" ],
+      "description" : "Google Benchmark support"
+    },
+    "graphics" : 
+    {
+      "dependencies" : [ "vulkan", "glfw3", "glew", "glm", "imgui" ],
+      "description" : "Vulkan/OpenGL desktop graphics capability dependencies"
+    },
+    "pbt" : 
+    {
+      "dependencies" : [ "rapidcheck" ],
+      "description" : "Property-based testing with RapidCheck"
+    },
+    "qt" : 
+    {
+      "dependencies" : [ "qtbase", "qtdeclarative" ],
+      "description" : "Qt 6 desktop/QML capability dependencies"
+    },
+    "tests" : 
+    {
+      "dependencies" : [ "gtest" ],
+      "description" : "GoogleTest support"
+    }
+  },
+  "name" : "my-project",
+  "version" : "1.0.0"
+}

@@ -1,0 +1,8 @@
+@PACKAGE_INIT@
+include(CMakeFindDependencyMacro)
+find_dependency(Threads REQUIRED)
+include("${CMAKE_CURRENT_LIST_DIR}/library2Targets.cmake")
+if(NOT TARGET library2::library2)
+  add_library(library2::library2 ALIAS library2::@BOILERPLATE_PACKAGE_PREFERRED@)
+endif()
+check_required_components(library2)

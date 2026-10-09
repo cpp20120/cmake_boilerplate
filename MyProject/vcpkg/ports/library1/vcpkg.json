@@ -1,0 +1,17 @@
+{
+  "dependencies" : 
+  [
+    {
+      "host" : true,
+      "name" : "vcpkg-cmake"
+    },
+    {
+      "host" : true,
+      "name" : "vcpkg-cmake-config"
+    }
+  ],
+  "description" : "Boilerplate library1 example",
+  "license" : "MIT",
+  "name" : "library1",
+  "version-string" : "1.0.0"
+}

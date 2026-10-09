@@ -16,7 +16,7 @@ int sum_of_numbers(const int first_number, const int second_number) {
 
 int sum_on_worker(const int first_number, const int second_number) {
   int result = 0;
-  std::jthread worker([&result, first_number, second_number] {
+  std::thread worker([&result, first_number, second_number] {
     result = first_number + second_number;
   });
   worker.join();

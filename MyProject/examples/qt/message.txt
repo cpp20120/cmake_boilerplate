@@ -1,0 +1,1 @@
+Qt 6 is ready

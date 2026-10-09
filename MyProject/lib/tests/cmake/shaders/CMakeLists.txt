@@ -1,0 +1,26 @@
+cmake_minimum_required(VERSION 3.26)
+project(ShaderFixture LANGUAGES CXX)
+include("${BOILERPLATE_MODULE_DIR}/Boilerplate.cmake")
+boilerplate_project(CAPABILITIES project-minimal)
+boilerplate_add_executable(shader_app SOURCES main.cpp POLICIES minimal)
+if(TEST_BACKEND STREQUAL "dxc")
+  set(_language LANGUAGE HLSL PROFILE vs_6_0 ENTRY_POINT main FORMAT "${TEST_FORMAT}")
+  set(_source shader.hlsl)
+else()
+  set(_language LANGUAGE GLSL)
+  set(_source shader.vert)
+endif()
+foreach(_variant IN ITEMS low high)
+  if(_variant STREQUAL "low")
+    set(_factor 1)
+  else()
+    set(_factor 2)
+  endif()
+  boilerplate_add_shaders(shader_app ${_language} NAME "${_variant}"
+    SOURCES "${_source}" SOURCE_DIR "${TEST_SOURCE_DIR}"
+    INCLUDE_DIRS "${TEST_SOURCE_DIR}/includes" DEFINES "FACTOR=${_factor}"
+    COMPILER "${TEST_COMPILER}" BACKEND "${TEST_BACKEND}" COPY_TO_RUNTIME)
+endforeach()
+file(GENERATE OUTPUT "${CMAKE_CURRENT_BINARY_DIR}/paths-$<CONFIG>.cmake" CONTENT
+  "set(outputs [==[$<TARGET_GENEX_EVAL:shader_app,$<TARGET_PROPERTY:shader_app,BOILERPLATE_SHADER_OUTPUTS>>]==])\nset(runtime [==[$<TARGET_FILE_DIR:shader_app>/shaders]==])\nset(executable [==[$<TARGET_FILE:shader_app>]==])\nset(resources [==[$<TARGET_PROPERTY:shader_app,BOILERPLATE_INSTALL_RESOURCE_DIR>]==])\n")
+boilerplate_finalize_project()

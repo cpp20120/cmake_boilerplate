@@ -1,0 +1,159 @@
+diff --git a/lib/cmake/build/BuildMatrix.cmake b/lib/cmake/build/BuildMatrix.cmake
+index 6c3b034..87da989 100644
+--- a/lib/cmake/build/BuildMatrix.cmake
++++ b/lib/cmake/build/BuildMatrix.cmake
+@@ -163,8 +163,59 @@ foreach(_preset IN LISTS PRESETS)
+       endif()
+     endif()
+     if(NOT PACKAGE_FORMAT STREQUAL "ARCH")
+-      # CPack uses install() staging, never installs into the host prefix.
+-      run("${CMAKE_COMMAND}" --build --preset "${_preset}" --target package ${_parallel})
++      # CPackRPM refuses whitespace in CPACK_TOPLEVEL_DIRECTORY, even though
++      # configure, build and install support paths with spaces. When RPM is
++      # selected, stage its CPack output at a safe /tmp path and copy the
++      # completed RPM back to the standard distributables directory.
++      set(_rpm_selected FALSE)
++      if(PACKAGE_FORMAT STREQUAL "RPM")
++        set(_rpm_selected TRUE)
++      elseif(NOT PACKAGE_FORMAT AND CMAKE_HOST_SYSTEM_NAME STREQUAL "Linux")
++        boilerplate_linux_family(_family)
++        if(_family STREQUAL "rpm")
++          # Without rpmbuild, automatic packaging intentionally falls back to
++          # TGZ, just as Packaging.cmake does at configure time.
++          find_program(_rpm_tool rpmbuild)
++          if(_rpm_tool)
++            set(_rpm_selected TRUE)
++          endif()
++        endif()
++      endif()
++      if(_rpm_selected AND _package_directory MATCHES "[ \t]")
++        set(_cpack_config "${SOURCE_DIR}/out/build/${_preset}/CPackConfig.cmake")
++        if(NOT EXISTS "${_cpack_config}")
++          message(FATAL_ERROR "Missing CPack configuration: ${_cpack_config}")
++        endif()
++        file(MAKE_DIRECTORY "${_package_directory}")
++        # The default RPM-family generator set is TGZ;RPM. Preserve the TGZ
++        # in the regular output folder; explicit --package-format RPM omits it.
++        if(NOT PACKAGE_FORMAT)
++          run("${CMAKE_CPACK_COMMAND}" --config "${_cpack_config}"
++            -G TGZ -B "${_package_directory}")
++        endif()
++        string(RANDOM LENGTH 16 ALPHABET "0123456789abcdef" _rpm_nonce)
++        set(_rpm_staging "/tmp/boilerplate-cpack-rpm-${_rpm_nonce}")
++        file(MAKE_DIRECTORY "${_rpm_staging}")
++        execute_process(
++          COMMAND "${CMAKE_CPACK_COMMAND}" --config "${_cpack_config}"
++            -G RPM -B "${_rpm_staging}"
++          WORKING_DIRECTORY "${SOURCE_DIR}/out/build/${_preset}"
++          RESULT_VARIABLE _rpm_rc)
++        if(NOT "${_rpm_rc}" STREQUAL "0")
++          file(REMOVE_RECURSE "${_rpm_staging}")
++          message(FATAL_ERROR "CPack RPM generation failed (${_rpm_rc})")
++        endif()
++        file(GLOB _rpm_files "${_rpm_staging}/*.rpm")
++        if(NOT _rpm_files)
++          file(REMOVE_RECURSE "${_rpm_staging}")
++          message(FATAL_ERROR "CPack reported success but generated no RPM")
++        endif()
++        file(COPY ${_rpm_files} DESTINATION "${_package_directory}")
++        file(REMOVE_RECURSE "${_rpm_staging}")
++      else()
++        # CPack uses install() staging, never installs into the host prefix.
++        run("${CMAKE_COMMAND}" --build --preset "${_preset}" --target package ${_parallel})
++      endif()
+       file(REMOVE_RECURSE "${_package_directory}/_CPack_Packages")
+     endif()
+     if(_arch)
+diff --git a/lib/cmake/packaging/PKGBUILD.in b/lib/cmake/packaging/PKGBUILD.in
+index 75e4552..f74261b 100644
+--- a/lib/cmake/packaging/PKGBUILD.in
++++ b/lib/cmake/packaging/PKGBUILD.in
+@@ -7,6 +7,8 @@ arch=("$CARCH")
+ license=(@PKGLICENSE@)
+ source=()
+ sha256sums=()
++# Release artifacts have no debuginfo; avoid empty split-debug packages.
++options=('!debug')
+ package() {
+   [[ -n "${BOILERPLATE_ARCH_BUILD_DIR:-}" ]] || return 1
+   DESTDIR="$pkgdir" cmake --install "$BOILERPLATE_ARCH_BUILD_DIR" --prefix /usr
+diff --git a/lib/library2/include/library2.hpp b/lib/library2/include/library2.hpp
+index 768b51a..1f8dd64 100644
+--- a/lib/library2/include/library2.hpp
++++ b/lib/library2/include/library2.hpp
+@@ -45,7 +45,7 @@ LIBRARY2_EXPORT int sum_of_numbers(int first_number, int second_number);
+  * @return The sum after the worker has been joined.
+  * @pre The mathematical sum must be representable as an int.
+  * @throws std::system_error If thread creation or joining fails.
+- * @note This call blocks and creates a new std::jthread for each invocation.
++ * @note This call blocks and creates a new std::thread for each invocation.
+  *       It demonstrates the library's public Threads dependency; it is not
+  *       intended to accelerate integer addition. Overflow is not checked.
+  */
+diff --git a/lib/library2/src/lib.cpp b/lib/library2/src/lib.cpp
+index a7e8cbd..d85238b 100644
+--- a/lib/library2/src/lib.cpp
++++ b/lib/library2/src/lib.cpp
+@@ -16,7 +16,7 @@ int sum_of_numbers(const int first_number, const int second_number) {
+ 
+ int sum_on_worker(const int first_number, const int second_number) {
+   int result = 0;
+-  std::jthread worker([&result, first_number, second_number] {
++  std::thread worker([&result, first_number, second_number] {
+     result = first_number + second_number;
+   });
+   worker.join();
+diff --git a/lib/tests/cmake/verify_cross.cmake b/lib/tests/cmake/verify_cross.cmake
+index 313084f..dad47b9 100644
+--- a/lib/tests/cmake/verify_cross.cmake
++++ b/lib/tests/cmake/verify_cross.cmake
+@@ -50,7 +50,10 @@ reject("${CMAKE_COMMAND}" --build "${_build}" --target run_matrix)
+ reject("${CMAKE_COMMAND}" --build "${_build}" --target boilerplate_pgo_train)
+ run("${CMAKE_COMMAND}" --install "${_build}" --prefix "${CHECK_BINARY}/target/usr")
+ run("${CMAKE_COMMAND}" --build "${_build}" --target package)
+-file(GLOB _packages "${_build}/*.tar.gz")
++# CPack artifacts are now routed into out/packages/<build-folder>.
++# Read the location from generated CPackConfig instead of guessing the path.
++include("${_build}/CPackConfig.cmake")
++file(GLOB _packages "${CPACK_PACKAGE_DIRECTORY}/*.tar.gz")
+ if(NOT _packages)
+   message(FATAL_ERROR "Cross package was not produced")
+ endif()
+diff --git a/scripts/verify-package.cmake b/scripts/verify-package.cmake
+index 0c83a59..31c6e0a 100644
+--- a/scripts/verify-package.cmake
++++ b/scripts/verify-package.cmake
+@@ -24,18 +24,26 @@ file(GLOB _artifacts "${PACKAGE_DIR}/${_pattern}")
+ if(NOT _artifacts)
+   message(FATAL_ERROR "Expected ${_pattern} in ${PACKAGE_DIR}")
+ endif()
++set(_verified_arch 0)
+ foreach(_artifact IN LISTS _artifacts)
+   file(SIZE "${_artifact}" _size)
+   if(_size LESS 100)
+     message(FATAL_ERROR "Package empty: ${_artifact}")
+   endif()
+   if(PACKAGE_FORMAT STREQUAL "ARCH")
++    # makepkg may emit a separate -debug package on distributions whose
++    # makepkg.conf enables split-debug; it does not contain the runtime exe.
++    if(_artifact MATCHES "-debug-[0-9][^/]*\\.pkg\\.tar\\.zst$")
++      message(STATUS "Skipping auxiliary Arch debug package: ${_artifact}")
++      continue()
++    endif()
+     find_program(_bsdtar bsdtar REQUIRED)
+     execute_process(COMMAND "${_bsdtar}" -tf "${_artifact}"
+       OUTPUT_VARIABLE _contents RESULT_VARIABLE _rc ERROR_VARIABLE _err)
+     if(NOT _rc EQUAL 0 OR NOT _contents MATCHES "(^|\n)usr/bin/[^\n]+")
+       message(FATAL_ERROR "Invalid native Arch package content: ${_artifact}: ${_err}")
+     endif()
++    math(EXPR _verified_arch "${_verified_arch} + 1")
+   elseif(PACKAGE_FORMAT STREQUAL "DEB")
+     execute_process(COMMAND dpkg-deb --contents "${_artifact}"
+       RESULT_VARIABLE _rc OUTPUT_VARIABLE _contents ERROR_VARIABLE _err)
+@@ -51,3 +59,6 @@ foreach(_artifact IN LISTS _artifacts)
+   endif()
+   message(STATUS "Verified ${PACKAGE_FORMAT}: ${_artifact} (${_size} bytes)")
+ endforeach()
++if(PACKAGE_FORMAT STREQUAL "ARCH" AND _verified_arch EQUAL 0)
++  message(FATAL_ERROR "No runtime Arch package was verified in ${PACKAGE_DIR}")
++endif()

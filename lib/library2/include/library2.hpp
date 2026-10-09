@@ -45,7 +45,7 @@ LIBRARY2_EXPORT int sum_of_numbers(int first_number, int second_number);
  * @return The sum after the worker has been joined.
  * @pre The mathematical sum must be representable as an int.
  * @throws std::system_error If thread creation or joining fails.
- * @note This call blocks and creates a new std::jthread for each invocation.
+ * @note This call blocks and creates a new std::thread for each invocation.
  *       It demonstrates the library's public Threads dependency; it is not
  *       intended to accelerate integer addition. Overflow is not checked.
  */

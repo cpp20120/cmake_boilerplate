@@ -1,0 +1,7 @@
+{
+  "project": "MyProject",
+  "package": "my-project",
+  "image": "my-project",
+  "ciImage": "my-project-build",
+  "libraries": "MyProjectLibraries"
+}

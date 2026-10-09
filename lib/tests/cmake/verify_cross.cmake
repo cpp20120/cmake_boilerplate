@@ -50,7 +50,10 @@ reject("${CMAKE_COMMAND}" --build "${_build}" --target run_matrix)
 reject("${CMAKE_COMMAND}" --build "${_build}" --target boilerplate_pgo_train)
 run("${CMAKE_COMMAND}" --install "${_build}" --prefix "${CHECK_BINARY}/target/usr")
 run("${CMAKE_COMMAND}" --build "${_build}" --target package)
-file(GLOB _packages "${_build}/*.tar.gz")
+# CPack artifacts are now routed into out/packages/<build-folder>.
+# Read the location from generated CPackConfig instead of guessing the path.
+include("${_build}/CPackConfig.cmake")
+file(GLOB _packages "${CPACK_PACKAGE_DIRECTORY}/*.tar.gz")
 if(NOT _packages)
   message(FATAL_ERROR "Cross package was not produced")
 endif()
