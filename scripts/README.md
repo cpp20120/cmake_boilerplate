@@ -153,9 +153,9 @@ can be installed.
 ## Python is a separate, optional workflow
 
 The process/benchmark harness is implemented in CMake. Host setup, normal builds,
-CTest, PGO, install/package and generated checks do not require Python. Install
-Python 3 separately only for optional statistics/comparison tooling. Bootstrap does
-not discover or check Python.
+CTest, PGO, install/package, vcpkg registry maintenance and generated checks do
+not require Python. Install Python 3 separately only for optional statistics/comparison
+tooling. Bootstrap does not discover or check Python.
 
 `cmake-format`, `gcovr`, the `iwyu_tool` runner and Emscripten also need Python;
 they are outside host setup and are listed as separate tools. The former

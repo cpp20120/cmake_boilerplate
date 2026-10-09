@@ -38,20 +38,15 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
-      - uses: actions/setup-python@v5
-        with:
-          python-version: '3.x'
       - uses: ilammy/msvc-dev-cmd@v1
         if: runner.os == 'Windows'
       - name: Verify version database and source pins
-        run: python scripts/registry.py verify
+        run: cmake -P scripts/Registry.cmake
+      - name: Check registry tooling and release archive
+        run: cmake -DCHECK_BINARY="$RUNNER_TEMP/registry-check" -P scripts/test-registry.cmake
       - name: Read pinned vcpkg revision
         id: pins
-        run: |
-          python - <<'PY' >> "$GITHUB_OUTPUT"
-          import json
-          print('vcpkg=' + json.load(open('vcpkg/release.json'))['vcpkg-baseline'])
-          PY
+        run: cmake -DACTION=pins -DOUTPUT="$GITHUB_OUTPUT" -P scripts/Registry.cmake
       - uses: actions/checkout@v4
         with:
           repository: microsoft/vcpkg
@@ -67,10 +62,8 @@ jobs:
         run: external/vcpkg/bootstrap-vcpkg.sh -disableMetrics
       - name: Prepare consumer outside the source checkout
         run: |
-          python scripts/registry.py prepare \
-            --output "$RUNNER_TEMP/registry-consumer" \
-            --repository "$(python -c 'from pathlib import Path; print(Path.cwd().as_uri())')" \
-            --baseline "$(git rev-parse HEAD)"
+          cmake -DACTION=prepare -DOUTPUT="$RUNNER_TEMP/registry-consumer" \
+            -P scripts/Registry.cmake
       - name: Install from Git registry (no overlay ports or binary cache)
         run: |
           external/vcpkg/vcpkg install \
@@ -106,36 +99,12 @@ jobs:
         env:
           REPOSITORY: ${{ github.repository }}
         run: |
-          python scripts/registry.py verify
-          python scripts/registry.py prepare --output "$RUNNER_TEMP/consumer" \
-            --repository "https://github.com/$REPOSITORY.git" --baseline "$(git rev-parse HEAD)"
-          python - <<'PY'
-          import json, os, pathlib, shutil, subprocess
-          release = json.load(open('vcpkg/release.json'))
-          tag, source = release['tag'], release['commit']
-          existing = subprocess.run(['git', 'rev-parse', '--verify', f'refs/tags/{tag}^{{commit}}'], capture_output=True, text=True)
-          if existing.returncode == 0 and existing.stdout.strip() != source:
-              raise SystemExit(f'{tag} already points to a different source commit')
-          if release['repository'] != os.environ['REPOSITORY']:
-              raise SystemExit('Update source pins before publishing from a fork')
-          baseline = subprocess.check_output(['git', 'rev-parse', 'HEAD'], text=True).strip()
-          temp = pathlib.Path(os.environ['RUNNER_TEMP'])
-          shutil.make_archive(str(temp / 'registry-consumer'), 'zip', temp / 'consumer')
-          (temp / 'release-notes.md').write_text(
-              f"library1 and library2 {release['version']}\n\n"
-              f"Source tag: `{tag}`\n\nSource commit: `{source}`\n\n"
-              f"Source archive SHA512: `{release['sha512']}`\n\n"
-              f"vcpkg Git registry baseline: `{baseline}`\n\n"
-              "The attached consumer uses this exact registry baseline. Install its manifest with vcpkg, "
-              "then configure CMake with the vcpkg toolchain. See the repository's vcpkg/README.md.\n"
-          )
-          with open(os.environ['GITHUB_ENV'], 'a') as env:
-              env.write(f'RELEASE_TAG={tag}\nSOURCE_COMMIT={source}\n')
-          PY
+          cmake -DACTION=release -DOUTPUT="$RUNNER_TEMP/registry-release" \
+            -DRELEASE_REPOSITORY="$REPOSITORY" -P scripts/Registry.cmake
       - name: Publish source tag and release
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          gh release create "$RELEASE_TAG" "$RUNNER_TEMP/registry-consumer.zip" \
+          gh release create "$RELEASE_TAG" "$RUNNER_TEMP/registry-release/registry-consumer.zip" \
             --target "$SOURCE_COMMIT" --title "$RELEASE_TAG" \
-            --notes-file "$RUNNER_TEMP/release-notes.md"
+            --notes-file "$RUNNER_TEMP/registry-release/release-notes.md"

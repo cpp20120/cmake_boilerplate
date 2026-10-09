@@ -111,12 +111,12 @@ targets carry include paths, static export definitions and the `Threads`
 dependency. The triplet chooses static or shared linkage.
 
 To produce a ready-to-build sample with a concrete baseline (run from this
-repository, with Python 3 available):
+repository, with CMake 3.26+ and Git available):
 
 ```sh
-python scripts/registry.py prepare --output /tmp/my-consumer \
-  --repository https://github.com/cpp20120/cmake_boilerplate.git \
-  --baseline "$(git rev-parse HEAD)"
+cmake -DACTION=prepare -DOUTPUT=/tmp/my-consumer \
+  -DREPOSITORY=https://github.com/cpp20120/cmake_boilerplate.git \
+  -DBASELINE="$(git rev-parse HEAD)" -P scripts/Registry.cmake
 cd /tmp/my-consumer
 "$VCPKG_ROOT/vcpkg" install --triplet x64-linux
 cmake -S . -B build -G "Ninja Multi-Config" \
@@ -140,14 +140,14 @@ It verifies the version database against actual committed Git trees, bootstraps
 the pinned vcpkg revision, installs both ports from a Git registry with binary
 caching disabled, and builds/runs the external consumer in Debug and Release.
 The six jobs cover Windows, Linux and macOS with both static and shared linkage.
-For PRs the registry URL points to the checkout via `file://`, so unpublished PR
+For PRs the registry points to the local Git checkout, so unpublished PR
 commits work; package sources still download from the pinned upstream commit.
 Only shared triplet definitions are overlays, never the ports themselves.
 
 After committing the ports and version files, run:
 
 ```sh
-python scripts/registry.py verify
+cmake -P scripts/Registry.cmake
 ```
 
 Push the changes, then manually run **vcpkg registry** on main/master with
@@ -156,6 +156,17 @@ source commit and publishes a GitHub Release with the consumer archive and the
 tested registry baseline in its notes. It rejects an existing tag pointing to
 different sources and never moves tags. Ordinary PR/push runs do not publish.
 Re-publishing an existing Release fails instead of silently replacing it.
+
+Registry validation, consumer preparation, release notes and ZIP creation use
+CMake and Git; no Python interpreter is required. `ACTION=prepare` defaults to
+the local checkout and its `HEAD` when `REPOSITORY` and `BASELINE` are omitted.
+The workflow uses shell for orchestration and `gh` only for publishing. To check
+the release archive locally without publishing:
+
+```sh
+cmake -DACTION=release -DOUTPUT=/tmp/registry-release \
+  -DRELEASE_REPOSITORY=cpp20120/cmake_boilerplate -P scripts/Registry.cmake
+```
 
 ### Subsequent versions
 
@@ -175,7 +186,7 @@ Re-publishing an existing Release fails instead of silently replacing it.
      --x-builtin-registry-versions-dir="$PWD/versions"
    ```
 
-4. Commit `versions/`, run `python scripts/registry.py verify`, and push. Never
+4. Commit `versions/`, run `cmake -P scripts/Registry.cmake`, and push. Never
    replace historical version entries or their Git trees. Use the resulting
    registry commit as the consumer baseline; it cannot be embedded in itself.
 5. Run the publishing workflow for a new source release. Packaging-only revisions

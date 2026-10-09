@@ -13,7 +13,7 @@ set(TEMPLATE_EXCLUDE_PATTERNS
   # newly generated application. Generated projects retain development overlays.
   "^(ports|versions|tests/registry-consumer)/"
   "^vcpkg/release\\.json$"
-  "^scripts/registry\\.py$"
+  "^scripts/(Registry|test-registry)\\.cmake$"
   "^\\.github/workflows/vcpkg-registry\\.yml$"
   "^\\.gitattributes$"
   "^cmake_boilerplate_capabilities_graph\\.(dot|svg|png)$"
