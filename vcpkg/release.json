@@ -1,0 +1,8 @@
+{
+  "version": "1.0.0",
+  "tag": "v1.0.0",
+  "repository": "cpp20120/cmake_boilerplate",
+  "commit": "60b591ca25b2c58d2ece386b7e649b34138bf5fd",
+  "sha512": "3051677843cdae415629bf856f8a0eab3b9f42a94fdab1da988fa8578ee87534ad870dcbc93c824bc213f0bb3f9003026a7f001a4efb7d8d5bb170417d994416",
+  "vcpkg-baseline": "3b6ec96bfa4d7dacd8ab1a97676a82c9cb18111e"
+}

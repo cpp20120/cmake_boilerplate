@@ -1,0 +1,12 @@
+{
+  "default": {
+    "library1": {
+      "baseline": "1.0.0",
+      "port-version": 0
+    },
+    "library2": {
+      "baseline": "1.0.0",
+      "port-version": 0
+    }
+  }
+}

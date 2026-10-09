@@ -1,0 +1,17 @@
+{
+  "name": "library2",
+  "version": "1.0.0",
+  "description": "Boilerplate library2 example",
+  "homepage": "https://github.com/cpp20120/cmake_boilerplate",
+  "license": "MIT",
+  "dependencies": [
+    {
+      "name": "vcpkg-cmake",
+      "host": true
+    },
+    {
+      "name": "vcpkg-cmake-config",
+      "host": true
+    }
+  ]
+}

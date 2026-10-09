@@ -777,6 +777,12 @@ inside `vcpkg.cmake`.
 
 ### Export libraries as vcpkg ports
 
+`library1` and `library2` also have portable, versioned release ports in the
+repository's Git registry: pinned source commit + SHA512, `versions/baseline.json`,
+and per-version `git-tree` entries. An independent project installs them with
+vcpkg and links `library1::library1` / `library2::library2` through `find_package()`.
+See [registry consumption, CI and release instructions](vcpkg/README.md#release-registry).
+
 The library boilerplate can generate local or archive-backed overlay ports with
 `boilerplate_vcpkg_port()`, including triplet-controlled shared/static builds and
 CMake package fixups. See [vcpkg packaging](lib/README.md#publishing-libraries-through-vcpkg)

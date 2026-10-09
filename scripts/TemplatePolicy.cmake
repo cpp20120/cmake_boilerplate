@@ -9,6 +9,13 @@ set(TEMPLATE_INCLUDE_PATTERNS
   "^(cmake|lib|src|include|tests|examples|scripts|tools|toolchains|shaders)/"
   "^vcpkg/(README\\.md|ports/|triplets/)")
 set(TEMPLATE_EXCLUDE_PATTERNS
+  # Published registry identity/history belongs to this repository, not to a
+  # newly generated application. Generated projects retain development overlays.
+  "^(ports|versions|tests/registry-consumer)/"
+  "^vcpkg/release\\.json$"
+  "^scripts/registry\\.py$"
+  "^\\.github/workflows/vcpkg-registry\\.yml$"
+  "^\\.gitattributes$"
   "^cmake_boilerplate_capabilities_graph\\.(dot|svg|png)$"
   "^(docs|out|build|artifacts|external|third_party|vcpkg_installed)/"
   "(^|/)(CMakeFiles|_deps|__pycache__|\\.git|\\.cache|\\.venv)/"

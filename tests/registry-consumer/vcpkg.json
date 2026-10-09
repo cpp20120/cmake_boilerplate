@@ -1,0 +1,8 @@
+{
+  "name": "registry-consumer",
+  "version": "1.0.0",
+  "dependencies": [
+    { "name": "library1", "version>=": "1.0.0" },
+    { "name": "library2", "version>=": "1.0.0" }
+  ]
+}
