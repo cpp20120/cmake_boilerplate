@@ -159,7 +159,17 @@ if(_boilerplate_testing_enabled AND BOILERPLATE_BUILD_TESTS AND BUILD_TESTING)
   add_test(NAME boilerplate_harness_checks
     COMMAND ${CMAKE_COMMAND} "-DCHECK_BINARY=${CMAKE_BINARY_DIR}/harness-check"
       -P "${CMAKE_CURRENT_SOURCE_DIR}/tests/harness/verify.cmake")
-  set_tests_properties(boilerplate_harness_checks PROPERTIES LABELS "build;harness" TIMEOUT 20)
+  # The harness invokes several nested CMake processes, including an intentional
+  # timeout fixture. Cold Windows CI runners can exceed a 20-second outer limit
+  # without any correctness failure. Keep a finite test-level timeout, separate
+  # from the per-fixture timeout in tests/harness/verify.cmake.
+  if(WIN32)
+    set(_boilerplate_harness_check_timeout 120)
+  else()
+    set(_boilerplate_harness_check_timeout 60)
+  endif()
+  set_tests_properties(boilerplate_harness_checks PROPERTIES
+    LABELS "build;harness" TIMEOUT "${_boilerplate_harness_check_timeout}")
 endif()
 
 if(CMAKE_SOURCE_DIR STREQUAL CMAKE_CURRENT_SOURCE_DIR)

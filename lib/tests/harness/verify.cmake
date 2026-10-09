@@ -13,9 +13,15 @@ foreach(_mode IN ITEMS success fail timeout)
     "set(ENVIRONMENT [==[HARNESS_FIXTURE=space value]==])\n"
     "set(WORKING_DIRECTORY [==[${CHECK_BINARY}/work dir]==])\n"
     "set(RESULT_ROOT [==[${_root}]==])\nset(TIMEOUT 1)\nset(REPEATS 2)\nset(WARMUP 1)\n")
+  message(STATUS "Harness fixture: ${_mode}")
+  # Bound each nested invocation so the outer CTest timeout is not the first
+  # indication of a stalled fixture on a slow CI runner.
   execute_process(COMMAND "${CMAKE_COMMAND}" "-DRUN_CONFIG=${CHECK_BINARY}/${_mode}.cmake"
     -P "${CMAKE_CURRENT_LIST_DIR}/../../cmake/benchmark/RunWorkload.cmake"
-    RESULT_VARIABLE _result OUTPUT_VARIABLE _stdout ERROR_VARIABLE _stderr)
+    RESULT_VARIABLE _result OUTPUT_VARIABLE _stdout ERROR_VARIABLE _stderr TIMEOUT 30)
+  if(NOT "${_result}" MATCHES "^-?[0-9]+$")
+    message(FATAL_ERROR "Harness fixture '${_mode}' did not exit normally (${_result}): ${_stdout}\n${_stderr}")
+  endif()
   file(GLOB _reports "${_root}/*/result.json")
   list(LENGTH _reports _count)
   if(NOT _count EQUAL 1)
