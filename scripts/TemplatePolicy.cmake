@@ -1,5 +1,5 @@
-# Repository files must match an explicit include or exclude rule. Unknown files
-# fail the manifest check, so new top-level areas require a deliberate decision.
+# Repository files must match an explicit include or exclude rule.
+# Unknown files fail the manifest check.
 set(TEMPLATE_INCLUDE_PATTERNS
   "^\\.(clang-format|clang-format-ignore|clang-tidy|cmake-format\\.yaml|dockerignore|gitignore)$"
   "^\\.github/workflows/[^/]+\\.ya?ml$"
@@ -8,13 +8,19 @@ set(TEMPLATE_INCLUDE_PATTERNS
   "^(devenv_and_run|docker_devenv)\\.sh$"
   "^(cmake|lib|src|include|tests|examples|scripts|tools|toolchains|shaders)/"
   "^vcpkg/(README\\.md|ports/|triplets/)")
+
 set(TEMPLATE_EXCLUDE_PATTERNS
-  # Published registry identity/history belongs to this repository, not to a
-  # newly generated application. Generated projects retain development overlays.
+  # Repository-specific security and contributor policies.
+  "^(SECURITY|CONTRIBUTING)\\.md$"
+  "^\\.github/dependabot\\.yml$"
+
+  # Published registry identity/history.
   "^(ports|versions|tests/registry-consumer)/"
   "^vcpkg/release\\.json$"
   "^scripts/(Registry|test-registry)\\.cmake$"
   "^\\.github/workflows/vcpkg-registry\\.yml$"
+
+  # Generated/local artifacts.
   "^\\.gitattributes$"
   "^cmake_boilerplate_capabilities_graph\\.(dot|svg|png)$"
   "^(docs|out|build|artifacts|external|third_party|vcpkg_installed)/"
