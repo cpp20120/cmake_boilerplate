@@ -1,0 +1,26 @@
+var searchData=
+[
+  ['pbt_20and_20fuzz_20stack_0',['Property/PBT and fuzz stack',['../index.html#autotoc_md38',1,'']]],
+  ['per_20target_20policies_1',['Per-target policies',['../index.html#autotoc_md37',1,'']]],
+  ['pgo_20and_20build_20matrices_2',['PGO and build matrices',['../index.html#autotoc_md45',1,'']]],
+  ['platform_20limits_3',['Validation and platform limits',['../index.html#autotoc_md48',1,'']]],
+  ['plugins_20and_20abi_4',['Plugins and ABI',['../md_lib_2cmake_2docs_2Delivery.html#autotoc_md10',1,'']]],
+  ['plugins_20and_20application_20delivery_5',['Shaders, plugins and application delivery',['../md_lib_2cmake_2docs_2Delivery.html',1,'']]],
+  ['plugins_20and_20deployment_6',['Shaders, plugins and deployment',['../index.html#autotoc_md39',1,'']]],
+  ['policies_7',['policies',['../dir_97aefd0d527b934f1d99a682da8fe6a9.html#autotoc_md24',1,'Built-in domain policies'],['../index.html#autotoc_md37',1,'Per-target policies']]],
+  ['policies_20and_20composition_8',['Target policies and composition',['../dir_97aefd0d527b934f1d99a682da8fe6a9.html#autotoc_md22',1,'']]],
+  ['ports_9',['Export libraries as vcpkg ports',['../index.html#autotoc_md50',1,'']]],
+  ['preflight_10',['vcpkg registry checkout preflight',['../index.html#autotoc_md49',1,'']]],
+  ['prepare_20a_20development_20host_11',['Prepare a development host',['../index.html#autotoc_md51',1,'']]],
+  ['primitives_12',['Primitives',['../dir_8b472efeab622b3a09965bdc1d57c881.html#autotoc_md14',1,'']]],
+  ['process_20harness_13',['process harness',['../dir_97aefd0d527b934f1d99a682da8fe6a9.html#autotoc_md25',1,'General CMake process harness'],['../dir_e4616cb3ade4c6f488314b3616d4e741.html#autotoc_md0',1,'General process harness']]],
+  ['profiles_14',['profiles',['../md_lib_2cmake_2docs_2Cuda.html',1,'CUDA target profiles'],['../index.html#autotoc_md40',1,'Optimization profiles']]],
+  ['project_20adapter_15',['What belongs here vs. in a project adapter',['../dir_e4616cb3ade4c6f488314b3616d4e741.html#autotoc_md1',1,'']]],
+  ['project_20capabilities_16',['Project capabilities',['../dir_8b472efeab622b3a09965bdc1d57c881.html#autotoc_md13',1,'Project capabilities'],['../index.html#autotoc_md36',1,'Project capabilities']]],
+  ['project_20capabilities_20and_20lifecycle_17',['Project capabilities and lifecycle',['../dir_97aefd0d527b934f1d99a682da8fe6a9.html#autotoc_md21',1,'']]],
+  ['projects_20and_20upstream_20comparison_18',['Training, external projects and upstream comparison',['../dir_97aefd0d527b934f1d99a682da8fe6a9.html#autotoc_md27',1,'']]],
+  ['property_20pbt_20and_20fuzz_20stack_19',['Property/PBT and fuzz stack',['../index.html#autotoc_md38',1,'']]],
+  ['protection_20',['Control-flow protection',['../dir_97aefd0d527b934f1d99a682da8fe6a9.html#autotoc_md23',1,'']]],
+  ['provider_21',['Dependency provider',['../dir_8b472efeab622b3a09965bdc1d57c881.html#autotoc_md15',1,'']]],
+  ['publishing_20libraries_20through_20vcpkg_22',['Publishing libraries through vcpkg',['../dir_97aefd0d527b934f1d99a682da8fe6a9.html#autotoc_md30',1,'']]]
+];

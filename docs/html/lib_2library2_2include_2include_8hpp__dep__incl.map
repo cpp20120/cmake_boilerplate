@@ -1,0 +1,7 @@
+<map id="lib/library2/include/include.hpp" name="lib/library2/include/include.hpp">
+<area shape="rect" id="Node000001" title="Public API of the example library with a Threads dependency." alt="" coords="94,5,236,50"/>
+<area shape="rect" id="Node000002" href="$library2_2src_2lib_8cpp.html" title="Implementation of the greeting and worker&#45;thread arithmetic examples." alt="" coords="5,98,167,126"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="136,60,100,99,97,95,131,62"/>
+<area shape="rect" id="Node000003" href="$main_8cpp.html" title="Sample application linking both example libraries." alt="" coords="191,98,296,126"/>
+<area shape="poly" id="edge2_Node000001_Node000003" title=" " alt="" coords="197,59,233,98,228,97,195,64"/>
+</map>

@@ -3,6 +3,7 @@ $ErrorActionPreference = 'Stop'
 Set-StrictMode -Version 2.0
 $mode = ''
 $profile = 'dev'
+$deferVcpkg = $false
 $PSNativeCommandUseErrorActionPreference = $false
 $toolsDir = Join-Path $PSScriptRoot 'out/host-tools'
 $userDirectory = if ($env:USERPROFILE) { $env:USERPROFILE } else { $HOME }
@@ -13,9 +14,10 @@ for ($i = 0; $i -lt $setupArgs.Count; $i++) {
     # Accept native PowerShell spelling and the existing GNU-style arguments.
     $aliases = @{ '-Install'='--install'; '-Check'='--check'; '-DryRun'='--dry-run';
         '-Profile'='--profile'; '-ToolsDir'='--tools-dir';
-        '-VcpkgRoot'='--vcpkg-root'; '-Help'='--help' }
+        '-VcpkgRoot'='--vcpkg-root'; '-DeferVcpkg'='--defer-vcpkg'; '-Help'='--help' }
     if ($aliases.ContainsKey($argument)) { $argument = $aliases[$argument] }
     switch ($argument) {
+        '--defer-vcpkg' { $deferVcpkg = $true }
         { $_ -in '--install', '--check', '--dry-run' } {
             if ($mode) { throw 'Choose exactly one mode.' }
             $mode = $argument
@@ -29,7 +31,8 @@ for ($i = 0; $i -lt $setupArgs.Count; $i++) {
         }
         { $_ -in '--help', '-h' } {
             Write-Host 'Usage: .\setup-host.ps1 --install|--check|--dry-run [--tools-dir PATH] [--vcpkg-root PATH]'
-            Write-Host 'Native syntax: ./setup-host.ps1 -Install|-Check|-DryRun -Profile minimal|dev|ci (default: dev)'
+            Write-Host 'Native syntax: ./setup-host.ps1 -Install|-Check|-DryRun -Profile minimal|package|dev|ci (default: dev)'
+            Write-Host '--defer-vcpkg reuses an existing SDK, or lets CMake provision it when needed.'
             Write-Host 'The harness runs in CMake; setup does not require Python.'
             exit 0
         }
@@ -37,7 +40,7 @@ for ($i = 0; $i -lt $setupArgs.Count; $i++) {
     }
 }
 if (-not $mode) { throw 'Choose --install, --check or --dry-run. See --help.' }
-if ($profile -notin 'minimal', 'dev', 'ci') { throw "Unknown profile: $profile" }
+if ($profile -notin 'minimal', 'package', 'dev', 'ci') { throw "Unknown profile: $profile" }
 $isWindowsHost = [Environment]::OSVersion.Platform -eq [PlatformID]::Win32NT
 if (-not $isWindowsHost -and $mode -ne '--dry-run') { throw 'Use setup-host.sh on Linux/macOS.' }
 Write-Host "Host: Windows; manager: winget; profile: $profile; mode: $mode"
@@ -70,6 +73,8 @@ function Refresh-ToolPath {
         foreach ($relative in 'LLVM/bin', 'Git/cmd', 'CMake/bin', 'Cppcheck', 'doxygen/bin', 'NSIS') {
             $paths += Join-Path $programFilesPath $relative
         }
+        # The official NSIS installer defaults to Program Files (x86).
+        $paths += Join-Path $installerBase 'NSIS'
         $paths += @(Get-ChildItem (Join-Path $programFilesPath 'Graphviz*/bin') -Directory -ErrorAction SilentlyContinue | ForEach-Object { $_.FullName })
         $paths += @(Get-ChildItem "$env:SystemDrive/VulkanSDK/*/Bin" -Directory -ErrorAction SilentlyContinue | Sort-Object FullName -Descending | ForEach-Object { $_.FullName })
     }
@@ -125,8 +130,12 @@ function Test-HostTools {
         $status = Write-ToolStatus $tool.Label (Test-ToolReady $tool)
         $counts[$status]++
     }
-    $status = Write-ToolStatus 'vcpkg' ((Test-Path (Join-Path $vcpkgRoot 'vcpkg.exe')) -and (Test-Path (Join-Path $vcpkgRoot 'scripts/buildsystems/vcpkg.cmake')))
-    $counts[$status]++
+    if ($deferVcpkg -and -not (Test-Path (Join-Path $vcpkgRoot 'vcpkg.exe'))) {
+        Write-Host 'DEFERRED  vcpkg: CMake provisions the pinned SDK/executable when needed.'
+    } else {
+        $status = Write-ToolStatus 'vcpkg' ((Test-Path (Join-Path $vcpkgRoot 'vcpkg.exe')) -and (Test-Path (Join-Path $vcpkgRoot 'scripts/buildsystems/vcpkg.cmake')))
+        $counts[$status]++
+    }
     Write-Host "Summary: already=$($counts.ALREADY) installed=$($counts.INSTALLED) missing=$($counts.MISSING)"
     Write-Host 'SEPARATE  CUDA, DXC and Emscripten: install separately.'
     return ($counts.MISSING -eq 0)
@@ -136,13 +145,33 @@ $null = Test-HostTools
 $packages = @($tools | Where-Object { $_.Winget -ne '-' -and -not (Test-ToolReady $_) } |
     ForEach-Object { $_.Winget } | Select-Object -Unique)
 $failed = $false
-if ($mode -eq '--install' -and ($packages.Count -gt 0 -or -not (Find-VisualStudio)) -and -not (Get-Command winget -ErrorAction SilentlyContinue)) {
-    throw 'Install App Installer (winget) from Microsoft Store first.'
+# Windows Server CI images can have Chocolatey but no supported WinGet. Use
+# either native package manager without requiring the user to provision one.
+$useChoco = $isWindowsHost -and -not (Get-Command winget -ErrorAction SilentlyContinue) -and
+    [bool](Get-Command choco -ErrorAction SilentlyContinue)
+$chocoIds = @{
+    'Git.Git' = 'git'; 'Kitware.CMake' = 'cmake';
+    'Ninja-build.Ninja' = 'ninja'; 'NSIS.NSIS' = 'nsis'
+}
+if ($mode -eq '--install' -and ($packages.Count -gt 0 -or -not (Find-VisualStudio)) -and -not $useChoco -and -not (Get-Command winget -ErrorAction SilentlyContinue)) {
+    Write-Host 'Installing WinGet through Microsoft.WinGet.Client...'
+    [Net.ServicePointManager]::SecurityProtocol = [Net.ServicePointManager]::SecurityProtocol -bor [Net.SecurityProtocolType]::Tls12
+    Install-PackageProvider -Name NuGet -Scope CurrentUser -Force | Out-Null
+    Install-Module -Name Microsoft.WinGet.Client -Scope CurrentUser -Force -Repository PSGallery
+    Import-Module Microsoft.WinGet.Client
+    Repair-WinGetPackageManager -Force -Latest
+    Refresh-ToolPath
+    if (-not (Get-Command winget -ErrorAction SilentlyContinue)) { throw 'WinGet bootstrap failed.' }
 }
 foreach ($package in $packages) {
     try {
-        Invoke-Tool 'winget' @('install', '--id', $package, '--exact', '--source', 'winget', '--silent',
-            '--accept-package-agreements', '--accept-source-agreements', '--disable-interactivity')
+        if ($useChoco) {
+            if (-not $chocoIds.ContainsKey($package)) { throw "No Chocolatey mapping for $package; install WinGet or extend host-tools" }
+            Invoke-Tool 'choco' @('install', $chocoIds[$package], '--yes', '--no-progress')
+        } else {
+            Invoke-Tool 'winget' @('install', '--id', $package, '--exact', '--source', 'winget', '--silent',
+                '--accept-package-agreements', '--accept-source-agreements', '--disable-interactivity')
+        }
     } catch { Write-Warning $_; $failed = $true }
 }
 try {
@@ -153,23 +182,33 @@ if (-not (Find-VisualStudio)) {
             'modify', '--installPath', $existing, '--passive', '--norestart',
             '--add', 'Microsoft.VisualStudio.Workload.VCTools', '--includeRecommended')
     } else {
-        Invoke-Tool 'winget' @('install', '--id', 'Microsoft.VisualStudio.2022.BuildTools', '--exact', '--source', 'winget',
-            '--accept-source-agreements', '--accept-package-agreements', '--override',
-            '--wait --passive --norestart --add Microsoft.VisualStudio.Workload.VCTools --includeRecommended')
+        if ($useChoco) {
+            Invoke-Tool 'choco' @('install', 'visualstudio2022buildtools', 'visualstudio2022-workload-vctools',
+                '--yes', '--no-progress')
+        } else {
+            Invoke-Tool 'winget' @('install', '--id', 'Microsoft.VisualStudio.2022.BuildTools', '--exact', '--source', 'winget',
+                '--accept-source-agreements', '--accept-package-agreements', '--override',
+                '--wait --passive --norestart --add Microsoft.VisualStudio.Workload.VCTools --includeRecommended')
+        }
     }
 }
 } catch { Write-Warning $_; $failed = $true }
 Refresh-ToolPath
 try {
+if (-not $deferVcpkg) {
 if (-not (Test-Path $vcpkgRoot)) { Invoke-Tool 'git' @('clone', 'https://github.com/microsoft/vcpkg.git', $vcpkgRoot) }
 if (-not (Test-Path (Join-Path $vcpkgRoot 'vcpkg.exe'))) {
     Invoke-Tool (Join-Path $vcpkgRoot 'bootstrap-vcpkg.bat') @('-disableMetrics')
+}
 }
 } catch { Write-Warning $_; $failed = $true }
 if ($mode -eq '--dry-run') { Write-Host "Would write $toolsDir/env.ps1 and audit installed tools."; exit 0 }
 function Quote-Literal([string]$Value) { return "'" + $Value.Replace("'", "''") + "'" }
 New-Item -ItemType Directory -Path $toolsDir -Force | Out-Null
-$content = @('$env:VCPKG_ROOT = ' + (Quote-Literal $vcpkgRoot))
+$content = @()
+if (Test-Path (Join-Path $vcpkgRoot 'scripts/buildsystems/vcpkg.cmake')) {
+    $content += '$env:VCPKG_ROOT = ' + (Quote-Literal $vcpkgRoot)
+}
 $content += '$env:PATH = ' + (Quote-Literal (($activationPaths -join ';') + ';')) + ' + $env:PATH'
 $vs = Find-VisualStudio
 if ($vs) {

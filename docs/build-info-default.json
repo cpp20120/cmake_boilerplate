@@ -1,0 +1,13 @@
+{
+  "capabilities" : "developer,docs",
+  "capabilities_expanded" : "compile-commands,compiler-cache,formatting,static-analysis,testing,build-info,diagnostics,developer,docs",
+  "compiler" : "Clang 22.1.8",
+  "configuration" : "",
+  "dirty" : true,
+  "generator" : "Ninja",
+  "project" : "TEST_PROJECT",
+  "project_mode" : "top-level",
+  "revision" : "ea82310aea568161e8159fd0e086171c6e877370",
+  "system" : "Linux x86_64",
+  "version" : "1.0.0"
+}

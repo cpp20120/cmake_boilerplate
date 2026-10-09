@@ -1,18 +1,45 @@
 # CMake boilerplate: libraries, runtimes and applications
 
-Create a named project from this checkout (or an unpacked source archive):
+## One command: prepare, build, test, and optionally run
 
-```sh
-cmake -DNAME=MyProject -DOUTPUT=../MyProject -P scripts/Init.cmake
-cd ../MyProject
-cmake --preset app-release
-cmake --build --preset app-release
-ctest --preset app-release
+Linux / macOS (Bash 3.2+):
+
+```bash
+./setup.sh --run
+# Or create a renamed project and run it in the same invocation:
+./setup.sh --init MyProject --output ../MyProject --run
 ```
 
-The same commands work in PowerShell. Generation requires only CMake 3.26+;
-builds also need Ninja and a compiler. Use the generated `setup-host.sh` or
-`setup-host.ps1` to provision missing build tools, then activate its environment.
+Windows (Windows PowerShell 5.1+ or PowerShell 7):
+
+```powershell
+.\setup.ps1 -Run
+# Or generate, configure, build, test and launch a new project:
+.\setup.ps1 -Init MyProject -Output ..\MyProject -Run
+```
+
+`setup` detects installed tools, provisions missing supported host dependencies,
+activates the toolchain **for its own process**, configures with the default
+`app-release` preset, builds and runs CTest. `--run` / `-Run` additionally launches
+the program through its CMake target; omit it for services/GUI programs you do not
+want to start automatically. No Python, pip, venv, user-shell configuration or
+manual invocation of CMake is needed. Tool installation can request administrator
+permissions, downloads, or a reboot/Command Line Tools approval.
+
+Use `--profile dev`, `--preset app-debug`, `--jobs 8`, `--no-tests`,
+`--setup-only`, or `--dry-run` as needed; PowerShell also accepts `-Profile`,
+`-Preset`, `-Jobs`, `-NoTests`, `-SetupOnly` and `-DryRun`. `--run-target NAME`
+builds an arbitrary CMake target but **does not** launch it. `--install-artifacts`
+installs built artifacts to the preset-specific output directory.
+
+To rebuild later without provisioning host packages, run `./build.sh --run` or
+`.\build.ps1 -Run`. Configuration, build, tests, launch, and optional install
+remain available individually with CMake/CTest for advanced users.
+
+`setup.sh` is included **in generated projects**, along with both activation and
+entry-option modules; copying the generated project does not require retaining
+this template checkout.
+
 `OUTPUT` defaults to `./<NAME>` and must be absent or empty. Names start with a
 letter, followed by alphanumeric groups separated by single underscores or hyphens.
 Build-system names such as `install`, `TEST` and `All_Build` are reserved regardless
@@ -206,7 +233,15 @@ the `vcpkg` executable in `PATH` (following symlinks), `vcpkg/` under `HOME`,
 `USERPROFILE` or `LOCALAPPDATA`, then `VSINSTALLDIR/VC/vcpkg`.
 Candidates must contain `scripts/buildsystems/vcpkg.cmake`; an invalid explicit
 root fails instead of silently selecting another installation. The selected root
-is printed during configuration. Nothing is downloaded by discovery itself.
+is printed during configuration. By default nothing is downloaded by discovery.
+`BOILERPLATE_VCPKG_BOOTSTRAP=ON` instead provisions a pinned checkout when no
+explicit root/toolchain is supplied. The revision comes from the manifest
+`builtin-baseline` or `BOILERPLATE_VCPKG_REVISION` (a full Git commit). Managed
+checkouts live in `BOILERPLATE_VCPKG_CACHE` (default `<build>/_deps`), are locked
+while provisioning and reused offline. `BOILERPLATE_VCPKG_REPOSITORY` accepts a
+local mirror. The official vcpkg toolchain bootstraps its executable and installs
+manifest features. Applications must set `VCPKG_MANIFEST_FEATURES` before
+`project()` and opt into bootstrap; dependency-free builds never call it.
 Use a fresh build directory when
 switching an already cached toolchain.
 
@@ -449,8 +484,13 @@ Individual knobs remain available: `BOILERPLATE_LTO_MODE=none|thin|full`,
 Useful presets: `lib-static`, `lib-shared`, `lib-aggressive` (native Full LTO,
 section GC, no-PLT, no semantic interposition, lld/ICF), `lib-address-undefined`,
 `lib-thread`, `app-asan`, `app-tsan`, `app-hardening`, `app-coverage`, `app-fuzz`.
-Named profiles own build type/LTO/PGO and require single-config generators.
-For Ninja Multi-Config/Visual Studio use `custom` and select `--config` explicitly.
+Named profiles own build type/LTO/PGO and select the corresponding configuration
+for both single-config and multi-config generators. With Visual Studio or Ninja
+Multi-Config, pass the matching `--config`. Use `custom` to retain several configs.
+Requested GNU-style optimization/instrumentation flags are compile-and-link
+probed, including required runtimes. LTO tries the system linker first and can
+fall back to LLD after a successful probe; ARM native optimization uses `-mcpu`.
+Unsupported explicit policies fail at configure time.
 Native profiles target the build CPU; use ordinary release for portable distribution.
 MSVC supports ordinary builds/full IPO; GNU-style Clang is required for ThinLTO
 and the supplied PGO/fuzzer profiles. Unsupported combinations fail at configure time.
@@ -747,6 +787,32 @@ Project-owned overlays live in `vcpkg/ports/` and `vcpkg/triplets/`, registered 
 manifest; `vcpkg-linux-shared` demonstrates the custom Linux shared triplet.
 See [the overlay layout and commands](vcpkg/README.md).
 
+### One-command application packaging
+
+After extracting the template, use one entry point for host preparation, configure,
+compile, tests and platform packages (no Python, no separate `cpack` command):
+
+```bash
+./setup.sh --package                     # Linux/macOS
+./setup.sh --init NewApp --package        # create + package in one command
+./setup.sh --package --package-format TGZ # request a specific CPack format
+```
+
+```powershell
+.\setup.ps1 -Package                    # Windows
+.\setup.ps1 -Init NewApp -Package       # create + package in one command
+```
+
+Packages land under `out/packages/<preset>/`. `--install-artifacts` is separate:
+packaging stages `install()` rules into the package, **not** the user's system.
+Default formats: Linux TGZ plus DEB/RPM when their native tools are present;
+Windows ZIP plus NSIS when `makensis` is present; macOS TGZ plus DMG when
+`hdiutil` is present. `--package` selects the `package` host-tools profile by
+default, which provisions supported native packagers and deployment tools. The
+`--package-format` option forces one generator; unavailable tools then cause a
+clear failure instead of a silent format downgrade. Signing/notarization of
+installers is deliberately a separate release step.
+
 ### Prepare a development host
 
 Use `./setup-host.sh --install --profile dev` on Linux/macOS or
@@ -905,3 +971,20 @@ flowchart LR
     Configure --> TARGETS
     TARGETS --> Finalize
 ```
+
+
+### Native packages by operating-system family
+
+`./setup.sh --init MyApp --run --package` (Windows: `./setup.ps1 -Init MyApp -Run -Package`) now creates a project, prepares tools, builds, runs CTest, launches the sample application, and produces packages in `out/packages/app-release/` of the new project. Without `--init`, it packages the current project. No Python is required.
+
+| Host | Automatic output (when native tools are available) | Explicit option |
+| --- | --- | --- |
+| Debian, Ubuntu and ID_LIKE=debian | `.tar.gz`, `.deb` | `--package-format DEB` |
+| Fedora, RHEL and ID_LIKE=fedora/rhel | `.tar.gz`, `.rpm` | `--package-format RPM` |
+| Arch, CachyOS, Manjaro and ID_LIKE=arch | `.tar.gz`, `.pkg.tar.zst` | `--package-format ARCH` |
+| macOS | `.tar.gz`, `.dmg` | `--package-format DragNDrop` |
+| Windows | `.zip`, NSIS `.exe` | `-PackageFormat NSIS` |
+
+On Arch the `.pkg.tar.zst` is built **with `makepkg`**, not CPack. Run the bootstrap as a **normal user**, never root; `sudo` is used for system dependencies, while `makepkg` stages `cmake --install` into its own `pkgdir`. The build is not repeated. The `package` tool profile ensures fakeroot, zstd, and makepkg prerequisites are present. Package dependencies/signatures, Windows code signing, and Apple notarization remain release policy owned by the application; the boilerplate does not invent them.
+
+Linux detection reads `/etc/os-release` (`ID`, `ID_LIKE`); installed `rpm` or `dpkg-deb` executables do not change the family. If the native tool is missing during a **build-only** invocation, CPack falls back to TGZ and emits a warning. `setup.sh --package` installs supported native tooling first. Explicit formats override automatic selection, except that `ARCH` is only supported on Linux with makepkg. The `Bootstrap E2E` workflow runs the one-command path on Windows/macOS/Ubuntu and in Fedora/Arch containers, verifies the native artifacts, and uploads them. These checks require an actual CI run to establish portability.

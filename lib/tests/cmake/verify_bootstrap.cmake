@@ -126,3 +126,32 @@ if(NOT _selected STREQUAL "${_fixture}/matrix/vcpkg/scripts/buildsystems/vcpkg.c
   message(FATAL_ERROR "Matrix selected the wrong toolchain: ${_selected}")
 endif()
 message(STATUS "vcpkg discovery, explicit overrides and missing-root diagnostics passed")
+
+# Exercise real Git provisioning without network or a preinstalled vcpkg.
+find_program(_git git REQUIRED)
+set(_mirror "${_fixture}/local mirror")
+fake_vcpkg("${_mirror}")
+foreach(_args IN ITEMS "init" "add;." "-c;user.name=Fixture;-c;user.email=fixture@example.invalid;commit;-m;fixture")
+  execute_process(COMMAND "${_git}" ${_args} WORKING_DIRECTORY "${_mirror}"
+    RESULT_VARIABLE _result OUTPUT_QUIET ERROR_VARIABLE _error)
+  if(NOT _result EQUAL 0)
+    message(FATAL_ERROR "Cannot create Git fixture: ${_error}")
+  endif()
+endforeach()
+execute_process(COMMAND "${_git}" -C "${_mirror}" rev-parse HEAD
+  OUTPUT_VARIABLE _revision OUTPUT_STRIP_TRAILING_WHITESPACE COMMAND_ERROR_IS_FATAL ANY)
+set(_managed "${_fixture}/managed cache/vcpkg-${_revision}/scripts/buildsystems/vcpkg.cmake")
+set(_bootstrap_args -DBOILERPLATE_VCPKG_BOOTSTRAP=ON
+  "-DBOILERPLATE_VCPKG_REVISION=${_revision}"
+  "-DBOILERPLATE_VCPKG_CACHE=${_fixture}/managed cache"
+  "-DBOILERPLATE_VCPKG_REPOSITORY=${_mirror}"
+  "-D_boilerplate_git=${_git}")
+check(provision "${_managed}" ARGS ${_bootstrap_args})
+# A warm checkout must work even when its origin has gone offline.
+file(RENAME "${_mirror}" "${_mirror}-offline")
+check(reuse "${_managed}" ARGS ${_bootstrap_args})
+check(override "${_explicit}" ARGS ${_bootstrap_args}
+  "-DBOILERPLATE_VCPKG_ROOT=${_fixture}/explicit root")
+check(invalid-pin "" ERROR "40-digit commit" ARGS ${_bootstrap_args}
+  -DBOILERPLATE_VCPKG_REVISION=main)
+message(STATUS "Pinned provisioning, offline reuse and explicit override checks passed")

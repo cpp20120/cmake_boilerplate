@@ -17,6 +17,13 @@ jobs:
         run: cmake -P scripts/TemplateManifest.cmake
       - name: Test manifest policy
         run: cmake "-DCHECK_BINARY=${{ runner.temp }}/template-policy-check" -P scripts/test-template-manifest.cmake
+      - name: Check one-command bootstrap (Linux/macOS)
+        if: runner.os != 'Windows'
+        run: bash scripts/test-entry.sh
+      - name: Check one-command bootstrap (Windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: ./scripts/test-entry.ps1
       - uses: ilammy/msvc-dev-cmd@v1
         if: runner.os == 'Windows'
       - name: Generate, build and test a renamed project

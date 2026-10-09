@@ -2,16 +2,17 @@
 # Bash 3.2+ (including macOS system Bash); no Python/pip/venv bootstrap.
 set -eo pipefail
 root="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd -P)"
-profile=dev
+profile=dev defer_vcpkg=false
 mode= manager= tools_dir="$root/out/host-tools" vcpkg_root="${VCPKG_ROOT:-$HOME/vcpkg}"
 fail() { echo "Host setup: $*" >&2; exit 1; }
 usage() {
   cat <<'HELP'
 Usage: setup-host.sh --install|--check|--dry-run [options]
-  --profile minimal|dev|ci    Tool selection (default: dev)
+  --profile minimal|package|dev|ci    Tool selection (default: dev)
   --manager apt|dnf|pacman|brew  Override detection for dry-run
   --tools-dir PATH             Activation file directory (out/host-tools)
   --vcpkg-root PATH            Existing/new SDK checkout ($VCPKG_ROOT or ~/vcpkg)
+  --defer-vcpkg                Let CMake provision vcpkg when dependencies need it
 The harness runs in CMake; setup does not require Python.
 HELP
 }
@@ -20,6 +21,7 @@ while [[ $# -gt 0 ]]; do
     --install|--check|--dry-run)
       [[ -z "$mode" ]] || fail 'Choose exactly one mode.'
       mode="$1"; shift ;;
+    --defer-vcpkg) defer_vcpkg=true; shift ;;
     --profile|--manager|--tools-dir|--vcpkg-root)
       [[ $# -ge 2 && -n "$2" && "$2" != --* ]] || fail "Missing value for $1"
       case "$1" in --profile) profile="$2";; --manager) manager="$2";; --tools-dir) tools_dir="$2";; --vcpkg-root) vcpkg_root="$2";; esac
@@ -29,7 +31,7 @@ while [[ $# -gt 0 ]]; do
   esac
 done
 [[ -n "$mode" ]] || { usage; exit 1; }
-case "$profile" in minimal|dev|ci) ;; *) fail "Unknown profile: $profile";; esac
+case "$profile" in minimal|package|dev|ci) ;; *) fail "Unknown profile: $profile";; esac
 canonical_path() {
   local path="$1" parent leaf
   if [[ -d "$path" ]]; then (cd "$path" && pwd -P); return; fi
@@ -61,12 +63,13 @@ if [[ "$os" == Linux && -r /etc/os-release ]]; then
   distro="$(. /etc/os-release; printf '%s' "${PRETTY_NAME:-Linux}")"
 fi
 echo "Host: $distro; manager: $manager; profile: $profile; mode: $mode"
-extra_path="$vcpkg_root"
+extra_path="$tools_dir/cmake/bin:$vcpkg_root"
 refresh_path() {
+  if [[ "$os" == Darwin ]]; then export PATH="/opt/homebrew/bin:/usr/local/bin:$PATH"; fi
   if [[ "$manager" == brew ]] && command -v brew >/dev/null 2>&1; then
     local prefix
     prefix="$(brew --prefix)"
-    extra_path="$vcpkg_root:$prefix/opt/llvm/bin:$prefix/opt/lld/bin:$prefix/opt/coreutils/libexec/gnubin"
+    extra_path="$tools_dir/cmake/bin:$vcpkg_root:$prefix/opt/llvm/bin:$prefix/opt/lld/bin:$prefix/opt/coreutils/libexec/gnubin:$prefix/bin"
   fi
   export PATH="$extra_path:$PATH"
 }
@@ -78,6 +81,16 @@ run() {
 elevated() {
   if [[ $EUID -eq 0 ]]; then run "$@"; else run sudo "$@"; fi
 }
+# Homebrew's official installer also provisions Apple's Command Line Tools.
+if [[ "$manager" == brew && "$mode" != --check ]]; then
+  if ! command -v brew >/dev/null 2>&1 || ! xcode-select -p >/dev/null 2>&1; then
+    if [[ "$mode" == --install ]]; then mkdir -p "$tools_dir"; fi
+    run curl --fail --location --retry 3 https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh \
+      -o "$tools_dir/homebrew-install.sh"
+    run /bin/bash "$tools_dir/homebrew-install.sh"
+    refresh_path
+  fi
+fi
 select_package() {
   case "$manager" in apt) package="$apt";; dnf) package="$dnf";; pacman) package="$pacman";; brew) package="$brew";; esac
 }
@@ -85,7 +98,7 @@ selected() { [[ ",$profiles," == *",$profile,"* ]]; }
 tool_ready() {
   if [[ "$label" == compiler && "$manager" == brew ]]; then
     xcode-select -p >/dev/null 2>&1 && command -v c++ >/dev/null 2>&1
-    return $?
+    if [[ $? != 0 ]]; then return 1; fi
   fi
   if [[ "$command_name" == @package ]]; then
     case "$manager" in
@@ -100,6 +113,10 @@ tool_ready() {
     command -v glibtoolize >/dev/null 2>&1; return $?
   fi
   command -v "$command_name" >/dev/null 2>&1 || return 1
+  if [[ "$label" == compiler ]]; then
+    printf '#include <thread>\n#if __cplusplus <= 202002L\n#error C++23 required\n#endif\n' |
+      "${CXX:-c++}" -std=c++23 -x c++ -fsyntax-only - >/dev/null 2>&1 || return 1
+  fi
   if [[ "$command_name" == cmake ]]; then
     local version
     version="$(cmake --version)" || return 1
@@ -130,7 +147,10 @@ audit() {
     elif tool_ready; then report_tool "$label" yes
     else report_tool "$label" no; fi
   done < "$root/scripts/host-tools.txt"
-  if [[ -x "$vcpkg_root/vcpkg" && -f "$vcpkg_root/scripts/buildsystems/vcpkg.cmake" ]]; then report_tool vcpkg yes
+  if [[ "$defer_vcpkg" == true && ! -f "$vcpkg_root/scripts/buildsystems/vcpkg.cmake" ]]; then
+    echo 'DEFERRED  vcpkg: CMake provisions the pinned SDK only for selected dependencies.'
+  elif [[ -x "$vcpkg_root/vcpkg" && -f "$vcpkg_root/scripts/buildsystems/vcpkg.cmake" ]]; then report_tool vcpkg yes
+  elif [[ "$defer_vcpkg" == true ]]; then echo "DEFERRED  vcpkg executable: its toolchain will bootstrap it."
   else report_tool vcpkg no; fi
   echo "Summary: already=$((ready_count - installed_count)) installed=$installed_count missing=$missing_count"
   echo 'SEPARATE  CUDA, DXC and Emscripten: install separately.'
@@ -149,10 +169,6 @@ while IFS='|' read -r label command_name apt dnf pacman brew winget profiles; do
   for item in "${packages[@]}"; do [[ "$item" != "$package" ]] || seen=true; done
   if [[ "$seen" == false ]]; then packages+=("$package"); fi
 done < "$root/scripts/host-tools.txt"
-if [[ "$mode" == --install && "$manager" == brew ]]; then
-  command -v brew >/dev/null 2>&1 || fail 'Install Homebrew first: https://brew.sh'
-  xcode-select -p >/dev/null || fail 'Install Xcode Command Line Tools: xcode-select --install'
-fi
 failed=0
 if [[ "$manager" == apt && ${#packages[@]} -gt 0 ]]; then elevated apt-get update || failed=1; fi
 for package in "${packages[@]}"; do
@@ -169,16 +185,38 @@ for package in "${packages[@]}"; do
   esac
 done
 refresh_path
+if [[ "$mode" == --install && "$os" == Linux ]]; then
+  label=CMake command_name=cmake
+  if ! tool_ready; then
+    source "$root/scripts/install-cmake.sh"
+    install_local_cmake || failed=1
+  fi
+  label=compiler command_name=c++
+  if ! tool_ready && [[ "$manager" == apt && -z "${CXX:-}" ]]; then
+    for candidate in g++-14 g++-13 g++-12; do
+      if command -v apt-cache >/dev/null 2>&1 && apt-cache show "$candidate" >/dev/null 2>&1; then
+        if elevated apt-get install -y --no-install-recommends "$candidate"; then
+          export CXX="$candidate"
+          if tool_ready; then break; fi
+          unset CXX
+        fi
+      fi
+    done
+  fi
+fi
+if [[ "$defer_vcpkg" == false ]]; then
 if [[ ! -d "$vcpkg_root" ]]; then run git clone https://github.com/microsoft/vcpkg.git "$vcpkg_root" || failed=1; fi
 if [[ ! -x "$vcpkg_root/vcpkg" ]]; then run bash "$vcpkg_root/bootstrap-vcpkg.sh" -disableMetrics || failed=1; fi
+fi
 if [[ "$mode" == --dry-run ]]; then
   echo "Would write $tools_dir/env.sh and audit installed tools."
   exit 0
 fi
 mkdir -p "$tools_dir"
 {
-  printf 'export VCPKG_ROOT=%q\n' "$vcpkg_root"
+  if [[ -f "$vcpkg_root/scripts/buildsystems/vcpkg.cmake" ]]; then printf 'export VCPKG_ROOT=%q\n' "$vcpkg_root"; fi
   printf 'export PATH=%q:"$PATH"\n' "$extra_path"
+  if [[ -n "${CXX:-}" ]]; then printf 'export CXX=%q\n' "$CXX"; fi
 } > "$tools_dir/env.sh"
 printf 'Activate: source %q\n' "$tools_dir/env.sh"
 report_phase=after

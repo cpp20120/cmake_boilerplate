@@ -1,0 +1,7 @@
+<map id="lib/library1/include/include.hpp" name="lib/library1/include/include.hpp">
+<area shape="rect" id="Node000001" title="Public API of the dependency&#45;free example library." alt="" coords="68,5,211,50"/>
+<area shape="rect" id="Node000002" title=" " alt="" coords="5,98,138,126"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="124,49,94,88,90,84,119,52"/>
+<area shape="rect" id="Node000003" title=" " alt="" coords="162,98,253,126"/>
+<area shape="poly" id="edge2_Node000001_Node000003" title=" " alt="" coords="158,48,189,86,184,86,156,53"/>
+</map>

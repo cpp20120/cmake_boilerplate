@@ -1,7 +1,7 @@
 # capability|command|apt|dnf|pacman|brew|winget|profiles
-Git|git|git|git|git|git|Git.Git|minimal,dev,ci
-CMake|cmake|cmake|cmake|cmake|cmake|Kitware.CMake|minimal,dev,ci
-Ninja|ninja|ninja-build|ninja-build|ninja|ninja|Ninja-build.Ninja|minimal,dev,ci
+Git|git|git|git|git|git|Git.Git|minimal,package,dev,ci
+CMake|cmake|cmake|cmake|cmake|cmake|Kitware.CMake|minimal,package,dev,ci
+Ninja|ninja|ninja-build|ninja-build|ninja|ninja|Ninja-build.Ninja|minimal,package,dev,ci
 Clang|clang++|clang|clang|clang|llvm|LLVM.LLVM|dev,ci
 clangd|clangd|clangd|clang-tools-extra|clang|llvm|LLVM.clangd|dev
 clang-tidy|clang-tidy|clang-tidy|clang-tools-extra|clang|llvm|LLVM.LLVM|dev,ci
@@ -19,20 +19,23 @@ Doxygen|doxygen|doxygen|doxygen|doxygen|doxygen|DimitriVanHeesch.Doxygen|dev
 Graphviz|dot|graphviz|graphviz|graphviz|graphviz|Graphviz.Graphviz|dev
 glslc|glslc|glslc|glslc|shaderc|shaderc|KhronosGroup.VulkanSDK|dev,ci
 glslang|glslangValidator|glslang-tools|glslang|glslang|glslang|KhronosGroup.VulkanSDK|dev,ci
-patchelf|patchelf|patchelf|patchelf|patchelf|-|-|dev,ci
-RPM packaging|rpmbuild|rpm|rpm-build|rpm-tools|-|-|dev,ci
-NSIS packaging|makensis|-|-|-|-|NSIS.NSIS|dev,ci
+patchelf|patchelf|patchelf|patchelf|patchelf|-|-|dev,package,ci
+RPM packaging|rpmbuild|-|rpm-build|-|-|-|dev,package,ci
+Arch makepkg|makepkg|-|-|base-devel|-|-|package
+Arch fakeroot|fakeroot|-|-|fakeroot|-|-|package
+Arch zstd|zstd|-|-|zstd|-|-|package
+NSIS packaging|makensis|-|-|-|-|NSIS.NSIS|dev,package,ci
 AFL++|afl-fuzz|afl++|afl++|afl++|afl++|-|dev
 honggfuzz|honggfuzz|honggfuzz|honggfuzz|honggfuzz|honggfuzz|-|dev
-compiler|c++|g++|gcc-c++|gcc|-|-|minimal,dev,ci
-curl|curl|curl|curl|curl|curl|-|minimal,dev,ci
-zip|zip|zip|zip|zip|zip|-|minimal,dev,ci
-unzip|unzip|unzip|unzip|unzip|unzip|-|minimal,dev,ci
-tar|tar|tar|tar|tar|-|-|minimal,dev,ci
-pkg-config|pkg-config|pkg-config|pkgconf-pkg-config|pkgconf|pkgconf|-|minimal,dev,ci
-make|make|make|make|make|-|-|minimal,dev,ci
-autoconf|autoconf|autoconf|autoconf|autoconf|autoconf|-|minimal,dev,ci
-autoconf-archive|@package|autoconf-archive|autoconf-archive|autoconf-archive|autoconf-archive|-|minimal,dev,ci
-automake|automake|automake|automake|automake|automake|-|minimal,dev,ci
-libtool|libtoolize|libtool|libtool|libtool|libtool|-|minimal,dev,ci
-bc|bc|bc|bc|bc|-|-|minimal,dev,ci
+compiler|c++|g++|gcc-c++|gcc|-|-|minimal,package,dev,ci
+curl|curl|curl|curl|curl|curl|-|minimal,package,dev,ci
+zip|zip|zip|zip|zip|zip|-|minimal,package,dev,ci
+unzip|unzip|unzip|unzip|unzip|unzip|-|minimal,package,dev,ci
+tar|tar|tar|tar|tar|-|-|minimal,package,dev,ci
+pkg-config|pkg-config|pkg-config|pkgconf-pkg-config|pkgconf|pkgconf|-|minimal,package,dev,ci
+make|make|make|make|make|-|-|minimal,package,dev,ci
+autoconf|autoconf|autoconf|autoconf|autoconf|autoconf|-|minimal,package,dev,ci
+autoconf-archive|@package|autoconf-archive|autoconf-archive|autoconf-archive|autoconf-archive|-|minimal,package,dev,ci
+automake|automake|automake|automake|automake|automake|-|minimal,package,dev,ci
+libtool|libtoolize|libtool|libtool|libtool|libtool|-|minimal,package,dev,ci
+bc|bc|bc|bc|bc|-|-|minimal,package,dev,ci

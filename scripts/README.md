@@ -38,6 +38,19 @@ cmake -DCHECK_BINARY=/tmp/fresh-template-check -P scripts/test-init.cmake
 Use a fresh test directory. Ninja and a native C++ compiler are required for this
 check; `.github/workflows/template.yml` runs it on Linux, Windows and macOS.
 
+## First-run entry point
+
+Use `./setup.sh` (Linux/macOS) or `.\setup.ps1` (Windows) to provision missing
+host tools and run configure, build and CTest in one invocation. Append `--run`
+or `-Run` to launch the example executable as well; it executes the actual binary,
+not merely the build target. Append `--init ProjectName --output ../ProjectName`
+or `-Init ProjectName -Output ..\ProjectName` to generate **and** build a new
+project from scratch. Run `./setup.sh --help` for the full arguments.
+
+Both launchers work in generated projects without Python, pip, venv or this
+checkout. Native package-manager elevation, Windows Build Tools/SDK installation,
+and macOS Xcode CLT approval can require host interaction.
+
 ## Host bootstrap
 
 The installers are Bash 3.2+ on Linux/macOS and Windows PowerShell 5.1+ / PowerShell
@@ -182,3 +195,5 @@ bash scripts/test-setup-host.sh
 The shell tests run with a minimal PATH containing no Python and mock package
 managers. Neither test suite installs real packages. CI runs the native tests on
 Linux, macOS and Windows.
+
+The bootstrap packaging backend supports `--package-format ARCH` for Arch-based systems. Automatic selection uses `ID` and `ID_LIKE` from `/etc/os-release`; on Arch the native package is created with unprivileged `makepkg`. CI: `.github/workflows/bootstrap-e2e.yml`.
