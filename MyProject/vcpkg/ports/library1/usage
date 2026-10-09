@@ -1,4 +1,0 @@
-library1 provides CMake targets:
-
-    find_package(library1 CONFIG REQUIRED)
-    target_link_libraries(main PRIVATE library1::library1)

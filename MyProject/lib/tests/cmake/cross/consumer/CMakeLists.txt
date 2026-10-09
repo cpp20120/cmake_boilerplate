@@ -1,8 +1,0 @@
-cmake_minimum_required(VERSION 3.26)
-project(CrossConsumer LANGUAGES CXX)
-if(NOT CMAKE_CROSSCOMPILING)
-  message(FATAL_ERROR "Consumer lost the toolchain")
-endif()
-find_package(crossmath CONFIG REQUIRED)
-add_executable(consumer ../main.cpp)
-target_link_libraries(consumer PRIVATE crossmath::crossmath)

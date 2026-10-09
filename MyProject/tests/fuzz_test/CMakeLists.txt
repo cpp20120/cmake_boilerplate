@@ -1,1 +1,0 @@
-boilerplate_add_fuzzer(fuzz_target SOURCES fuzz_target.cpp)

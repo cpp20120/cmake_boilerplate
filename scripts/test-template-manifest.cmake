@@ -48,6 +48,26 @@ if(NOT _before STREQUAL _after)
   message(FATAL_ERROR "Failed policy validation changed the manifest")
 endif()
 run("${_git}" -C "${CHECK_BINARY}" rm --cached unclassified.txt)
+# A generated project staged inside its boilerplate checkout must not become
+# part of the source template manifest or trigger a false unknown-file error.
+run("${CMAKE_COMMAND}" -DNAME=MyProject "-DOUTPUT=${CHECK_BINARY}/MyProject"
+  -P "${CMAKE_CURRENT_LIST_DIR}/Init.cmake")
+run("${_git}" -C "${CHECK_BINARY}" add MyProject)
+file(READ "${CHECK_BINARY}/scripts/template-files.txt" _before_nested)
+run("${CMAKE_COMMAND}" "-DSOURCE_DIR=${CHECK_BINARY}" -P "${_script}")
+run("${CMAKE_COMMAND}" "-DSOURCE_DIR=${CHECK_BINARY}" -DACTION=update -P "${_script}")
+file(READ "${CHECK_BINARY}/scripts/template-files.txt" _after_nested)
+if(NOT _before_nested STREQUAL _after_nested OR _after_nested MATCHES "MyProject/")
+  message(FATAL_ERROR "Nested generated project contaminated the template manifest")
+endif()
+# An arbitrary root with only a forged marker is still an unknown top-level
+# area and must never be implicitly skipped.
+file(MAKE_DIRECTORY "${CHECK_BINARY}/Unrelated/scripts")
+file(WRITE "${CHECK_BINARY}/Unrelated/scripts/template-identity.json" "{\"project\":\"OtherProject\"}\n")
+run("${_git}" -C "${CHECK_BINARY}" add Unrelated)
+reject("${CMAKE_COMMAND}" "-DSOURCE_DIR=${CHECK_BINARY}" -P "${_script}")
+run("${_git}" -C "${CHECK_BINARY}" rm --cached -r Unrelated)
+run("${CMAKE_COMMAND}" "-DSOURCE_DIR=${CHECK_BINARY}" -P "${_script}")
 file(APPEND "${CHECK_BINARY}/scripts/template-files.txt" "scripts/local-secret.txt\n")
 reject("${CMAKE_COMMAND}" "-DSOURCE_DIR=${CHECK_BINARY}" -P "${_script}")
 run("${CMAKE_COMMAND}" "-DSOURCE_DIR=${CHECK_BINARY}" -DACTION=update -P "${_script}")

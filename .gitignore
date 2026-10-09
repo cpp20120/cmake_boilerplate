@@ -90,3 +90,4 @@ checks.json
 
 #doxygen
 doxygen_output/
+/MyProject/
