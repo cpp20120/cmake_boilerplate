@@ -1,5 +1,7 @@
 # CMake boilerplate: libraries, runtimes and applications
 
+[![OpenSSF Best Practices](https://www.bestpractices.dev/projects/15343/badge)](https://www.bestpractices.dev/projects/15343)
+
 ## One command: prepare, build, test, and optionally run
 
 Linux / macOS (Bash 3.2+):
