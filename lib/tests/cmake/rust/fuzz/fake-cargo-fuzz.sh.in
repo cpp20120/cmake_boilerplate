@@ -1,0 +1,16 @@
+#!/bin/sh
+if [ "$1" = '--version' ]; then
+  echo 'cargo-fuzz 0.13.2 (fake)'
+  exit 0
+fi
+cmd=$1
+shift
+mkdir -p "$CARGO_TARGET_DIR"
+{
+  printf 'mode=%s\n' "$cmd"
+  printf 'cargo=%s\n' "${CARGO-}"
+  printf 'rustc=%s\n' "${RUSTC-}"
+  printf 'build-dir=%s\n' "$CARGO_TARGET_DIR"
+  for a in "$@"; do printf 'arg=[%s]\n' "$a"; done
+} >> "$CARGO_TARGET_DIR/invocations.log"
+case "$cmd" in build|run) exit 0;; *) exit 19;; esac

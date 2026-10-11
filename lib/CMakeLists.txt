@@ -112,6 +112,13 @@ add_custom_target(boilerplate_check_rust_sanitizers
     "-DCHECK_GENERATOR=Ninja Multi-Config"
     -P "${CMAKE_CURRENT_SOURCE_DIR}/tests/cmake/verify_rust_sanitizers.cmake"
   USES_TERMINAL VERBATIM)
+add_custom_target(boilerplate_check_rust_fuzz
+  COMMAND "${CMAKE_COMMAND}" "-DCHECK_BINARY=${CMAKE_BINARY_DIR}/rust-fuzz-check"
+    -P "${CMAKE_CURRENT_SOURCE_DIR}/tests/cmake/verify_rust_fuzz.cmake"
+  COMMAND "${CMAKE_COMMAND}" "-DCHECK_BINARY=${CMAKE_BINARY_DIR}/rust-fuzz-check-multi"
+    "-DCHECK_GENERATOR=Ninja Multi-Config"
+    -P "${CMAKE_CURRENT_SOURCE_DIR}/tests/cmake/verify_rust_fuzz.cmake"
+  USES_TERMINAL VERBATIM)
 find_program(_boilerplate_ninja ninja)
 if(_boilerplate_ninja)
   find_program(_boilerplate_clang clang++)

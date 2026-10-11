@@ -342,3 +342,5 @@ function(boilerplate_add_rust_test name)
   add_dependencies(boilerplate_tests ${name}_cargo_tests)
   set_property(TARGET ${name}_cargo_tests PROPERTY FOLDER "boilerplate/tests")
 endfunction()
+
+include("${CMAKE_CURRENT_LIST_DIR}/RustFuzz.cmake")

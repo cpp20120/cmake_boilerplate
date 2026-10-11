@@ -1,0 +1,11 @@
+#!/bin/sh
+if [ "$1" = '--version' ]; then
+  printf '%s\n' 'cargo 1.99.0@CHANNEL@ (fake)' 'release: 1.99.0@CHANNEL@' 'host: x86_64-unknown-linux-gnu'
+  exit 0
+fi
+if [ "$1" != fuzz ]; then
+  printf 'Unexpected Cargo command: %s\n' "$1" >&2
+  exit 12
+fi
+shift
+exec '@FAKE_FUZZ_BIN@' "$@"

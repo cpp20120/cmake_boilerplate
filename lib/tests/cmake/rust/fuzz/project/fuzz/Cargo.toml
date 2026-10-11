@@ -1,0 +1,27 @@
+[package]
+name = "boilerplate-fuzz-fixture"
+version = "0.0.1"
+edition = "2021"
+publish = false
+
+[package.metadata]
+cargo-fuzz = true
+
+# Keep this fuzz fixture independent from lib/tests/cmake/rust/Cargo.toml.
+# That parent manifest declares its own workspace but does not include this
+# nested fuzz package.
+[workspace]
+
+[features]
+scheduler = []
+test_feature = []
+
+[dependencies]
+libfuzzer-sys = "0.4"
+
+[[bin]]
+name = "scheduler"
+path = "fuzz_targets/scheduler.rs"
+test = false
+doc = false
+bench = false

@@ -193,8 +193,8 @@ Rust scenario `PGO` is explicitly rejected until a later stage.
 
 ## Subsequent stages
 
-Fuzzing, coverage, PGO, packaging and DagFlow-Rust migration are
-explicitly deferred. Rust ASan/TSan are implemented in Stage 3A.1 below. Backend-specific benchmark metadata is implemented in Stage 2A using
+Coverage, PGO, packaging and DagFlow-Rust migration are deferred.
+Rust ASan/TSan are implemented in Stage 3A.1, and cargo-fuzz in Stage 3A.2 below. Backend-specific benchmark metadata is implemented in Stage 2A using
 the existing CMake benchmark and scenario runners.
 No second benchmark runner or xtask orchestration is introduced. Rust libraries,
 C++/Rust FFI, cross compilation, doctest orchestration and broad CI expansion are
@@ -248,8 +248,8 @@ which does **not** override manifest Cargo profiles. Explicit enabled common
 project defaults for LTO/native/frame-pointers/debug symbols also map to Rust;
 neutral C++ defaults do not erase Cargo settings. Unsupported C++ keys,
 including CUDA, Unity, CFI, MSVC-specific hardening and C++ standards, fail
-explicitly when requested for Rust. PGO/fuzz/coverage remain separate
-future work; ASan/TSan are implemented below.
+explicitly when requested for Rust. PGO/coverage remain separate future work; sanitizers and fuzzing are
+implemented below.
 
 A variant is fingerprinted from the Cargo workspace and package, requested
 features (normalized), profile, emitted rustc flags, toolchain/host, relevant
@@ -343,7 +343,8 @@ reconfiguring CMake so the new build variant records the change.
 sanitizer is incorporated into the build identity. `boilerplate_add_harness()`
 and `boilerplate_add_scenario()` remain available, but sanitizer overhead
 means instrumented results are **not comparable to production benchmarks**.
-Rust PGO and fuzzing are not yet available. This stage does not promise that
+Rust PGO is not yet available. Rust fuzzing is implemented in Stage 3A.2.
+This stage does not promise that
 all Rust concurrency bugs are detectable by TSan; a real instrumented test
 run is still required.
 
@@ -364,3 +365,103 @@ nightly Cargo/rustc sanitizer build and runtime tests must also pass on a
 Linux x86_64 host before enabling sanitizer CI for actual projects. macOS,
 Windows, other host triples, Rust cross-compilation, sanitizer-specific
 runtime options, and fuzzing integration are outside Stage 3A.1.
+
+## Stage 3A.2: Rust cargo-fuzz integration (Linux x86_64)
+
+Rust fuzzing is **not** an imported Cargo executable: `cargo-fuzz` supplies
+libFuzzer, sanitizer coverage, and the fuzz binary's lifecycle. The optional
+Rust capability exposes a dedicated adapter to the same CMake build / CTest
+orchestration, without making up `$<TARGET_FILE:...>` for a fuzz target.
+
+Install `cargo-fuzz` and an LLVM nightly toolchain with Rust sources:
+
+```sh
+rustup toolchain install nightly --component rust-src
+rustup run nightly cargo install cargo-fuzz --locked
+```
+
+When a system-installed `cargo` does not support `cargo +nightly`, use `rustup run nightly cargo ...`; the CMake runner pins nightly Cargo for nested `cargo-fuzz` invocations regardless of the system Cargo on PATH.
+
+`cargo-fuzz` also requires a native C++ compiler. Current integration is limited
+to Linux `x86_64-unknown-linux-gnu`, and sanitizer `address` (default) or
+`none`. It explicitly rejects stable Rust, missing `rust-src`, missing
+`cargo-fuzz`, missing fuzz targets and unsupported sanitizer combinations.
+Configure with `-DBOILERPLATE_RUST_TOOLCHAIN=nightly`, or select matching
+nightly Cargo/rustc paths. Optional `BOILERPLATE_RUST_CARGO_FUZZ` pins an
+installed `cargo-fuzz` executable.
+
+A dedicated Cargo fuzz package (usually `fuzz/Cargo.toml`) must already exist,
+for example created using `cargo fuzz init`; the CMake integration never
+modifies manifests or creates Rust targets:
+
+```cmake
+project(MyRustFuzz LANGUAGES NONE)
+include(CTest)
+include("path/to/Boilerplate.cmake")
+boilerplate_project(CAPABILITIES rust fuzzing)
+boilerplate_add_rust_fuzzer(scheduler
+  MANIFEST "${CMAKE_SOURCE_DIR}/fuzz/Cargo.toml"
+  FUZZ_TARGET scheduler
+  SEED_CORPUS "${CMAKE_SOURCE_DIR}/fuzz/seeds/scheduler"
+  DICTIONARY "${CMAKE_SOURCE_DIR}/fuzz/dictionary.txt"
+  RUN_SECONDS 60 TIMEOUT 15 MAX_LEN 4096
+  FEATURES scheduler)
+boilerplate_finalize_project()
+```
+
+Generated CMake targets:
+
+- `scheduler_cargo_fuzz_build`: instrumented build (`cargo fuzz build`).
+- `fuzz_scheduler`: bounded fuzz execution (`cargo fuzz run`).
+- `replay_scheduler`: replay a single existing input, selected by the
+  `BOILERPLATE_FUZZ_REPLAY_INPUT` environment variable.
+- CTest `scheduler_smoke`: a bounded `-runs=1` smoke check (part of `check`).
+- Existing `boilerplate_fuzzers` and `fuzz-smoke` aggregates when the project
+  enables the `fuzzing` capability (which inherits `testing`).
+
+```sh
+cmake --build out/fuzz --target scheduler_cargo_fuzz_build
+cmake --build out/fuzz --target fuzz_scheduler
+cmake --build out/fuzz --target boilerplate_check
+BOILERPLATE_FUZZ_REPLAY_INPUT=/absolute/path/to/crash-file \
+  cmake --build out/fuzz --target replay_scheduler
+```
+
+`CORPUS` selects an explicit **mutable** directory. Alternatively,
+`SEED_CORPUS` is a flat **read-only** seed directory; missing seed files are
+copied to the build-tree `rust-fuzz/<name>/corpus` without overwriting existing
+mutated corpus files. Crash artifacts live under
+`rust-fuzz/<name>/artifacts/`. Both survive rebuilds. Explicit
+`CORPUS` and `SEED_CORPUS` are mutually exclusive. `NO_SMOKE` permits a
+non-testing project; `NO_DEFAULT_FEATURES`, `FEATURES`, `LABELS` and `DEPENDS`
+are also supported. `SANITIZER none` disables ASan while retaining libFuzzer
+coverage. No C++ policy is applied to Rust fuzz targets.
+
+Fuzz build variants are isolated per CMake config, target, features, sanitizer,
+manifest/lockfile hash, pinned tool hashes and captured build environment.
+Debug uses cargo-fuzz `--dev`, Release its optimized default, and
+RelWithDebInfo adds Cargo release debuginfo. The runner uses the original
+Rust environment fingerprint, including native compiler normalization, but
+rejects changed Rust flags rather than silently changing instrumentation.
+Ambient `RUSTFLAGS`/`CARGO_ENCODED_RUSTFLAGS` overrides are not yet supported
+for this adapter. Existing `.cargo/config` rustflags and LLVM runtime-specific
+options have not been exhaustively validated.
+
+A self-contained fixture lives under `lib/tests/cmake/rust/fuzz/`; it includes
+an actual `libfuzzer-sys` target for optional real-toolchain validation.
+Toolchain-free orchestration checks use fake Cargo and cargo-fuzz binaries:
+
+```sh
+cmake -S lib -B out/build -G Ninja
+cmake --build out/build --target boilerplate_check_rust_fuzz
+# Real nightly test (requires network-resolved libfuzzer-sys):
+cmake -S lib/tests/cmake/rust/fuzz -B out/rust-fuzz -G Ninja \
+  -DCMAKE_BUILD_TYPE=Debug -DBOILERPLATE_RUST_TOOLCHAIN=nightly
+cmake --build out/rust-fuzz --target scheduler_fuzz_cargo_fuzz_build
+ctest --test-dir out/rust-fuzz -C Debug -R scheduler_fuzz_smoke --output-on-failure
+```
+
+Fake drivers validate command construction, persistence, environment gating,
+variant separation and CTest, **not** actual LLVM coverage or the runtime's
+ability to detect crashes. Real fuzzing, non-Linux targets and fuzz coverage
+reports require independent validation. Rust coverage and PGO are deferred.

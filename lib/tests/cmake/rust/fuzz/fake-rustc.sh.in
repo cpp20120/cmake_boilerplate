@@ -1,0 +1,8 @@
+#!/bin/sh
+case "$1" in
+  --version)
+    printf '%s\n' 'rustc 1.99.0@CHANNEL@ (fake)' 'release: 1.99.0@CHANNEL@' 'host: @TRIPLE@';;
+  --print)
+    if [ "$2" = sysroot ]; then printf '%s\n' '@FAKE_SYSROOT@'; exit 0; fi ;;
+  *) exit 12 ;;
+esac
