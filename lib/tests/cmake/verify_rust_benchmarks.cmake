@@ -76,7 +76,9 @@ function(check_rust metadata config)
   # resolved features, even if a newly added C++ policy uses a different name.
   set(_allowed backend target compiler generator project configuration rustc rustc_version cargo cargo_version
     rust_host rust_sysroot cargo_manifest cargo_package cargo_target_kind cargo_target_name rust_edition cargo_profile
-    rust_target cargo_no_default_features cargo_target_dir cargo_build_id cargo_build_target cargo_features_requested rustflags_explicit)
+    rust_target cargo_no_default_features cargo_target_dir cargo_build_id cargo_build_target cargo_features_requested rustflags_explicit
+    rust_opt_level rust_lto_mode rust_debug_info rust_codegen_units rust_incremental
+    rust_enable_native rust_frame_pointers)
   string(JSON _count LENGTH "${metadata}")
   math(EXPR _last "${_count}-1")
   foreach(_i RANGE ${_last})

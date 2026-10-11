@@ -105,6 +105,37 @@ if(FIXTURE_RUST)
     message(FATAL_ERROR "Benchmark registration applied C++ policies to Rust")
   endif()
   file(GENERATE OUTPUT "${CMAKE_CURRENT_BINARY_DIR}/bench-$<CONFIG>.txt" CONTENT "$<TARGET_FILE:rust_bench>")
+
+  if(FIXTURE_PROFILE_VARIANTS)
+    # Intentionally two Cargo invocations for the SAME package and bin, with
+    # independent policies and artifacts. Tests verify both survive concurrently.
+    boilerplate_define_policy(rust-fast
+      RUST_OPT_LEVEL 3 LTO_MODE thin RUST_CODEGEN_UNITS 1 FRAME_POINTERS ON)
+    boilerplate_add_rust_executable(rust_variant_fast
+      MANIFEST Cargo.toml CARGO_TARGET fixture-bin PACKAGE rust-fixture
+      FEATURES answer NO_DEFAULT_FEATURES LOCKED OFFLINE EXCLUDE_FROM_ALL
+      RUSTFLAGS --cfg "cmake_fixture=\"value with spaces\""
+      POLICIES rust-fast)
+    boilerplate_add_rust_executable(rust_variant_small
+      MANIFEST Cargo.toml CARGO_TARGET fixture-bin PACKAGE rust-fixture
+      FEATURES answer NO_DEFAULT_FEATURES LOCKED OFFLINE EXCLUDE_FROM_ALL
+      RUSTFLAGS --cfg "cmake_fixture=\"value with spaces\""
+      POLICY_OPTIONS RUST_OPT_LEVEL z RUST_CODEGEN_UNITS 8 LTO_MODE off)
+    add_custom_target(run_rust_variants
+      COMMAND "$<TARGET_FILE:rust_variant_fast>"
+      COMMAND "$<TARGET_FILE:rust_variant_small>"
+      DEPENDS rust_variant_fast rust_variant_small VERBATIM)
+    if(FIXTURE_BAD_RUST_POLICY)
+      boilerplate_add_rust_executable(rust_bad_policy MANIFEST Cargo.toml
+        CARGO_TARGET fixture-bin PACKAGE rust-fixture
+        POLICY_OPTIONS UNITY_BUILD ON)
+    endif()
+    if(FIXTURE_BAD_RUST_PROFILE)
+      boilerplate_add_rust_executable(rust_bad_profile MANIFEST Cargo.toml
+        CARGO_TARGET fixture-bin PACKAGE rust-fixture
+        POLICY_OPTIONS RUST_CARGO_PROFILE test)
+    endif()
+  endif()
   if(FIXTURE_BAD_POLICY)
     boilerplate_apply_target_policy(rust_bin POLICIES minimal)
   endif()

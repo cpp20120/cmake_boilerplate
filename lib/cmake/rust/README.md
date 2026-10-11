@@ -114,11 +114,11 @@ the build tree. Generated build artifacts and intermediate files stay beneath
 
 ## Configurations and policies
 
-Debug explicitly selects Cargo `dev`; Release selects Cargo `release`.
+Debug selects Cargo `dev`; Release selects Cargo `release`; RelWithDebInfo
+selects an optimized Cargo `release` build with debuginfo (Stage 2B).
 Artifacts are separated by CMake target, toolchain identity, feature/flag set,
-host triple and configuration. Cargo uses an explicit host `--target`; Windows
-paths include `.exe`, Linux/macOS paths do not. Empty build types,
-RelWithDebInfo, MinSizeRel and custom configurations are rejected, without
+host triple and effective configuration. Cargo uses an explicit host `--target`; Windows
+paths include `.exe`, Linux/macOS paths do not. Empty build types, MinSizeRel and unsupported custom CMake configurations are rejected, without
 changing the consuming project's CMake configuration list.
 
 ```sh
@@ -187,11 +187,91 @@ Rust scenario `PGO` is explicitly rejected until a later stage.
 
 ## Subsequent stages
 
-Extended Rust profiles, fuzzing,
-sanitizers, coverage, PGO, packaging and DagFlow-Rust migration are explicitly
-deferred. Backend-specific benchmark metadata is implemented in Stage 2A using
+Fuzzing, sanitizers, coverage, PGO, packaging and DagFlow-Rust migration are
+explicitly deferred. Backend-specific benchmark metadata is implemented in Stage 2A using
 the existing CMake benchmark and scenario runners.
 No second benchmark runner or xtask orchestration is introduced. Rust libraries,
 C++/Rust FFI, cross compilation, doctest orchestration and broad CI expansion are
 also outside this stage. Platform path handling is implemented, but macOS,
 Windows, Visual Studio and Xcode require verification on those hosts.
+
+## Stage 2B: profiles and target-local Cargo variants
+
+The CMake build orchestrator now supports `Debug`, `Release` and
+`RelWithDebInfo` for Cargo targets. `RelWithDebInfo` selects the release Cargo
+profile with an explicit `opt-level=3` and `debug=2` override. The corresponding
+output directory remains Cargo's `release` subdirectory; the outer CMake build
+variant gets its own unique `CARGO_TARGET_DIR`.
+
+```cmake
+boilerplate_define_policy(rust-fast RUST_OPT_LEVEL 3 LTO_MODE thin
+  RUST_CODEGEN_UNITS 1 FRAME_POINTERS ON)
+
+boilerplate_add_rust_executable(rust_fast
+  MANIFEST rust/Cargo.toml KIND bin CARGO_TARGET my-bench PACKAGE my-crate
+  FEATURES scheduler NO_DEFAULT_FEATURES LOCKED
+  POLICIES rust-fast)
+
+boilerplate_add_rust_executable(rust_small
+  MANIFEST rust/Cargo.toml KIND bin CARGO_TARGET my-bench PACKAGE my-crate
+  FEATURES scheduler NO_DEFAULT_FEATURES LOCKED
+  POLICY_OPTIONS RUST_OPT_LEVEL z LTO_MODE off)
+```
+
+`POLICIES` reuses the existing named-policy composition. `POLICY_OPTIONS`
+accepts explicit KEY VALUE pairs and overrides named policies. The per-target
+`PROFILE` argument selects one named `BOILERPLATE_PROFILE` for that Rust import;
+`RUST_CARGO_PROFILE` selects the actual Cargo profile (`dev`, `release` or a
+profile defined by the manifest). Target options never mutate `Cargo.toml`.
+
+| Setting | Effect on Cargo/Rust |
+| --- | --- |
+| `RUST_OPT_LEVEL` | `CARGO_PROFILE_<PROFILE>_OPT_LEVEL` (`0,1,2,3,s,z`) |
+| `LTO_MODE` | profile LTO (`thin`, `fat`, `off`, `inherit`) |
+| `RUST_DEBUG_INFO` | profile debuginfo (`0,1,2`, line-level options) |
+| `RUST_CODEGEN_UNITS` | profile codegen units, positive integer |
+| `RUST_INCREMENTAL` | profile incremental boolean |
+| `ENABLE_NATIVE` | `-C target-cpu=native`, or `generic` for explicit OFF |
+| `FRAME_POINTERS` | `-C force-frame-pointers=yes/no` |
+| `DEBUG_SYMBOLS` | convenience mapping to profile debug `2/0` |
+| `RUST_CARGO_PROFILE` | actual Cargo profile name |
+| `RUST_TARGET` | native host target triple only (cross compilation deferred) |
+
+All Rust-specific default cache values (`BOILERPLATE_RUST_*`) are `inherit`,
+which does **not** override manifest Cargo profiles. Explicit enabled common
+project defaults for LTO/native/frame-pointers/debug symbols also map to Rust;
+neutral C++ defaults do not erase Cargo settings. Unsupported C++ keys,
+including CUDA, Unity, CFI, MSVC-specific hardening and C++ standards, fail
+explicitly when requested for Rust. PGO/sanitizers/fuzz/coverage remain separate
+future work.
+
+A variant is fingerprinted from the Cargo workspace and package, requested
+features (normalized), profile, emitted rustc flags, toolchain/host, relevant
+Cargo configurations and build environment. The CMake registration name is
+also included so that two imported producers never declare duplicate Ninja
+byproducts, even if their desired Cargo configuration is identical. This trades
+some cache reuse for a correct independently owned CMake build graph; Cargo
+still retains incremental compilation within each variant. Outputs live under
+`<CMAKE_BINARY_DIR>/cargo/<sha256>/<triple>/<profile>/` and can coexist.
+
+Cargo and its `--target` option manage actual compilation. CMake uses profile
+environment overrides for Cargo-owned settings and encoded rustc flags only for
+non-profile options. If this would discard user Cargo config rustflags, the
+integration rejects the combination instead of silently overriding it. Build,
+test, quality checks and benchmarks inherit the same build-variant config.
+A change to the tracked Rust build environment requires CMake reconfiguration.
+
+Verify Stage 2B (requires a real native Cargo/rustc installation):
+
+```sh
+cmake -DCHECK_BINARY=/tmp/boilerplate-rust-profiles \
+  -P lib/tests/cmake/verify_rust_profiles.cmake
+cmake -DCHECK_BINARY=/tmp/boilerplate-rust-profiles-multi \
+  '-DCHECK_GENERATOR=Ninja Multi-Config' \
+  -P lib/tests/cmake/verify_rust_profiles.cmake
+```
+
+C++-only projects still require no Rust toolchain. Rust cross targets, PGO,
+sanitisers, platform-specific link options and Cargo profile inheritance
+beyond Cargo's normal semantics are not implemented in this stage. The new
+Stage 2B suite exercises real builds when a Rust toolchain is present.

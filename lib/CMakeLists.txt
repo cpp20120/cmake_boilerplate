@@ -98,6 +98,13 @@ add_custom_target(boilerplate_check_rust_benchmarks
     "-DCHECK_GENERATOR=Ninja Multi-Config"
     -P "${CMAKE_CURRENT_SOURCE_DIR}/tests/cmake/verify_rust_benchmarks.cmake"
   USES_TERMINAL VERBATIM)
+add_custom_target(boilerplate_check_rust_profiles
+  COMMAND "${CMAKE_COMMAND}" "-DCHECK_BINARY=${CMAKE_BINARY_DIR}/rust-profile-check"
+    -P "${CMAKE_CURRENT_SOURCE_DIR}/tests/cmake/verify_rust_profiles.cmake"
+  COMMAND "${CMAKE_COMMAND}" "-DCHECK_BINARY=${CMAKE_BINARY_DIR}/rust-profile-check-multi"
+    "-DCHECK_GENERATOR=Ninja Multi-Config"
+    -P "${CMAKE_CURRENT_SOURCE_DIR}/tests/cmake/verify_rust_profiles.cmake"
+  USES_TERMINAL VERBATIM)
 find_program(_boilerplate_ninja ninja)
 if(_boilerplate_ninja)
   find_program(_boilerplate_clang clang++)

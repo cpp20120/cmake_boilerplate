@@ -57,8 +57,8 @@ file(WRITE "${CHECK_BINARY}/fake-b/rustc" "not executed")
 fail(mixed "Incompatible Rust toolchain"
   "-DBOILERPLATE_RUST_CARGO=${CHECK_BINARY}/fake-a/cargo"
   "-DBOILERPLATE_RUST_RUSTC=${CHECK_BINARY}/fake-b/rustc")
-fail(profile "unsupported in stage 1" ${_tools}
-  -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCMAKE_CONFIGURATION_TYPES=RelWithDebInfo)
+fail(profile "Rust configuration.*must be" ${_tools}
+  -DCMAKE_BUILD_TYPE=MinSizeRel -DCMAKE_CONFIGURATION_TYPES=MinSizeRel)
 fail(policy "target policies cannot be applied" ${_tools} -DFIXTURE_BAD_POLICY=ON)
 fail(lifecycle "before boilerplate_finalize_project" ${_tools} -DFIXTURE_LATE_TARGET=ON)
 
