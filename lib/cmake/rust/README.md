@@ -1,4 +1,4 @@
-# Optional Cargo backend (stages 1 and 2A)
+# Optional Cargo backend (Stages 1–3A.1)
 
 CMake owns the build graph and project lifecycle. Cargo owns Rust dependency
 resolution, crate compilation, fingerprints and incremental rebuilds. Including
@@ -134,9 +134,10 @@ cmake --build out/rust-multi --config Release --target run_rust check
 ctest --test-dir out/rust-multi -C Release --output-on-failure
 ```
 
-C++ policy switches, CMAKE_CXX_FLAGS, sanitizer/LTO/PGO settings and artifact
-suffixes are not translated to Rust. They still apply to C++ targets in a mixed
-project. Calling the C++ policy API on a Rust import is an error. Rust metadata
+C++-specific policies and CMAKE_CXX_FLAGS are not translated to Rust.
+Supported Rust build-profile policies are lowered independently, including
+ASan/TSan with an opt-in nightly toolchain (Stage 3A.1). These also retain
+their original semantics for C++ targets in a mixed project. Calling the C++ policy API on a Rust import is an error. Rust metadata
 lives on the import in `BOILERPLATE_RUST_*` properties: `MANIFEST`, `PACKAGE`,
 `KIND`, `CARGO_TARGET`, `FEATURES`, `NO_DEFAULT_FEATURES`, `FLAGS`, `TARGET_DIR`,
 `BUILD_TARGET`, `CARGO`, `RUSTC`, `CARGO_VERSION`, `RUSTC_VERSION`, `HOST`, `SYSROOT`.
@@ -192,8 +193,8 @@ Rust scenario `PGO` is explicitly rejected until a later stage.
 
 ## Subsequent stages
 
-Fuzzing, sanitizers, coverage, PGO, packaging and DagFlow-Rust migration are
-explicitly deferred. Backend-specific benchmark metadata is implemented in Stage 2A using
+Fuzzing, coverage, PGO, packaging and DagFlow-Rust migration are
+explicitly deferred. Rust ASan/TSan are implemented in Stage 3A.1 below. Backend-specific benchmark metadata is implemented in Stage 2A using
 the existing CMake benchmark and scenario runners.
 No second benchmark runner or xtask orchestration is introduced. Rust libraries,
 C++/Rust FFI, cross compilation, doctest orchestration and broad CI expansion are
@@ -247,8 +248,8 @@ which does **not** override manifest Cargo profiles. Explicit enabled common
 project defaults for LTO/native/frame-pointers/debug symbols also map to Rust;
 neutral C++ defaults do not erase Cargo settings. Unsupported C++ keys,
 including CUDA, Unity, CFI, MSVC-specific hardening and C++ standards, fail
-explicitly when requested for Rust. PGO/sanitizers/fuzz/coverage remain separate
-future work.
+explicitly when requested for Rust. PGO/fuzz/coverage remain separate
+future work; ASan/TSan are implemented below.
 
 A variant is fingerprinted from the Cargo workspace and package, requested
 features (normalized), profile, emitted rustc flags, toolchain/host, relevant
@@ -277,6 +278,89 @@ cmake -DCHECK_BINARY=/tmp/boilerplate-rust-profiles-multi \
 ```
 
 C++-only projects still require no Rust toolchain. Rust cross targets, PGO,
-sanitisers, platform-specific link options and Cargo profile inheritance
-beyond Cargo's normal semantics are not implemented in this stage. The new
-Stage 2B suite exercises real builds when a Rust toolchain is present.
+other sanitizers, platform-specific link options and Cargo profile inheritance
+beyond Cargo's normal semantics are not implemented. The Stage 2B suite
+exercises real builds when a Rust toolchain is present.
+
+## Stage 3A.1: Rust ASan and TSan (Linux x86_64)
+
+Stage 3A.1 supports Rust `address` and `thread` sanitizers on
+`x86_64-unknown-linux-gnu` **only**, using matching **nightly** Cargo/rustc
+and the `rust-src` component. Configure-time checks fail explicitly for stable
+Rust, missing `rust-src`, unsupported host targets, and other sanitizer modes
+(`undefined`, `address-undefined`, `leak`); there is no invented equivalent
+of C++ UBSan or LSan. Rust-only projects continue to support `LANGUAGES NONE`.
+
+Choose a nightly toolchain **before** configuring a Rust project:
+
+```sh
+rustup toolchain install nightly --component rust-src
+cmake -S your-project -B out/rust-asan -G Ninja \
+  -DCMAKE_BUILD_TYPE=Debug -DBOILERPLATE_RUST_TOOLCHAIN=nightly \
+  -DBOILERPLATE_RUST_SANITIZER=address
+cmake --build out/rust-asan --target your_rust_target_cargo your_rust_test_cargo_tests
+ctest --test-dir out/rust-asan -C Debug --output-on-failure
+```
+
+`BOILERPLATE_RUST_SANITIZER=inherit` (default) uses the existing project-wide
+`BOILERPLATE_SANITIZER` (default `none`). For mixed projects, use the
+Rust-specific cache setting or a **target-specific** policy to avoid altering
+C++ compilation. Both the existing `asan`/`tsan` named policies and
+`POLICY_OPTIONS SANITIZER address|thread|none` are supported:
+
+```cmake
+boilerplate_add_rust_executable(my_asan
+  MANIFEST Cargo.toml PACKAGE my-crate CARGO_TARGET my-bin
+  POLICY_OPTIONS SANITIZER address)
+boilerplate_add_rust_test(my_asan_tests TARGET my_asan LABELS sanitizer)
+
+boilerplate_add_rust_executable(my_tsan
+  MANIFEST Cargo.toml PACKAGE my-crate CARGO_TARGET my-bin
+  POLICIES tsan)
+boilerplate_add_rust_test(my_tsan_tests TARGET my_tsan LABELS sanitizer)
+```
+
+Each sanitizer uses `-Zsanitizer=address|thread` in
+`CARGO_ENCODED_RUSTFLAGS` and passes `-Zbuild-std` to Cargo (including
+`cargo test` and test prebuilding). The explicit `--target` ensures that host
+build scripts/proc-macros are distinct from the instrumented target code.
+The stdlib is rebuilt with the same instrumentation; this can take longer
+on a fresh variant. Raw `-Zsanitizer` in user RUSTFLAGS is rejected to keep
+variant identity and provenance consistent. Each variant has an isolated
+Cargo artifact directory; sanitizers never reuse unsanitized executables.
+
+`RunCargo.cmake` also enforces the configured native build environment when
+invoked by Ninja or CTest. If `CC`, `CXX`, `AR`, `CFLAGS`, `CXXFLAGS`, or
+`LDFLAGS` were absent when the Cargo variant was registered, unexpected values
+injected by a later launcher are removed before fingerprint validation **and**
+Cargo execution. If any of these were present during configuration, their
+values remain fingerprinted and changes fail. Rust-specific environment inputs
+(e.g. `RUSTFLAGS`, Cargo profile overrides) remain strictly validated. To
+intentionally use a different native compiler for build scripts, set it before
+reconfiguring CMake so the new build variant records the change.
+
+`boilerplate_collect_target_metadata()` reports `rust_sanitizer`, and the
+sanitizer is incorporated into the build identity. `boilerplate_add_harness()`
+and `boilerplate_add_scenario()` remain available, but sanitizer overhead
+means instrumented results are **not comparable to production benchmarks**.
+Rust PGO and fuzzing are not yet available. This stage does not promise that
+all Rust concurrency bugs are detectable by TSan; a real instrumented test
+run is still required.
+
+A toolchain-free regression test uses fake Cargo/rustc drivers to validate
+the CMake orchestration, sanitizer flags, artifact separation, test execution,
+and diagnostic failures:
+
+```sh
+cmake -S lib -B out/build -G Ninja
+cmake --build out/build --target boilerplate_check_rust_sanitizers
+# Or the standalone CMake-script test:
+cmake -DCHECK_BINARY=/tmp/boilerplate-rust-asan-check \
+  -P lib/tests/cmake/verify_rust_sanitizers.cmake
+```
+
+**These fake-driver tests do not run the Rust sanitizers themselves.** The real
+nightly Cargo/rustc sanitizer build and runtime tests must also pass on a
+Linux x86_64 host before enabling sanitizer CI for actual projects. macOS,
+Windows, other host triples, Rust cross-compilation, sanitizer-specific
+runtime options, and fuzzing integration are outside Stage 3A.1.

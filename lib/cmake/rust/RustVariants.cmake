@@ -90,7 +90,12 @@ function(_boilerplate_rust_variant config target)
     set(_owns_flags TRUE)
   endif()
   list(APPEND _flags ${ARG_RUSTFLAGS})
+  # Sanitizer instrumentation is policy-controlled so the build variant,
+  # Cargo std rebuild, and provenance cannot silently disagree with raw flags.
   string(JOIN " " _raw ${_flags})
+  if(_raw MATCHES "(^|[ ;])-Z[ =]?sanitizer([ =]|$)")
+    message(FATAL_ERROR "Rust ${target}: specify SANITIZER as a policy, not raw -Zsanitizer flags")
+  endif()
   # Explicit, conflicting -C options must not silently override profile values.
   foreach(_pair IN ITEMS "RUST_OPT_LEVEL|opt-level" "RUST_DEBUG_INFO|debuginfo" "LTO_MODE|lto"
       "RUST_CODEGEN_UNITS|codegen-units" "ENABLE_NATIVE|target-cpu" "FRAME_POINTERS|force-frame-pointers")
@@ -117,7 +122,7 @@ function(_boilerplate_rust_variant config target)
   # CMake imports are separate producers even when Cargo inputs match. This
   # avoids two independent custom targets declaring the same Ninja BYPRODUCTS.
   boilerplate_append_setting(_content cmake_registration "${target}")
-  boilerplate_append_setting(_content instrumentation none)
+  boilerplate_append_setting(_content instrumentation "${_s_SANITIZER}")
   # Runtime/tool changes in place should invalidate the variant too.
   foreach(_key IN ITEMS _CARGO _RUSTC)
     file(SHA256 "${${_key}}" _sha)
@@ -130,7 +135,7 @@ function(_boilerplate_rust_variant config target)
     set(_profile_dir debug)
   endif()
   foreach(_key IN ITEMS RUST_OPT_LEVEL RUST_DEBUG_INFO RUST_CODEGEN_UNITS RUST_INCREMENTAL
-      RUST_CARGO_PROFILE RUST_TARGET LTO_MODE FRAME_POINTERS ENABLE_NATIVE DEBUG_SYMBOLS)
+      RUST_CARGO_PROFILE RUST_TARGET LTO_MODE FRAME_POINTERS ENABLE_NATIVE DEBUG_SYMBOLS SANITIZER)
     set(_s_${_key} "${_s_${_key}}" PARENT_SCOPE)
   endforeach()
   foreach(_key IN ITEMS _identity _target_dir _profile_dir _flags _owns_flags _profile_env _features)

@@ -1,0 +1,40 @@
+#!/bin/sh
+case "$1" in
+  --version)
+    printf '%s\n' 'cargo 1.99.0@CHANNEL@ (fake)' 'release: 1.99.0@CHANNEL@' 'host: @TRIPLE@'
+    exit 0 ;;
+  metadata)
+    cat '@FAKE_METADATA@'
+    exit $? ;;
+esac
+command=$1
+shift
+cargo_target_dir=
+target=
+profile=
+build_std=no
+while [ "$#" -gt 0 ]; do
+  case "$1" in
+    --target-dir) cargo_target_dir=$2; shift 2 ;;
+    --target) target=$2; shift 2 ;;
+    --profile) profile=$2; shift 2 ;;
+    -Zbuild-std) build_std=yes; shift ;;
+    *) shift ;;
+  esac
+done
+if [ -z "$cargo_target_dir" ] || [ -z "$target" ] || [ -z "$profile" ]; then
+  echo 'Fake Cargo: missing build arguments' >&2
+  exit 11
+fi
+mkdir -p "$cargo_target_dir"
+printf 'command=%s\nprofile=%s\nbuild_std=%s\nflags=%s\n' \
+  "$command" "$profile" "$build_std" "${CARGO_ENCODED_RUSTFLAGS-}" \
+  > "$cargo_target_dir/last-invocation.txt"
+if [ "$command" = build ]; then
+  path_profile=$profile
+  if [ "$profile" = dev ]; then path_profile=debug; fi
+  mkdir -p "$cargo_target_dir/$target/$path_profile"
+  printf '#!/bin/sh\necho 42\n' > "$cargo_target_dir/$target/$path_profile/fixture-bin"
+  chmod +x "$cargo_target_dir/$target/$path_profile/fixture-bin"
+fi
+exit 0

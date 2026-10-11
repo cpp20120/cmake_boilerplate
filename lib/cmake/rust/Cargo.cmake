@@ -136,6 +136,11 @@ function(boilerplate_add_rust_executable target)
     set(_config_file "${_base}/${_config}/cargo.cmake")
     set(_args --manifest-path "${_manifest}" --target "${_s_RUST_TARGET}"
       --target-dir "${_target_dir}" --profile "${_s_RUST_CARGO_PROFILE}")
+    if(NOT _s_SANITIZER STREQUAL "none")
+      # The Rust standard library must be instrumented consistently with the
+      # selected crate; Cargo -Zbuild-std requires nightly and rust-src.
+      list(APPEND _args -Zbuild-std)
+    endif()
     if(ARG_PACKAGE)
       list(APPEND _args --package "${ARG_PACKAGE}")
     endif()
@@ -164,6 +169,7 @@ function(boilerplate_add_rust_executable target)
     boilerplate_append_setting(_content RUST_PROFILE_ENV "${_profile_env}")
     boilerplate_append_setting(_content RUST_ENVIRONMENT_HASH "${_environment}")
     boilerplate_append_setting(_content RUST_ENVIRONMENT_FINGERPRINTS "${_environment_fingerprints}")
+    boilerplate_append_setting(_content RUST_SANITIZER "${_s_SANITIZER}")
     boilerplate_append_setting(_content RUST_KIND "${ARG_KIND}")
     boilerplate_append_setting(_content RUST_CARGO_TARGET "${ARG_CARGO_TARGET}")
     file(GENERATE OUTPUT "${_config_file}" CONTENT "${_content}"
@@ -178,7 +184,7 @@ function(boilerplate_add_rust_executable target)
         "OPT_LEVEL|${_s_RUST_OPT_LEVEL}" "LTO_MODE|${_s_LTO_MODE}"
         "DEBUG_INFO|${_s_RUST_DEBUG_INFO}" "CODEGEN_UNITS|${_s_RUST_CODEGEN_UNITS}"
         "INCREMENTAL|${_s_RUST_INCREMENTAL}" "ENABLE_NATIVE|${_s_ENABLE_NATIVE}"
-        "FRAME_POINTERS|${_s_FRAME_POINTERS}")
+        "FRAME_POINTERS|${_s_FRAME_POINTERS}" "SANITIZER|${_s_SANITIZER}")
       string(REPLACE "|" ";" _pair "${_pair}")
       list(GET _pair 0 _key)
       list(GET _pair 1 _value)
@@ -235,7 +241,7 @@ function(boilerplate_add_rust_executable target)
   foreach(_key IN ITEMS CARGO RUSTC CARGO_VERSION RUSTC_VERSION SYSROOT HOST)
     set_property(TARGET ${target} PROPERTY BOILERPLATE_RUST_${_key} "${_${_key}}")
   endforeach()
-  foreach(_key IN ITEMS OPT_LEVEL LTO_MODE DEBUG_INFO CODEGEN_UNITS INCREMENTAL ENABLE_NATIVE FRAME_POINTERS)
+  foreach(_key IN ITEMS OPT_LEVEL LTO_MODE DEBUG_INFO CODEGEN_UNITS INCREMENTAL ENABLE_NATIVE FRAME_POINTERS SANITIZER)
     set(_expr "")
     foreach(_config IN LISTS _configs)
       string(TOUPPER "${_config}" _upper)

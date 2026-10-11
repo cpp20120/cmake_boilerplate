@@ -97,7 +97,7 @@ function(boilerplate_collect_target_metadata target output)
     foreach(_mapping IN ITEMS "OPT_LEVEL|rust_opt_level" "LTO_MODE|rust_lto_mode"
         "DEBUG_INFO|rust_debug_info" "CODEGEN_UNITS|rust_codegen_units"
         "INCREMENTAL|rust_incremental" "ENABLE_NATIVE|rust_enable_native"
-        "FRAME_POINTERS|rust_frame_pointers")
+        "FRAME_POINTERS|rust_frame_pointers" "SANITIZER|rust_sanitizer")
       string(REPLACE "|" ";" _mapping "${_mapping}")
       list(GET _mapping 0 _property)
       list(GET _mapping 1 _key)

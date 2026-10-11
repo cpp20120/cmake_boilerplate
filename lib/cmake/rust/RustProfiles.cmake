@@ -3,7 +3,7 @@ include_guard(GLOBAL)
 # Only explicit Rust defaults override Cargo's own manifest/config profiles.
 # 'inherit' differs from deliberately requesting OFF/0/none.
 foreach(_key IN ITEMS OPT_LEVEL DEBUG_INFO CODEGEN_UNITS INCREMENTAL CARGO_PROFILE TARGET
-    LTO_MODE FRAME_POINTERS ENABLE_NATIVE DEBUG_SYMBOLS)
+    LTO_MODE FRAME_POINTERS ENABLE_NATIVE DEBUG_SYMBOLS SANITIZER)
   set(BOILERPLATE_RUST_${_key} inherit CACHE STRING
     "Rust ${_key}; inherit leaves Cargo's own setting unchanged")
 endforeach()

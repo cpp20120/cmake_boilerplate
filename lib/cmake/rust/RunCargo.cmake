@@ -4,6 +4,25 @@ if(NOT RUST_CONFIG OR NOT EXISTS "${RUST_CONFIG}")
 endif()
 include("${RUST_CONFIG}")
 include("${CMAKE_CURRENT_LIST_DIR}/RustEnvironment.cmake")
+# Some build/test launchers add native compiler variables after configuration.
+# The Cargo producer captured its environment when the variant was registered:
+# an absent variable must remain absent during compilation, not silently alter
+# cc-rs/build-script behavior or make the build fail spuriously. Preserve and
+# validate values that *were* present in the producer's snapshot.
+if(DEFINED RUST_ENVIRONMENT_FINGERPRINTS)
+  foreach(_native_var IN ITEMS CC CXX AR CFLAGS CXXFLAGS LDFLAGS)
+    set(_present_at_configure FALSE)
+    foreach(_snapshot_entry IN LISTS RUST_ENVIRONMENT_FINGERPRINTS)
+      if(_snapshot_entry MATCHES "^${_native_var}=")
+        set(_present_at_configure TRUE)
+        break()
+      endif()
+    endforeach()
+    if(NOT _present_at_configure)
+      unset(ENV{${_native_var}})
+    endif()
+  endforeach()
+endif()
 _boilerplate_rust_environment(_actual_environment _actual_fingerprints)
 if(DEFINED RUST_ENVIRONMENT_HASH AND NOT _actual_environment STREQUAL RUST_ENVIRONMENT_HASH)
   set(_differences)
