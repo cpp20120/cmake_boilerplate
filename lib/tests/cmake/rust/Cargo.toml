@@ -1,0 +1,26 @@
+[package]
+name = "rust-fixture"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.74"
+
+[workspace]
+
+[features]
+default = ["unwanted"]
+unwanted = []
+answer = []
+benchmark = []
+
+[[bin]]
+name = "fixture-bin"
+path = "src/main.rs"
+
+[[bin]]
+name = "fixture-benchmark"
+path = "src/benchmark.rs"
+required-features = ["benchmark"]
+
+[[example]]
+name = "hello"
+path = "examples/hello.rs"

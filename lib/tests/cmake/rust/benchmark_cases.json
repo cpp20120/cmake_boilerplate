@@ -1,0 +1,8 @@
+{
+  "cases": [
+    {"name": "small", "args": ["json-line", "4"]},
+    {"name": "large", "args": ["json-line", "8"]},
+    {"name": "invalid", "args": ["invalid"]}
+  ],
+  "groups": {"valid": ["small", "large"], "invalid": ["invalid"]}
+}

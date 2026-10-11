@@ -1,4 +1,5 @@
 include_guard(GLOBAL)
+include("${CMAKE_CURRENT_LIST_DIR}/TargetMetadata.cmake")
 
 set(BOILERPLATE_HARNESS_RESULTS_DIR "${CMAKE_BINARY_DIR}/harness-results" CACHE PATH
   "Output root for the self-contained CMake process harness")
@@ -69,20 +70,7 @@ function(boilerplate_add_harness name)
     set(ARG_PERF_EVENTS cycles instructions branches branch-misses cache-misses)
   endif()
 
-  get_target_property(_policies ${ARG_TARGET} BOILERPLATE_POLICIES)
-  if(NOT _policies)
-    set(_policies project-defaults)
-  else()
-    string(REPLACE ";" "," _policies "${_policies}")
-  endif()
-  set(_metadata "target=${ARG_TARGET}" "policies=${_policies}"
-    "compiler=${CMAKE_CXX_COMPILER_ID}-${CMAKE_CXX_COMPILER_VERSION}"
-    "generator=${CMAKE_GENERATOR}" "project=${PROJECT_NAME}")
-  foreach(_setting IN ITEMS CXX_STANDARD SANITIZER CFI CFI_DIAGNOSTICS WINDOWS_CFG LTO_MODE PGO_MODE ENABLE_NATIVE
-      ENABLE_NO_SEMANTIC_INTERPOSITION ENABLE_GC_SECTIONS ENABLE_NO_PLT USE_LLD ENABLE_ICF FRAME_POINTERS REPRODUCIBLE HARDENING COVERAGE)
-    boilerplate_get_target_setting(${ARG_TARGET} ${_setting} _value)
-    list(APPEND _metadata "${_setting}=${_value}")
-  endforeach()
+  boilerplate_collect_target_metadata(${ARG_TARGET} _metadata)
   list(APPEND _metadata ${ARG_METADATA})
 
   set(_content)
@@ -110,7 +98,7 @@ function(boilerplate_add_harness name)
   boilerplate_append_setting(_content HARNESS_CPUS "${ARG_CPUS}")
   boilerplate_append_setting(_content HARNESS_SEED "${ARG_SEED}")
   boilerplate_append_setting(_content HARNESS_RANDOMIZE "${ARG_RANDOMIZE}")
-  boilerplate_append_setting(_content HARNESS_COMPILER "${CMAKE_CXX_COMPILER_ID}-${CMAKE_CXX_COMPILER_VERSION}")
+  boilerplate_append_setting(_content HARNESS_COMPILER "${_metadata_COMPILER}")
   boilerplate_append_setting(_content HARNESS_GENERATOR "${CMAKE_GENERATOR}")
   boilerplate_append_setting(_content HARNESS_PROJECT "${PROJECT_NAME}")
 

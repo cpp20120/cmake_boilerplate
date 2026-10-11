@@ -1,0 +1,197 @@
+# Optional Cargo backend (stages 1 and 2A)
+
+CMake owns the build graph and project lifecycle. Cargo owns Rust dependency
+resolution, crate compilation, fingerprints and incremental rebuilds. Including
+`Boilerplate.cmake` does not search for or execute Rust tools. Only the explicit
+`rust` project capability enables discovery; even `full` does not enable Rust.
+Requirements: CMake 3.26+, Cargo and rustc 1.74+ from one native installation.
+
+## Public API
+
+```cmake
+cmake_minimum_required(VERSION 3.26)
+project(mixed LANGUAGES CXX) # LANGUAGES NONE is also usable for a Rust-only root
+include(CTest)
+include(path/to/Boilerplate.cmake)
+boilerplate_project(CAPABILITIES rust testing)
+
+boilerplate_add_rust_executable(my_tool
+  MANIFEST rust/Cargo.toml
+  KIND bin CARGO_TARGET my-tool
+  PACKAGE my-package
+  FEATURES cli
+  NO_DEFAULT_FEATURES LOCKED
+  RUSTFLAGS -Dwarnings)
+
+boilerplate_add_rust_test(my_rust_tests TARGET my_tool
+  LABELS unit TIMEOUT 120 TEST_ARGS --nocapture)
+add_custom_target(run_my_tool COMMAND "$<TARGET_FILE:my_tool>" VERBATIM)
+boilerplate_finalize_project()
+```
+
+`boilerplate_add_rust_executable(<target> ...)` accepts:
+
+| Argument | Meaning |
+| --- | --- |
+| `MANIFEST <path>` | Required Cargo.toml, relative to the calling source directory or absolute |
+| `KIND bin\|example` | Defaults to `bin`; examples must have executable crate type |
+| `CARGO_TARGET <name>` | Cargo binary/example name, defaulting to the CMake target name |
+| `PACKAGE <name>` | Workspace member; can be omitted if exactly one executable matches |
+| `FEATURES <list>` | Cargo features as a CMake list |
+| `NO_DEFAULT_FEATURES` | Pass `--no-default-features` consistently |
+| `RUSTFLAGS <list>` | Explicit rustc arguments, encoded without whitespace splitting |
+| `LOCKED`, `OFFLINE` | Corresponding Cargo build/test flags |
+| `DEPENDS <list>` | CMake targets/files needed before Cargo, such as generated sources |
+| `EXCLUDE_FROM_ALL` | Omit the Cargo build from the default build |
+
+The function validates the executable using `cargo metadata --no-deps` at
+configure time. Cargo.toml changes trigger reconfiguration; source changes are
+Cargo's responsibility. Unknown API arguments are errors. A workspace package's
+`rust-version` is checked against the selected compiler.
+
+The target is a global `IMPORTED EXECUTABLE`. Build it through `<target>_cargo`
+or a consuming CMake target; imported targets themselves are not command-line
+build targets. `add_dependencies(consumer my_tool)`, CMake commands using the
+target name, and `$<TARGET_FILE:my_tool>` follow its Cargo build dependency.
+The executable is also declared as a byproduct for file-level dependencies.
+Cargo runs on every requested build so it can detect source, manifest, build
+script and dependency changes. An unchanged build normally reports `Finished`
+without recompiling; Cargo controls incremental compilation within its profiles.
+
+`boilerplate_add_rust_test(<name> TARGET <rust-target> [TIMEOUT <seconds>]
+[LABELS <list>] [TEST_ARGS <list>])` creates one CTest entry running
+`cargo test --all-targets` for the selected package. This covers unit and
+integration tests and Cargo's test-enabled binaries/examples, not doctests.
+It also creates `<name>_cargo_tests` (`cargo test --no-run --all-targets`) and
+adds it to the existing `boilerplate_tests`, `boilerplate_check`, and `check`
+workflow. It requires the `testing` capability and respects `BUILD_TESTING=OFF`.
+Tests inherit the executable's toolchain, package, features, flags, profile,
+target triple, working directory and artifact directory; these cannot diverge
+through test registration. Build before invoking CTest so CMake prerequisites
+and standalone executable tests are ready. CTest's Cargo suite also checks
+freshness itself. Cargo serializes concurrent access to a shared target directory.
+
+## Toolchain selection
+
+By default, the first Cargo on PATH is selected and rustc is sought **beside it**.
+There is no independent PATH fallback for rustc. Rustup proxies (including
+hard-linked proxies) are resolved using `rustup which` in the CMake source root.
+Thus root `rust-toolchain.toml` selection applies when the selected Cargo is a
+rustup proxy; nested crate overrides do not subsequently change pinned tools.
+
+Choose either an installed rustup toolchain:
+
+```sh
+cmake -S lib/tests/cmake/rust -B out/rust -G Ninja \
+  -DCMAKE_BUILD_TYPE=Debug -DBOILERPLATE_RUST_TOOLCHAIN=stable
+```
+
+or absolute tool paths:
+
+```sh
+cmake -S lib/tests/cmake/rust -B out/rust-system -G Ninja \
+  -DCMAKE_BUILD_TYPE=Debug \
+  -DBOILERPLATE_RUST_CARGO=/usr/bin/cargo \
+  -DBOILERPLATE_RUST_RUSTC=/usr/bin/rustc
+```
+
+Supplying just one path finds the companion in that directory. Toolchain-name
+and path overrides are mutually exclusive. No toolchain is installed/downloaded
+by discovery. Both resolved tools must share an installation directory, host
+triple and major/minor release; discovery reports both versions and the sysroot,
+and checks that the host standard library exists. Split installations/custom
+wrappers are deliberately rejected in this stage. Reconfigure to select changed
+tools. Rustup updates may replace binaries in place; Cargo detects that on build.
+
+Build/test commands pin Cargo, `RUSTC`, `RUSTDOC` and the tool directory. Explicit
+`RUSTFLAGS` become `CARGO_ENCODED_RUSTFLAGS`, overriding ambient/config rustflags;
+ambient Rust compiler wrappers are disabled. This follows Cargo's documented
+[environment controls](https://doc.rust-lang.org/cargo/reference/environment-variables.html).
+Cargo's normal dependency caches, registry credentials, linker configuration and
+manifest profile settings remain Cargo-owned. Dependency caches may live outside
+the build tree. Generated build artifacts and intermediate files stay beneath
+`<CMAKE_BINARY_DIR>/cargo/<target>-<identity>/<Debug|Release>/`.
+
+## Configurations and policies
+
+Debug explicitly selects Cargo `dev`; Release selects Cargo `release`.
+Artifacts are separated by CMake target, toolchain identity, feature/flag set,
+host triple and configuration. Cargo uses an explicit host `--target`; Windows
+paths include `.exe`, Linux/macOS paths do not. Empty build types,
+RelWithDebInfo, MinSizeRel and custom configurations are rejected, without
+changing the consuming project's CMake configuration list.
+
+```sh
+cmake -S lib/tests/cmake/rust -B out/rust-multi -G "Ninja Multi-Config" \
+  '-DCMAKE_CONFIGURATION_TYPES=Debug;Release'
+cmake --build out/rust-multi --config Debug --target run_rust check
+cmake --build out/rust-multi --config Release --target run_rust check
+ctest --test-dir out/rust-multi -C Release --output-on-failure
+```
+
+C++ policy switches, CMAKE_CXX_FLAGS, sanitizer/LTO/PGO settings and artifact
+suffixes are not translated to Rust. They still apply to C++ targets in a mixed
+project. Calling the C++ policy API on a Rust import is an error. Rust metadata
+lives on the import in `BOILERPLATE_RUST_*` properties: `MANIFEST`, `PACKAGE`,
+`KIND`, `CARGO_TARGET`, `FEATURES`, `NO_DEFAULT_FEATURES`, `FLAGS`, `TARGET_DIR`,
+`BUILD_TARGET`, `CARGO`, `RUSTC`, `CARGO_VERSION`, `RUSTC_VERSION`, `HOST`, `SYSROOT`.
+Imports follow the existing treatment of imported targets: they are not enrolled
+in the C++ component/diagnostics target scan. Registration must precede project
+finalization. Cross compilation and macOS explicit/universal architecture lists
+are rejected in stage 1.
+
+## Quality and fixture verification
+
+Every registration supplies `<target>_format`, `<target>_format-check` and
+`<target>_clippy`, plus `rust-format`, `rust-format-check` and `rust-clippy`
+aggregates. Formatting uses the selected package; Clippy uses `--all-targets`
+and the same build context, with `-D warnings`. Tools must exist beside selected
+Cargo; missing rustfmt/Clippy produces an installation hint only when that quality
+target is invoked. Ordinary builds need neither component nor nightly.
+
+From the repository root:
+
+```sh
+cmake -S lib/tests/cmake/rust -B out/rust-debug -G Ninja -DCMAKE_BUILD_TYPE=Debug
+cmake --build out/rust-debug --target run_rust copy_rust check
+ctest --test-dir out/rust-debug --output-on-failure
+cmake --build out/rust-debug --target rust-format-check rust-clippy
+
+cmake -DCHECK_BINARY=/tmp/boilerplate-rust-check -DCHECK_QUALITY=ON \
+  -P lib/tests/cmake/verify_rust.cmake
+cmake -DCHECK_BINARY=/tmp/boilerplate-rust-multi-check \
+  '-DCHECK_GENERATOR=Ninja Multi-Config' -P lib/tests/cmake/verify_rust.cmake
+```
+
+The fixture also has local `rust-debug`, `rust-release`, `rust-multi` and
+`cpp-only` configure presets: run `cmake --preset rust-debug`,
+`cmake --build --preset rust-debug` and `ctest --preset rust-debug` from
+`lib/tests/cmake/rust`. The existing standalone library build exposes the explicit
+`boilerplate_check_rust` regression target, which is not a dependency of C++ checks.
+The regression script accepts `CHECK_GENERATOR`, `CHECK_QUALITY` and
+`CHECK_RUST_TOOLCHAIN` / `CHECK_RUST_CARGO` / `CHECK_RUST_RUSTC` overrides.
+
+The fixture has no external dependencies. Checks cover disabled Rust with absent
+tools, tool diagnostics, imports, dependencies and file byproducts, paths/flags
+with spaces, unchanged-build freshness, source-change recompilation, CTest,
+Debug/Release isolation, policy rejection and lifecycle ordering.
+
+## Benchmarks and scenarios
+
+Stage 2A enables Rust imports in the existing `boilerplate_add_harness()` and
+`boilerplate_add_scenario()` APIs. See the [benchmark guide](../benchmark/README.md#rust-executables-and-backend-provenance-stage-2a)
+for registration examples, backend metadata, new provenance properties and
+`verify_rust_benchmarks.cmake` acceptance checks. Both runners use the same imported
+artifact and Cargo dependency; no C++ target policies are applied to Rust.
+Rust scenario `PGO` is explicitly rejected until a later stage.
+
+## Subsequent stages
+
+Extended Rust profiles, fuzzing,
+sanitizers, coverage, PGO, packaging and DagFlow-Rust migration are explicitly
+deferred. Backend-specific benchmark metadata is implemented in Stage 2A using
+the existing CMake benchmark and scenario runners.
+No second benchmark runner or xtask orchestration is introduced. Rust libraries,
+C++/Rust FFI, cross compilation, doctest orchestration and broad CI expansion are
+also outside this stage. Platform path handling is implemented, but macOS,
+Windows, Visual Studio and Xcode require verification on those hosts.

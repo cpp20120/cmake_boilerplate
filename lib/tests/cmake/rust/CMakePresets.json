@@ -1,0 +1,42 @@
+{
+  "version": 6,
+  "cmakeMinimumRequired": { "major": 3, "minor": 26, "patch": 0 },
+  "configurePresets": [
+    {
+      "name": "rust-debug",
+      "generator": "Ninja",
+      "binaryDir": "${sourceDir}/out/${presetName}",
+      "cacheVariables": { "CMAKE_BUILD_TYPE": "Debug" }
+    },
+    {
+      "name": "rust-release",
+      "inherits": "rust-debug",
+      "cacheVariables": { "CMAKE_BUILD_TYPE": "Release" }
+    },
+    {
+      "name": "rust-multi",
+      "inherits": "rust-debug",
+      "generator": "Ninja Multi-Config",
+      "cacheVariables": { "CMAKE_CONFIGURATION_TYPES": "Debug;Release" }
+    },
+    {
+      "name": "cpp-only",
+      "inherits": "rust-debug",
+      "cacheVariables": { "FIXTURE_RUST": "OFF" }
+    }
+  ],
+  "buildPresets": [
+    { "name": "rust-debug", "configurePreset": "rust-debug", "targets": ["run_rust", "check"] },
+    { "name": "rust-release", "configurePreset": "rust-release", "targets": ["run_rust", "check"] },
+    { "name": "rust-multi-debug", "configurePreset": "rust-multi", "configuration": "Debug", "targets": ["run_rust", "check"] },
+    { "name": "rust-multi-release", "configurePreset": "rust-multi", "configuration": "Release", "targets": ["run_rust", "check"] },
+    { "name": "cpp-only", "configurePreset": "cpp-only", "targets": ["check"] }
+  ],
+  "testPresets": [
+    { "name": "rust-debug", "configurePreset": "rust-debug", "output": {"outputOnFailure": true} },
+    { "name": "rust-release", "configurePreset": "rust-release", "output": {"outputOnFailure": true} },
+    { "name": "rust-multi-debug", "configurePreset": "rust-multi", "configuration": "Debug", "output": {"outputOnFailure": true} },
+    { "name": "rust-multi-release", "configurePreset": "rust-multi", "configuration": "Release", "output": {"outputOnFailure": true} },
+    { "name": "cpp-only", "configurePreset": "cpp-only", "output": {"outputOnFailure": true} }
+  ]
+}

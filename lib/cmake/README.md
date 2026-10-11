@@ -12,6 +12,7 @@ after it. Public `boilerplate_*` functions and preset names are unchanged.
 | `packaging/` | Library variants, install/export templates, vcpkg ports, CPack and runtime delivery helpers |
 | `dependencies/` | Dependency providers, allocator adapters and vcpkg discovery |
 | `platforms/` | Runtime, CUDA, Qt, graphics policies and shader compilation |
+| `rust/` | Opt-in Cargo executable imports, toolchain discovery, tests and quality workflows ([API guide](rust/README.md)) |
 | `project/` | Project lifecycle, workspace components, developer tools, formatting, analysis, documentation and generated metadata |
 | `docs/` | Capability, CUDA and delivery guides |
 

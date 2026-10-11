@@ -10,6 +10,10 @@ the repository-root `cmake/` layer and is not loaded by this slice. A library ca
 therefore be extracted, built, tested, installed and consumed without bringing
 application hosting machinery with it.
 
+The optional [Rust/Cargo backend](cmake/rust/README.md) adds native executable
+imports, Cargo test suites and formatting/Clippy targets through the `rust`
+project capability. C++-only projects do not require Rust tools.
+
 ## Targets
 
 ```cmake

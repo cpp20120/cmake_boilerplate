@@ -87,6 +87,17 @@ if(_boilerplate_testing_enabled AND BOILERPLATE_BUILD_GOOGLE_TESTS AND BUILD_TES
 endif()
 
 # Explicit infrastructure regression checks; never part of the default build.
+add_custom_target(boilerplate_check_rust
+  COMMAND "${CMAKE_COMMAND}" "-DCHECK_BINARY=${CMAKE_BINARY_DIR}/rust-check"
+    -P "${CMAKE_CURRENT_SOURCE_DIR}/tests/cmake/verify_rust.cmake"
+  USES_TERMINAL VERBATIM)
+add_custom_target(boilerplate_check_rust_benchmarks
+  COMMAND "${CMAKE_COMMAND}" "-DCHECK_BINARY=${CMAKE_BINARY_DIR}/rust-benchmark-check"
+    -P "${CMAKE_CURRENT_SOURCE_DIR}/tests/cmake/verify_rust_benchmarks.cmake"
+  COMMAND "${CMAKE_COMMAND}" "-DCHECK_BINARY=${CMAKE_BINARY_DIR}/rust-benchmark-check-multi"
+    "-DCHECK_GENERATOR=Ninja Multi-Config"
+    -P "${CMAKE_CURRENT_SOURCE_DIR}/tests/cmake/verify_rust_benchmarks.cmake"
+  USES_TERMINAL VERBATIM)
 find_program(_boilerplate_ninja ninja)
 if(_boilerplate_ninja)
   find_program(_boilerplate_clang clang++)

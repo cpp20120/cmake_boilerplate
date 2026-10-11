@@ -318,6 +318,7 @@ include("${CMAKE_CURRENT_LIST_DIR}/BuildInfo.cmake")
 include("${CMAKE_CURRENT_LIST_DIR}/Diagnostics.cmake")
 include("${CMAKE_CURRENT_LIST_DIR}/Cuda.cmake")
 include("${CMAKE_CURRENT_LIST_DIR}/Web.cmake")
+include("${CMAKE_CURRENT_LIST_DIR}/../rust/Cargo.cmake")
 
 # Primitive project capabilities.
 boilerplate_define_project_capability(project-minimal)
@@ -344,6 +345,7 @@ boilerplate_define_project_capability(reproducible-build CONFIGURE_HOOKS _boiler
 boilerplate_define_project_capability(build-info CONFIGURE_HOOKS _boilerplate_project_build_info_configure)
 boilerplate_define_project_capability(diagnostics FINALIZE_HOOKS _boilerplate_project_diagnostics_finalize)
 boilerplate_define_project_capability(cuda CONFIGURE_HOOKS _boilerplate_project_cuda_configure)
+boilerplate_define_project_capability(rust CONFIGURE_HOOKS _boilerplate_project_rust_configure)
 boilerplate_define_project_capability(web-deployment FINALIZE_HOOKS _boilerplate_project_web_finalize)
 
 # Compositions. They are convenience names only; callers can always list the

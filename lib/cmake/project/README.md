@@ -49,6 +49,7 @@ boilerplate_finalize_project()
 | `build-info` | JSON manifest + `boilerplate::build_info` generated C++ header |
 | `diagnostics` | resolved project/target summary + `boilerplate_config` target |
 | `cuda` | explicitly enables/configures the CUDA language |
+| `rust` | explicitly discovers a coherent Cargo/rustc toolchain; [Cargo API](../rust/README.md) |
 | `web-deployment` | aggregate deployment for registered Emscripten targets |
 
 Compositions: `developer`, `quality`, `distribution`, `ci`, `full`.
