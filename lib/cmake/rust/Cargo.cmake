@@ -163,6 +163,7 @@ function(boilerplate_add_rust_executable target)
     boilerplate_append_setting(_content RUST_OWNS_FLAGS "${_owns_flags}")
     boilerplate_append_setting(_content RUST_PROFILE_ENV "${_profile_env}")
     boilerplate_append_setting(_content RUST_ENVIRONMENT_HASH "${_environment}")
+    boilerplate_append_setting(_content RUST_ENVIRONMENT_FINGERPRINTS "${_environment_fingerprints}")
     boilerplate_append_setting(_content RUST_KIND "${ARG_KIND}")
     boilerplate_append_setting(_content RUST_CARGO_TARGET "${ARG_CARGO_TARGET}")
     file(GENERATE OUTPUT "${_config_file}" CONTENT "${_content}"
@@ -226,6 +227,11 @@ function(boilerplate_add_rust_executable target)
     BOILERPLATE_RUST_TARGET_DIR "${_dir_genex}"
     BOILERPLATE_RUST_CONFIG "${_base}/$<CONFIG>/cargo.cmake"
     BOILERPLATE_RUST_BUILD_TARGET "${target}_cargo")
+  # The snapshot belongs to the Cargo producer, not to the ambient environment
+  # of a later CMake registration call. CTest must normalize against this exact
+  # snapshot or it can accidentally accept/reject a different build context.
+  set_property(TARGET ${target} PROPERTY BOILERPLATE_RUST_ENVIRONMENT_FINGERPRINTS
+    "${_environment_fingerprints}")
   foreach(_key IN ITEMS CARGO RUSTC CARGO_VERSION RUSTC_VERSION SYSROOT HOST)
     set_property(TARGET ${target} PROPERTY BOILERPLATE_RUST_${_key} "${_${_key}}")
   endforeach()
@@ -299,6 +305,33 @@ function(boilerplate_add_rust_test name)
     DEPENDS ${ARG_TARGET} USES_TERMINAL VERBATIM)
   add_test(NAME ${name} COMMAND "${CMAKE_COMMAND}" "-DRUST_CONFIG=${_config}" -DRUST_MODE=test -P "${_runner}")
   set_tests_properties(${name} PROPERTIES TIMEOUT "${ARG_TIMEOUT}" LABELS "rust;${ARG_LABELS}")
+  # CTest gets the exact build-environment snapshot from the Cargo producer.
+  # Do not use ENV{} here: CMake's ambient environment may have changed since
+  # boilerplate_add_rust_executable() captured the producer's fingerprint.
+  get_property(_has_snapshot TARGET ${ARG_TARGET}
+    PROPERTY BOILERPLATE_RUST_ENVIRONMENT_FINGERPRINTS SET)
+  if(NOT _has_snapshot)
+    message(FATAL_ERROR "Rust test ${name}: ${ARG_TARGET} lacks a build environment fingerprint")
+  endif()
+  get_target_property(_expected_environment ${ARG_TARGET}
+    BOILERPLATE_RUST_ENVIRONMENT_FINGERPRINTS)
+  set(_ctest_env_modifications)
+  foreach(_compiler_var IN ITEMS CC CXX AR CFLAGS CXXFLAGS LDFLAGS)
+    set(_present_in_build FALSE)
+    foreach(_fingerprint IN LISTS _expected_environment)
+      if(_fingerprint MATCHES "^${_compiler_var}=")
+        set(_present_in_build TRUE)
+        break()
+      endif()
+    endforeach()
+    if(NOT _present_in_build)
+      list(APPEND _ctest_env_modifications "${_compiler_var}=unset:")
+    endif()
+  endforeach()
+  if(_ctest_env_modifications)
+    set_tests_properties(${name} PROPERTIES
+      ENVIRONMENT_MODIFICATION "${_ctest_env_modifications}")
+  endif()
   _boilerplate_project_testing_finalize()
   add_dependencies(boilerplate_tests ${name}_cargo_tests)
   set_property(TARGET ${name}_cargo_tests PROPERTY FOLDER "boilerplate/tests")

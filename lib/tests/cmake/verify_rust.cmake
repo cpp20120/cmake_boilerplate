@@ -75,6 +75,14 @@ run("${CMAKE_COMMAND}" -S "${_source}" -B "${_build}" -G "${CHECK_GENERATOR}"
 if(NOT _log MATCHES "Boilerplate Rust: Cargo.*rustc.*host=.*sysroot=")
   message(FATAL_ERROR "Toolchain identity was not reported")
 endif()
+# The fixture deliberately mutates CC *during test registration*. Its CTest
+# environment must still match the snapshot captured by the Rust producer.
+if(NOT DEFINED ENV{CC})
+  file(READ "${_build}/CTestTestfile.cmake" _ctest_entries)
+  if(NOT _ctest_entries MATCHES "CC=unset:")
+    message(FATAL_ERROR "CTest did not normalize CC against the Rust target fingerprint")
+  endif()
+endif()
 run("${CMAKE_COMMAND}" --build "${_build}" --config Debug --target run_rust copy_rust)
 if(NOT _log MATCHES "answer=42" OR NOT _log MATCHES "example=42" OR NOT EXISTS "${_build}/prerequisite")
   message(FATAL_ERROR "Imported executable build ordering or TARGET_FILE failed: ${_log}")
@@ -101,6 +109,12 @@ if(NOT _log MATCHES "Compiling rust-fixture" OR NOT _log MATCHES "answer=43")
 endif()
 run("${CMAKE_COMMAND}" --build "${_build}" --config Debug --target check)
 run("${CMAKE_CTEST_COMMAND}" --test-dir "${_build}" -C Debug -R rust_suite -V)
+# Reproduce launchers that add CC for CTest only. The test should run using
+# the same environment fingerprint as its prebuilt Cargo artifacts.
+if(NOT DEFINED ENV{CC})
+  run("${CMAKE_COMMAND}" -E env "CC=/not/a/compiler" "${CMAKE_CTEST_COMMAND}"
+    --test-dir "${_build}" -C Debug -R rust_suite -V)
+endif()
 if(NOT _log MATCHES "returns_answer.*ok" OR NOT _log MATCHES "100% tests passed")
   message(FATAL_ERROR "CTest did not execute the Cargo suite: ${_log}")
 endif()

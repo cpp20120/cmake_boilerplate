@@ -63,7 +63,22 @@ if(FIXTURE_RUST)
   file(GENERATE OUTPUT "${CMAKE_CURRENT_BINARY_DIR}/binary-$<CONFIG>.txt" CONTENT "$<TARGET_FILE:rust_bin>")
   file(GENERATE OUTPUT "${CMAKE_CURRENT_BINARY_DIR}/example-$<CONFIG>.txt" CONTENT "$<TARGET_FILE:rust_example>")
   boilerplate_register_check(rust_binary rust_bin LABELS rust)
+  # Regression: simulate a compiler wrapper exporting CC only after the Rust
+  # target recorded its build fingerprint but before CTest registration.
+  # CTest's normalization must be based on that fingerprint, not this ENV{CC}.
+  if(DEFINED ENV{CC})
+    set(_fixture_original_cc_defined TRUE)
+    set(_fixture_original_cc "$ENV{CC}")
+  else()
+    set(_fixture_original_cc_defined FALSE)
+  endif()
+  set(ENV{CC} "/not/the/configured/compiler")
   boilerplate_add_rust_test(rust_suite TARGET rust_bin LABELS fixture TEST_ARGS --nocapture)
+  if(_fixture_original_cc_defined)
+    set(ENV{CC} "${_fixture_original_cc}")
+  else()
+    unset(ENV{CC})
+  endif()
 
   boilerplate_add_rust_executable(rust_bench MANIFEST Cargo.toml CARGO_TARGET fixture-benchmark
     PACKAGE rust-fixture FEATURES answer benchmark NO_DEFAULT_FEATURES LOCKED OFFLINE

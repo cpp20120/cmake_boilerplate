@@ -67,8 +67,13 @@ adds it to the existing `boilerplate_tests`, `boilerplate_check`, and `check`
 workflow. It requires the `testing` capability and respects `BUILD_TESTING=OFF`.
 Tests inherit the executable's toolchain, package, features, flags, profile,
 target triple, working directory and artifact directory; these cannot diverge
-through test registration. Build before invoking CTest so CMake prerequisites
-and standalone executable tests are ready. CTest's Cargo suite also checks
+through test registration. The CTest entry removes native compiler environment
+variables (CC, CXX, AR, CFLAGS, CXXFLAGS, LDFLAGS) **only if they were absent from the Cargo target's
+captured build-environment fingerprint**, preventing test-launcher-only additions from changing the
+Cargo build variant. Variables captured in the target's build environment and other tracked
+Cargo/Rust environment overrides are still checked by the fingerprint guard.
+Build before invoking CTest so CMake prerequisites and standalone executable
+tests are ready. CTest's Cargo suite also checks
 freshness itself. Cargo serializes concurrent access to a shared target directory.
 
 ## Toolchain selection
