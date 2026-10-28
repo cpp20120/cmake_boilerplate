@@ -123,7 +123,15 @@ run("${CMAKE_COMMAND}" -S "${_fixture}" -B "${_multi}" -G "Ninja Multi-Config"
 run("${CMAKE_COMMAND}" --build "${_multi}" --config Release --target boilerplate_dashboard)
 report("${_multi}" Test _xml)
 file(READ "${_xml}" _tests)
-if(NOT _tests MATCHES "Release/dashboard_fixture")
-  message(FATAL_ERROR "Multi-config dashboard did not run Release executable")
+# CTest can serialize Windows executable paths with backslash separators.
+# Normalize the XML text before checking the multi-config executable path.
+string(REPLACE "\\" "/" _normalized_tests "${_tests}")
+if(NOT _normalized_tests MATCHES "Release/dashboard_fixture(\\.exe)?")
+  string(REGEX MATCHALL "<FullCommandLine>[^<]*</FullCommandLine>"
+    _test_commands "${_tests}")
+  message(FATAL_ERROR
+    "Multi-config dashboard did not run Release executable.\n"
+    "Test commands: ${_test_commands}\n"
+    "CTest report: ${_xml}")
 endif()
 message(STATUS "Dashboard regression checks passed")

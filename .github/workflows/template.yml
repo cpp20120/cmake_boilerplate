@@ -53,6 +53,7 @@ jobs:
             ${{ runner.temp }}/dashboard-check/**/Testing/Temporary/**
             ${{ runner.temp }}/dashboard-check/**/Testing/*/Build.xml
             ${{ runner.temp }}/dashboard-check/**/Testing/*/Configure.xml
+            ${{ runner.temp }}/dashboard-check/**/Testing/*/Test.xml
           if-no-files-found: ignore
 
       - name: Generate, build and test a renamed project
