@@ -91,3 +91,7 @@ checks.json
 #doxygen
 doxygen_output/
 /MyProject/
+
+# Personal shell configuration
+/.zshrc
+/.zshenv
