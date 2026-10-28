@@ -1,17 +1,16 @@
-version: '3.8'
-
 services:
   app:
     build:
       context: .
       dockerfile: Dockerfile
+      target: runtime
     volumes:
       - .:/project
     working_dir: /project
     environment:
       - BUILD_TYPE=Release
     ports:
-      - "8000:8000"  
+      - "8000:8000"
     deploy:
       resources:
         limits:
@@ -21,13 +20,15 @@ services:
   dev:
     build:
       context: .
-      dockerfile: Dockerfile
-      target: builder 
+      dockerfile: .devcontainer/Dockerfile
+      target: devcontainer
+    working_dir: /workspace
     volumes:
-      - .:/project
-    working_dir: /project
-    environment:
-      - BUILD_TYPE=Debug
-    command: /bin/bash
-    tty: true
+      - .:/workspace
+      - dev-out:/workspace/out
     stdin_open: true
+    tty: true
+    command: /bin/zsh
+
+volumes:
+  dev-out:

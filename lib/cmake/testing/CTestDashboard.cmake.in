@@ -1,0 +1,206 @@
+# Generated into the build tree by the dashboard capability. Run with ctest -S.
+cmake_minimum_required(VERSION 3.26)
+set(CTEST_SOURCE_DIRECTORY "@_dashboard_source@")
+set(CTEST_BINARY_DIRECTORY "@_dashboard_binary@")
+set(CTEST_CMAKE_GENERATOR "@_dashboard_generator@")
+set(CTEST_CONFIGURATION_TYPE "@_dashboard_config@")
+set(CTEST_SITE "@_dashboard_site@")
+set(CTEST_BUILD_NAME "@_dashboard_build_name@")
+set(CTEST_PROJECT_NAME "@_dashboard_project@")
+set(CTEST_NIGHTLY_START_TIME "00:00:00 UTC")
+set(CTEST_TEST_TIMEOUT "@BOILERPLATE_DASHBOARD_TEST_TIMEOUT@")
+set(_model "@BOILERPLATE_DASHBOARD_MODEL@")
+set(_parallel "@BOILERPLATE_DASHBOARD_PARALLEL@")
+set(_label "@BOILERPLATE_DASHBOARD_LABEL@")
+set(_test_load "@BOILERPLATE_DASHBOARD_TEST_LOAD@")
+set(_resource "@BOILERPLATE_DASHBOARD_RESOURCE_SPEC@")
+set(_coverage "@BOILERPLATE_DASHBOARD_COVERAGE@")
+set(_coverage_backend "@BOILERPLATE_DASHBOARD_COVERAGE_BACKEND@")
+set(_memcheck "@BOILERPLATE_DASHBOARD_MEMCHECK@")
+set(_submit "@BOILERPLATE_DASHBOARD_SUBMIT@")
+set(_submit_failure_fatal "@BOILERPLATE_DASHBOARD_SUBMIT_FAILURE_FATAL@")
+set(_url "@BOILERPLATE_DASHBOARD_URL@")
+set(_retry_count "@BOILERPLATE_DASHBOARD_RETRY_COUNT@")
+set(_retry_delay "@BOILERPLATE_DASHBOARD_RETRY_DELAY@")
+
+if(NOT IS_DIRECTORY "${CTEST_SOURCE_DIRECTORY}" OR
+   NOT EXISTS "${CTEST_SOURCE_DIRECTORY}/CMakeLists.txt" OR
+   NOT EXISTS "${CTEST_BINARY_DIRECTORY}/CMakeCache.txt")
+  message(FATAL_ERROR "Dashboard needs the existing configured source and build directories")
+endif()
+file(STRINGS "${CTEST_BINARY_DIRECTORY}/CMakeCache.txt" _home
+  REGEX "^CMAKE_HOME_DIRECTORY:INTERNAL=")
+if(NOT _home STREQUAL "CMAKE_HOME_DIRECTORY:INTERNAL=${CTEST_SOURCE_DIRECTORY}")
+  message(FATAL_ERROR "Dashboard build tree belongs to another source directory: ${_home}")
+endif()
+set(_test_args BUILD "${CTEST_BINARY_DIRECTORY}" PARALLEL_LEVEL "${_parallel}"
+  RETURN_VALUE _test_result CAPTURE_CMAKE_ERROR _test_error)
+if(_label)
+  list(APPEND _test_args INCLUDE_LABEL "${_label}")
+endif()
+if(_test_load)
+  list(APPEND _test_args TEST_LOAD "${_test_load}")
+endif()
+if(_resource)
+  if(NOT EXISTS "${_resource}")
+    message(FATAL_ERROR "Dashboard resource specification does not exist: ${_resource}")
+  endif()
+  list(APPEND _test_args RESOURCE_SPEC_FILE "${_resource}")
+endif()
+
+# CTest TAGs have minute precision. A second non-APPEND dashboard run in the
+# same minute can reuse the directory and accidentally submit XML from a prior
+# run (especially Coverage.xml after coverage was switched OFF).
+# Serialize this boilerplate's runs in the same build tree while working with
+# the shared Testing/TAG and its report files.
+file(MAKE_DIRECTORY "${CTEST_BINARY_DIRECTORY}/Testing")
+file(LOCK "${CTEST_BINARY_DIRECTORY}/Testing/boilerplate-dashboard.lock"
+  GUARD PROCESS TIMEOUT 0 RESULT_VARIABLE _dashboard_lock_result)
+if(NOT _dashboard_lock_result STREQUAL "0")
+  message(FATAL_ERROR "Another dashboard run owns this build tree: ${_dashboard_lock_result}")
+endif()
+ctest_start("${_model}")
+file(STRINGS "${CTEST_BINARY_DIRECTORY}/Testing/TAG" _dashboard_tag LIMIT_COUNT 1)
+if(NOT _dashboard_tag MATCHES "^[0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9]-[0-9][0-9][0-9][0-9]$")
+  message(FATAL_ERROR "Unexpected CTest TAG: '${_dashboard_tag}'")
+endif()
+set(_dashboard_tag_dir "${CTEST_BINARY_DIRECTORY}/Testing/${_dashboard_tag}")
+# ctest_start writes Testing/TAG; the tagged directory can be created lazily
+# by the first reporting step.
+file(MAKE_DIRECTORY "${_dashboard_tag_dir}")
+# Clear reports, not the TAG itself or CTest's Temporary diagnostics. On a
+# reused TAG this also clears CoverageLog-*.xml and old MemCheck reports.
+file(GLOB _stale_dashboard_xml LIST_DIRECTORIES FALSE "${_dashboard_tag_dir}/*.xml")
+if(_stale_dashboard_xml)
+  file(REMOVE ${_stale_dashboard_xml})
+endif()
+
+set(_submit_parts Start)
+set(_failed FALSE)
+ctest_configure(BUILD "${CTEST_BINARY_DIRECTORY}" SOURCE "${CTEST_SOURCE_DIRECTORY}"
+  RETURN_VALUE _configure_result CAPTURE_CMAKE_ERROR _configure_error)
+list(APPEND _submit_parts Configure)
+if(NOT _configure_result EQUAL 0 OR NOT _configure_error EQUAL 0)
+  set(_failed TRUE)
+  message(STATUS "Dashboard Configure failed: ${_configure_result}/${_configure_error}")
+else()
+  ctest_build(BUILD "${CTEST_BINARY_DIRECTORY}" CONFIGURATION "${CTEST_CONFIGURATION_TYPE}"
+    PARALLEL_LEVEL "${_parallel}" RETURN_VALUE _build_result
+    NUMBER_ERRORS _build_errors NUMBER_WARNINGS _build_warnings
+    CAPTURE_CMAKE_ERROR _build_error)
+  list(APPEND _submit_parts Build)
+  if(NOT _build_result EQUAL 0 OR NOT _build_error EQUAL 0 OR _build_errors GREATER 0)
+    set(_failed TRUE)
+    message(STATUS "Dashboard Build failed: ${_build_result}/${_build_error}, errors=${_build_errors}")
+  else()
+    if(_coverage)
+      if(_coverage_backend STREQUAL "gcov")
+        # Reset only counters, immediately before this run's single Test step.
+        file(GLOB_RECURSE _old_counters "${CTEST_BINARY_DIRECTORY}/*.gcda")
+        if(_old_counters)
+          file(REMOVE ${_old_counters})
+        endif()
+        set(CTEST_COVERAGE_COMMAND "@_dashboard_gcov@")
+        set(CTEST_COVERAGE_EXTRA_FLAGS "@_dashboard_gcov_flags@")
+      else()
+        if(CMAKE_VERSION VERSION_LESS 4.4)
+          message(FATAL_ERROR "LLVM-COV dashboard coverage needs CTest 4.4+")
+        endif()
+        set(CTEST_TEST_COVERAGE_TOOL LLVM-COV)
+        set(CTEST_COVERAGE_COMMAND "@_dashboard_gcov@")
+        set(CTEST_TEST_COVERAGE_MERGE_EXECUTABLE "@_dashboard_profdata@")
+        set(CTEST_TEST_COVERAGE_DATA_EXECUTABLE "@_dashboard_gcov@")
+        list(APPEND _test_args COVERAGE_TOOL LLVM-COV)
+        # CTest merges each test's fresh .profraw into a per-test .profdata.
+        file(GLOB_RECURSE _old_profiles "${CTEST_BINARY_DIRECTORY}/*.profdata")
+        if(_old_profiles)
+          file(REMOVE ${_old_profiles})
+        endif()
+      endif()
+    endif()
+    ctest_test(${_test_args})
+    list(APPEND _submit_parts Test)
+    if(NOT _test_result EQUAL 0 OR NOT _test_error EQUAL 0)
+      set(_failed TRUE)
+      message(STATUS "Dashboard Test failed: ${_test_result}/${_test_error}")
+    endif()
+    if(_coverage)
+      if(_coverage_backend STREQUAL "gcov")
+        file(GLOB_RECURSE _counters "${CTEST_BINARY_DIRECTORY}/*.gcda")
+      else()
+        file(GLOB_RECURSE _counters "${CTEST_BINARY_DIRECTORY}/*.profdata")
+      endif()
+      if(NOT _counters)
+        set(_failed TRUE)
+        message(STATUS "Dashboard Coverage skipped: no fresh instrumented counters")
+      else()
+        file(STRINGS "${CTEST_BINARY_DIRECTORY}/Testing/TAG" _tag LIMIT_COUNT 1)
+        set(_coverage_xml "${CTEST_BINARY_DIRECTORY}/Testing/${_tag}/Coverage.xml")
+        file(REMOVE "${_coverage_xml}")
+        ctest_coverage(BUILD "${CTEST_BINARY_DIRECTORY}" RETURN_VALUE _coverage_result
+          CAPTURE_CMAKE_ERROR _coverage_error)
+        if(_coverage_backend STREQUAL "llvm-cov" AND
+            (NOT _coverage_result EQUAL 0 OR NOT _coverage_error EQUAL 0 OR
+             NOT EXISTS "${_coverage_xml}"))
+          # CTest 4.4 script mode does not propagate its LLVM data executable to
+          # ctest_coverage. Command-line dashboard mode reads DartConfiguration.
+          execute_process(COMMAND "@CMAKE_CTEST_COMMAND@" -M "${_model}" -T Coverage
+            --test-dir "${CTEST_BINARY_DIRECTORY}"
+            RESULT_VARIABLE _coverage_result)
+          set(_coverage_error 0)
+        endif()
+        if(NOT _coverage_result EQUAL 0 OR NOT _coverage_error EQUAL 0)
+          set(_failed TRUE)
+          message(STATUS "Dashboard Coverage failed: ${_coverage_result}/${_coverage_error}")
+        elseif(NOT EXISTS "${_coverage_xml}")
+          set(_failed TRUE)
+          message(STATUS "Dashboard Coverage produced no Coverage.xml")
+        else()
+          file(READ "${_coverage_xml}" _coverage_body)
+          if(NOT _coverage_body MATCHES "<LOC(Tested|UnTested)>[0-9]+</LOC(Tested|UnTested)>")
+            set(_failed TRUE)
+            message(STATUS "Dashboard Coverage.xml has no measured lines")
+          else()
+            list(APPEND _submit_parts Coverage)
+          endif()
+        endif()
+      endif()
+    endif()
+    if(_memcheck)
+      set(CTEST_MEMORYCHECK_COMMAND "@_dashboard_memcheck@")
+      set(CTEST_MEMORYCHECK_TYPE Valgrind)
+      ctest_memcheck(${_test_args} DEFECT_COUNT _defects)
+      list(APPEND _submit_parts MemCheck)
+      if(NOT _test_result EQUAL 0 OR NOT _test_error EQUAL 0 OR _defects GREATER 0)
+        set(_failed TRUE)
+        message(STATUS "Dashboard MemCheck failed: ${_test_result}/${_test_error}, defects=${_defects}")
+      endif()
+    endif()
+  endif()
+endif()
+
+# Never submit unless explicitly enabled at configure time. A failed Test step
+# still reaches this point and its Test.xml is available to CDash.
+if(_submit)
+  set(CTEST_SUBMIT_URL "${_url}")
+  if(DEFINED ENV{BOILERPLATE_CDASH_BEARER_TOKEN} AND
+      NOT "$ENV{BOILERPLATE_CDASH_BEARER_TOKEN}" STREQUAL "")
+    ctest_submit(PARTS ${_submit_parts}
+      RETRY_COUNT "${_retry_count}" RETRY_DELAY "${_retry_delay}"
+      HTTPHEADER "Authorization: Bearer $ENV{BOILERPLATE_CDASH_BEARER_TOKEN}"
+      RETURN_VALUE _submit_result CAPTURE_CMAKE_ERROR _submit_error)
+  else()
+    ctest_submit(PARTS ${_submit_parts}
+      RETRY_COUNT "${_retry_count}" RETRY_DELAY "${_retry_delay}"
+      RETURN_VALUE _submit_result CAPTURE_CMAKE_ERROR _submit_error)
+  endif()
+  if(NOT _submit_result EQUAL 0 OR NOT _submit_error EQUAL 0)
+    message(STATUS "Dashboard Submit failed: ${_submit_result}/${_submit_error}")
+    if(_submit_failure_fatal)
+      set(_failed TRUE)
+    endif()
+  endif()
+endif()
+if(_failed)
+  message(FATAL_ERROR "Dashboard pipeline failed; inspect ${CTEST_BINARY_DIRECTORY}/Testing/Temporary and Testing/*/*.xml")
+endif()

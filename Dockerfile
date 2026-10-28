@@ -2,33 +2,22 @@
 
 ARG DEBIAN_IMAGE=debian:trixie-slim
 
-# Development/toolchain image. Docker is deliberately an outer workflow; it
-# does not participate in the CMake target graph.
-FROM ${DEBIAN_IMAGE} AS dev
+# Deployment build tools. Interactive tooling lives in .devcontainer/Dockerfile.
+FROM ${DEBIAN_IMAGE} AS build
 ENV DEBIAN_FRONTEND=noninteractive \
     CMAKE_GENERATOR=Ninja
 RUN apt-get update \
     && apt-get install -y --no-install-recommends \
       build-essential \
-      clang clangd clang-format clang-tidy clang-tools \
-      llvm lld mold \
-      cmake cmake-format ninja-build \
-      ccache \
+      clang lld mold \
+      cmake ninja-build \
       git ca-certificates curl \
-      python3 \
       pkg-config file patchelf \
-      glslc glslang-tools \
       zip unzip \
-      doxygen graphviz \
-      cppcheck iwyu \
-      gcovr lcov \
-      gdb valgrind \
-      afl++ \
     && rm -rf /var/lib/apt/lists/*
 WORKDIR /workspace
 
 # Reproducible project build using the same public preset API as a host build.
-FROM dev AS build
 ARG CMAKE_PRESET=app-release
 COPY . .
 RUN cmake --preset "${CMAKE_PRESET}" \

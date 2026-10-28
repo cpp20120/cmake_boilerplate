@@ -1,5 +1,7 @@
 # CMake boilerplate: libraries, runtimes and applications
 
+Optional CTest/CDash reporting is documented in [Dashboard.md](Dashboard.md).
+
 [![OpenSSF Best Practices](https://www.bestpractices.dev/projects/15343/badge)](https://www.bestpractices.dev/projects/15343)
 
 ## One command: prepare, build, test, and optionally run
@@ -714,18 +716,25 @@ process harness, matrix and simple comparison are implemented in CMake.
 
 ## Containers
 
-Docker is deliberately **outside** the CMake capability graph. The Dockerfile consumes
-the same public presets/install rules as a host build and has four explicit stages:
-`dev -> build -> test -> runtime`. The default base is `debian:trixie-slim`: the dev
-stage installs the normal GCC/Clang/CMake/Ninja toolchain plus analysis, coverage and
-AFL++ tools from Debian packages, while the runtime stays on the same glibc family.
-The runtime stage copies the CMake install tree; it does not know the project's internal
-build-directory layout. Override `DEBIAN_IMAGE` at Docker build time if another Debian
-13-compatible base is desired.
+Docker is deliberately **outside** the CMake capability graph. Two independent
+Dockerfiles serve deployment and development:
+
+- `Dockerfile`: `build`, `test`, and `runtime` stages consume the public CMake
+  presets/install rules. The build stage provides GCC/Clang/CMake/Ninja and packaging
+  prerequisites; the runtime image contains the installed application and runtime libraries.
+- `.devcontainer/Dockerfile`: the `dev` stage provides the development toolchain,
+  debuggers, analysis, coverage, and AFL++ tools. The `devcontainer` stage adds the
+  non-root VS Code user, LLVM/Rust editor tooling, and zsh. It can be built
+  independently of the deployment image.
+
+Both default to `debian:trixie-slim`, keeping build and runtime on the same glibc
+family. Override `DEBIAN_IMAGE` at Docker build time if another Debian 13-compatible
+base is desired. Optional presets may require adding their dependencies to the
+corresponding Dockerfile.
 
 Native Bash and PowerShell wrappers keep common container commands short. The host
-only needs Bash or PowerShell and Docker (or Podman); Python and CMake run inside the
-image, not as prerequisites for the wrapper.
+only needs Bash or PowerShell and Docker (or Podman); CMake and compiler tools run
+inside the image.
 
 ```sh
 bash tools/container.sh dev
@@ -749,14 +758,83 @@ PowerShell uses native parameter names:
 
 Both wrappers support an image name (`--image` / `-Image`), an engine executable
 (`--docker` / `-Docker`), and build flags (`--pull` / `-Pull`, `--no-cache` / `-NoCache`).
-The default image name is `cmake-boilerplate`; dev/test stages use its `:dev`/`:test`
-tags. `shell` and `run` build their image first unless `--no-build` / `-NoBuild` is set.
+The default image name is `cmake-boilerplate`; the `devcontainer` and `test`
+stages use its `:dev`/`:test` tags. `shell` and `run` build their image
+first unless `--no-build` / `-NoBuild` is set.
 `clean` removes these three local image tags. Engine failures return a nonzero exit code.
 
-`--preset` is simply forwarded as `CMAKE_PRESET` to the Docker build. Use another
-preset when the image contains the corresponding toolchain/dependencies. `.dockerignore`
+`build`, `test`, and `run` use the root Dockerfile; `dev` and `shell` build
+the full `devcontainer` stage of `.devcontainer/Dockerfile` (including Rust and zsh).
+Compose uses the same split for its `app` and `dev` services, with a dedicated
+`dev-out` volume for container-only build artifacts. `shell` starts zsh by default
+(pass `--shell bash` / `-Shell bash` to override). For deployment/test images,
+`--preset` is forwarded as `CMAKE_PRESET`. Use another preset when the image
+contains the corresponding toolchain/dependencies. `.dockerignore`
 keeps host build trees, profiles and a local vcpkg checkout out of the context. Docker
 is optional; no configure/build/test target requires a Docker daemon.
+
+### VS Code Dev Containers
+
+Install Docker and the VS Code **Dev Containers** extension
+(`ms-vscode-remote.remote-containers`). Open this repository's root folder (or a
+generated project's root) in VS Code, then run **Dev Containers: Reopen in
+Container** from the Command Palette. See the
+[VS Code setup guide](https://code.visualstudio.com/docs/devcontainers/create-dev-container)
+for host prerequisites.
+
+The checked-in `.devcontainer/devcontainer.json` builds the `devcontainer` stage
+of `.devcontainer/Dockerfile`. It runs as `vscode` with Clang/Clang++, LLD, clangd,
+clang-tidy, clang-format, and LLDB. VS Code installs CMake Tools, clangd, CodeLLDB,
+and rust-analyzer. Clangd provides C/C++ completion, formatting, and clang-tidy
+diagnostics using the repository's existing configuration.
+
+Creation configures `app-debug` with Clang and LLD, refreshing its container-only
+CMake cache to replace older GCC selections. CMake Tools copies the active
+configuration's compile commands to `out/compile_commands.json` for clangd.
+After configuring a different preset manually, copy its `compile_commands.json`
+there too, or configure through CMake Tools. Use **CMake: Debug** on the selected
+target to launch CodeLLDB; Rust's debug code lenses use the same debugger.
+
+Stable Rust is installed through rustup with Cargo, Clippy, rustfmt, and `rust-src`.
+The Docker build argument `RUST_TOOLCHAIN` can select a specific toolchain.
+Rust-analyzer uses Clippy for checks; the CMake framework's `rust` capability
+remains opt-in. For a crate outside the opened workspace root, use rust-analyzer's
+`linkedProjects` setting to select its `Cargo.toml`.
+
+The default terminal is zsh with history, completion, autosuggestions, syntax
+highlighting, fzf history/file search, and zoxide's `z` navigation. The small
+`.devcontainer/zshrc` includes navigation/Git aliases and a plain prompt, with
+no plugin managers, startup downloads, host paths, or replacements for `cd`/`cat`.
+Customize that file and rebuild to change the container's shell defaults.
+On Linux, Dev Containers aligns the user's UID/GID with the host. The first image
+build and extension installation require network access.
+
+From the container terminal:
+
+```sh
+cmake --build --preset app-debug --parallel 2
+ctest --preset app-debug --output-on-failure
+cmake --build --preset app-debug --target boilerplate_run
+```
+
+For editor build/debug commands, use **CMake: Select Configure Preset** to select
+`app-debug`. Choose another checked-in preset when needed. Builds and tests run
+on demand; opening the container only configures the initial build.
+
+Sources are mounted at `/workspace`. A persistent volume specific to this Dev
+Container stores `/workspace/out`, keeping container CMake caches separate from
+host builds. The creation command sets ownership of that volume before configuring;
+host `out/` contents are hidden inside the container. Standalone builds from `lib/`
+use `lib/out/` and are outside this volume.
+
+The project initializer includes both Dockerfiles and the Dev Container configuration.
+Debugging uses `SYS_PTRACE` and an unconfined seccomp profile for LLDB; this
+additional privilege applies to the **development** container, not the
+deployment image. Use a trusted codebase and Docker host.
+
+After changing `.devcontainer/`, run **Dev Containers: Rebuild Container**. The default image
+provides LLVM and stable Rust; nightly Rust sanitizers/fuzzing, CUDA, Qt, and
+cross-compilation workflows still require their documented tools.
 
 ## Validation and platform limits
 

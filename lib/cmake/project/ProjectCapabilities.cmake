@@ -311,6 +311,7 @@ include("${CMAKE_CURRENT_LIST_DIR}/../testing/Testing.cmake")
 include("${CMAKE_CURRENT_LIST_DIR}/../testing/PropertyTesting.cmake")
 include("${CMAKE_CURRENT_LIST_DIR}/../testing/Fuzzing.cmake")
 include("${CMAKE_CURRENT_LIST_DIR}/../testing/Coverage.cmake")
+include("${CMAKE_CURRENT_LIST_DIR}/../testing/Dashboard.cmake")
 include("${CMAKE_CURRENT_LIST_DIR}/Documentation.cmake")
 include("${CMAKE_CURRENT_LIST_DIR}/../packaging/Packaging.cmake")
 include("${CMAKE_CURRENT_LIST_DIR}/ReproducibleBuild.cmake")
@@ -339,6 +340,9 @@ boilerplate_define_project_capability(fuzzing
   FINALIZE_HOOKS _boilerplate_project_fuzzing_finalize)
 boilerplate_define_project_capability(coverage-report INHERITS testing
   FINALIZE_HOOKS _boilerplate_project_coverage_finalize)
+boilerplate_define_project_capability(dashboard INHERITS testing
+  CONFIGURE_HOOKS _boilerplate_project_dashboard_configure
+  FINALIZE_HOOKS _boilerplate_project_dashboard_finalize)
 boilerplate_define_project_capability(docs FINALIZE_HOOKS _boilerplate_project_docs_finalize)
 boilerplate_define_project_capability(packaging FINALIZE_HOOKS _boilerplate_project_packaging_finalize)
 boilerplate_define_project_capability(reproducible-build CONFIGURE_HOOKS _boilerplate_project_reproducible_configure)

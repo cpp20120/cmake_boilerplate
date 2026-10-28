@@ -334,6 +334,15 @@
       }
     },
     {
+      "name": "app-dashboard",
+      "inherits": "app-debug",
+      "description": "Local CTest dashboard; CDash submission remains disabled",
+      "cacheVariables": {
+        "BOILERPLATE_DASHBOARD": "ON",
+        "BOILERPLATE_DASHBOARD_SUBMIT": "OFF"
+      }
+    },
+    {
       "name": "app-qt-debug",
       "inherits": "app-debug",
       "description": "Debug build with the Qt 6 Widgets example",
@@ -698,6 +707,11 @@
     {
       "name": "app-debug",
       "configurePreset": "app-debug"
+    },
+    {
+      "name": "app-dashboard",
+      "configurePreset": "app-dashboard",
+      "targets": ["boilerplate_dashboard"]
     },
     {
       "name": "app-qt-debug",

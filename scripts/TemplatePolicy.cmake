@@ -1,9 +1,10 @@
 # Repository files must match an explicit include or exclude rule.
 # Unknown files fail the manifest check.
 set(TEMPLATE_INCLUDE_PATTERNS
+  "^\\.devcontainer/"
   "^\\.(clang-format|clang-format-ignore|clang-tidy|cmake-format\\.yaml|dockerignore|gitignore)$"
   "^\\.github/workflows/[^/]+\\.ya?ml$"
-  "^(CMakeLists\\.txt|CMakePresets\\.json|Dockerfile|LICENSE|README\\.md|Structure\\.md|docker-compose\\.yaml|vcpkg(-configuration)?\\.json)$"
+  "^(CMakeLists\\.txt|CMakePresets\\.json|Dashboard\\.md|Dockerfile|LICENSE|README\\.md|Structure\\.md|docker-compose\\.yaml|vcpkg(-configuration)?\\.json)$"
   "^(setup|setup-host|build|build_all|format_cmake|format_parallel)\\.(sh|ps1)$"
   "^(devenv_and_run|docker_devenv)\\.sh$"
   "^(cmake|lib|src|include|tests|examples|scripts|tools|toolchains|shaders)/"
@@ -11,7 +12,8 @@ set(TEMPLATE_INCLUDE_PATTERNS
 
 set(TEMPLATE_EXCLUDE_PATTERNS
   # Repository-specific security and contributor policies.
-  "^(SECURITY|CONTRIBUTING)\\.md$"
+  "^(SECURITY|CONTRIBUTING|AGENTS)\\.md$"
+  "^\\.agents/skills/"
   "^\\.github/dependabot\\.yml$"
 
   # Published registry identity/history.

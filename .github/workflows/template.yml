@@ -39,5 +39,8 @@ jobs:
       - uses: ilammy/msvc-dev-cmd@v1
         if: runner.os == 'Windows'
 
+      - name: Check local CTest dashboard without submission
+        run: cmake "-DCHECK_BINARY=${{ runner.temp }}/dashboard-check" -P scripts/test-dashboard.cmake
+
       - name: Generate, build and test a renamed project
         run: cmake "-DCHECK_BINARY=${{ runner.temp }}/template-check" -P scripts/test-init.cmake

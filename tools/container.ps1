@@ -7,7 +7,7 @@ param(
     [string]$Preset = 'app-release',
     [string]$Docker,
     [string]$BaseImage,
-    [string]$Shell = 'bash',
+    [string]$Shell = 'zsh',
     [switch]$Pull,
     [switch]$NoCache,
     [switch]$NoBuild,
@@ -38,7 +38,10 @@ function Invoke-Engine([string[]]$Arguments) {
     if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 }
 function Build-Image([string]$Target, [string]$Tag) {
-    $arguments = @('build', '--target', $Target, '--build-arg', "CMAKE_PRESET=$Preset")
+    $dockerfile = Join-Path $root 'Dockerfile'
+    if ($Target -eq 'devcontainer') { $dockerfile = Join-Path $root '.devcontainer/Dockerfile' }
+    $arguments = @('build', '--file', $dockerfile, '--target', $Target)
+    if ($Target -ne 'devcontainer') { $arguments += @('--build-arg', "CMAKE_PRESET=$Preset") }
     if ($BaseImage) { $arguments += @('--build-arg', "DEBIAN_IMAGE=$BaseImage") }
     if ($Pull) { $arguments += '--pull' }
     if ($NoCache) { $arguments += '--no-cache' }
@@ -49,9 +52,9 @@ try {
     switch ($Action) {
         build { Build-Image runtime $Image }
         test { Build-Image test "${Image}:test" }
-        dev { Build-Image dev "${Image}:dev" }
+        dev { Build-Image devcontainer "${Image}:dev" }
         shell {
-            if (-not $NoBuild) { Build-Image dev "${Image}:dev" }
+            if (-not $NoBuild) { Build-Image devcontainer "${Image}:dev" }
             Invoke-Engine @('run', '--rm', '-it', '-v', "${root}:/workspace", '-w', '/workspace', "${Image}:dev", $Shell)
         }
         run {

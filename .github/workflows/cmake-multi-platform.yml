@@ -10,6 +10,31 @@ permissions:
   contents: read
 
 jobs:
+  cdash-submit:
+    if: github.event_name == 'push' && vars.BOILERPLATE_CDASH_SUBMIT == 'true'
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install build tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y ninja-build cmake g++
+      - name: Configure opt-in CDash dashboard
+        env:
+          CDASH_URL: ${{ vars.BOILERPLATE_CDASH_URL }}
+          CDASH_PROJECT: ${{ vars.BOILERPLATE_CDASH_PROJECT }}
+        run: >-
+          cmake --preset app-dashboard
+          -DCMAKE_CXX_COMPILER=g++
+          -DBOILERPLATE_DASHBOARD_SUBMIT=ON
+          "-DBOILERPLATE_DASHBOARD_URL=$CDASH_URL"
+          "-DBOILERPLATE_DASHBOARD_PROJECT=$CDASH_PROJECT"
+          -DBOILERPLATE_DASHBOARD_VARIANT=github-push
+      - name: Run and submit dashboard
+        env:
+          BOILERPLATE_CDASH_BEARER_TOKEN: ${{ secrets.BOILERPLATE_CDASH_BEARER_TOKEN }}
+        run: cmake --build --preset app-dashboard
+
   host-setup-checks:
     runs-on: ${{ matrix.os }}
     strategy:

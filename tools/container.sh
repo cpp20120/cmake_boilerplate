@@ -19,7 +19,7 @@ image=cmake-boilerplate
 preset=app-release
 engine=
 base_image=
-shell_command=bash
+shell_command=zsh
 no_build=false
 build_flags=()
 app_args=()
@@ -56,7 +56,14 @@ fi
 cd -- "$root"
 build_image() {
     local target=$1 tag=$2
-    local args=(build --target "$target" --build-arg "CMAKE_PRESET=$preset")
+    local dockerfile="$root/Dockerfile"
+    if [[ "$target" == devcontainer ]]; then
+        dockerfile="$root/.devcontainer/Dockerfile"
+    fi
+    local args=(build --file "$dockerfile" --target "$target")
+    if [[ "$target" != devcontainer ]]; then
+        args+=(--build-arg "CMAKE_PRESET=$preset")
+    fi
     if [[ -n "$base_image" ]]; then
         args+=(--build-arg "DEBIAN_IMAGE=$base_image")
     fi
@@ -65,9 +72,9 @@ build_image() {
 case "$action" in
     build) build_image runtime "$image" ;;
     test) build_image test "$image:test" ;;
-    dev) build_image dev "$image:dev" ;;
+    dev) build_image devcontainer "$image:dev" ;;
     shell)
-        if ! "$no_build"; then build_image dev "$image:dev"; fi
+        if ! "$no_build"; then build_image devcontainer "$image:dev"; fi
         "$engine" run --rm -it -v "$root:/workspace" -w /workspace "$image:dev" "$shell_command" ;;
     run)
         if ! "$no_build"; then build_image runtime "$image"; fi
