@@ -1,0 +1,48 @@
+# Interactive development shell: no plugin managers or network at startup.
+[[ -o interactive ]] || return
+
+typeset -U path PATH
+path=("$HOME/.local/bin" "$HOME/.cargo/bin" $path)
+
+HISTFILE="${XDG_STATE_HOME:-$HOME/.local/state}/zsh/history"
+HISTSIZE=10000
+SAVEHIST=10000
+mkdir -p -- "${HISTFILE:h}"
+setopt APPEND_HISTORY SHARE_HISTORY HIST_IGNORE_ALL_DUPS HIST_IGNORE_SPACE
+setopt AUTO_PUSHD PUSHD_IGNORE_DUPS INTERACTIVE_COMMENTS AUTO_CD
+
+bindkey -e
+autoload -Uz compinit up-line-or-beginning-search down-line-or-beginning-search
+mkdir -p -- "${XDG_CACHE_HOME:-$HOME/.cache}"
+compinit -d "${XDG_CACHE_HOME:-$HOME/.cache}/zcompdump-${ZSH_VERSION}"
+zstyle ':completion:*' menu select
+zstyle ':completion:*' matcher-list 'm:{a-zA-Z}={A-Za-z}'
+zle -N up-line-or-beginning-search
+zle -N down-line-or-beginning-search
+bindkey '^[[A' up-line-or-beginning-search
+bindkey '^[[B' down-line-or-beginning-search
+bindkey '^[[H' beginning-of-line
+bindkey '^[[F' end-of-line
+bindkey '^[[3~' delete-char
+
+alias ..='cd ..'
+alias ...='cd ../..'
+alias ll='ls -lah --color=auto'
+alias gst='git status -sb'
+alias gd='git diff'
+alias gl='git log --oneline --decorate -15'
+(( $+commands[fdfind] )) && alias fd=fdfind
+
+# fzf owns Ctrl-T / Alt-C / Ctrl-R here. zoxide provides 'z' and 'zi'.
+if [[ -t 0 && -t 1 ]] && (( $+commands[fzf] )); then
+  eval "$(fzf --zsh)"
+fi
+(( $+commands[zoxide] )) && eval "$(zoxide init zsh)"
+
+[[ -r /usr/share/zsh-autosuggestions/zsh-autosuggestions.zsh ]] && \
+  source /usr/share/zsh-autosuggestions/zsh-autosuggestions.zsh
+# Highlighting must wrap all other ZLE integrations.
+[[ -r /usr/share/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh ]] && \
+  source /usr/share/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh
+
+PROMPT='%F{cyan}%n%f %F{blue}%~%f %(?.%F{green}.%F{red})%#%f '

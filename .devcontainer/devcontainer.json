@@ -1,0 +1,69 @@
+{
+  "name": "LLVM and Rust Development",
+  "build": {
+    "dockerfile": "Dockerfile",
+    "context": "..",
+    "target": "devcontainer"
+  },
+  "workspaceMount": "source=${localWorkspaceFolder},target=/workspace,type=bind",
+  "workspaceFolder": "/workspace",
+  "remoteUser": "vscode",
+  "updateRemoteUserUID": true,
+  "init": true,
+  "mounts": [
+    "source=${devcontainerId}-out,target=/workspace/out,type=volume"
+  ],
+  "postCreateCommand": [
+    "bash",
+    ".devcontainer/post-create.sh"
+  ],
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "ms-vscode.cmake-tools",
+        "llvm-vs-code-extensions.vscode-clangd",
+        "vadimcn.vscode-lldb",
+        "rust-lang.rust-analyzer"
+      ],
+      "settings": {
+        "cmake.useCMakePresets": "always",
+        "cmake.configureOnOpen": false,
+        "cmake.copyCompileCommands": "${workspaceFolder}/out/compile_commands.json",
+        "cmake.debugConfig": {
+          "type": "lldb",
+          "request": "launch"
+        },
+        "clangd.path": "/usr/bin/clangd",
+        "clangd.arguments": [
+          "--background-index",
+          "--clang-tidy",
+          "--compile-commands-dir=/workspace/out"
+        ],
+        "C_Cpp.intelliSenseEngine": "disabled",
+        "lldb.launch.initCommands": [
+          "settings set target.disable-aslr false"
+        ],
+        "rust-analyzer.check.command": "clippy",
+        "[c]": {
+          "editor.defaultFormatter": "llvm-vs-code-extensions.vscode-clangd"
+        },
+        "[cpp]": {
+          "editor.defaultFormatter": "llvm-vs-code-extensions.vscode-clangd"
+        },
+        "[rust]": {
+          "editor.defaultFormatter": "rust-lang.rust-analyzer"
+        },
+        "terminal.integrated.defaultProfile.linux": "zsh",
+        "terminal.integrated.profiles.linux": {
+          "zsh": {
+            "path": "/bin/zsh"
+          }
+        }
+      }
+    }
+  },
+  "runArgs": [
+    "--cap-add=SYS_PTRACE",
+    "--security-opt=seccomp=unconfined"
+  ]
+}
