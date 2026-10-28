@@ -78,7 +78,26 @@ function(_boilerplate_project_dashboard_configure)
           get_filename_component(_compiler_dir "${CMAKE_CXX_COMPILER}" DIRECTORY)
           string(REGEX MATCH "^[0-9]+" _major "${CMAKE_CXX_COMPILER_VERSION}")
           find_program(_dashboard_gcov NAMES "llvm-cov-${_major}" llvm-cov
-            HINTS "${_compiler_dir}" REQUIRED)
+            HINTS "${_compiler_dir}")
+          # Apple's /usr/bin/clang and /usr/bin/g++ are Xcode shims. llvm-cov
+          # can live inside the selected Xcode toolchain, outside PATH.
+          if(NOT _dashboard_gcov AND APPLE)
+            find_program(_dashboard_xcrun NAMES xcrun)
+            if(_dashboard_xcrun)
+              execute_process(COMMAND "${_dashboard_xcrun}" --find llvm-cov
+                RESULT_VARIABLE _xcrun_status OUTPUT_VARIABLE _xcrun_cov
+                ERROR_QUIET OUTPUT_STRIP_TRAILING_WHITESPACE)
+              if(_xcrun_status EQUAL 0 AND EXISTS "${_xcrun_cov}" AND
+                  NOT IS_DIRECTORY "${_xcrun_cov}")
+                set(_dashboard_gcov "${_xcrun_cov}")
+              endif()
+            endif()
+          endif()
+          if(NOT _dashboard_gcov)
+            message(FATAL_ERROR
+              "Dashboard Clang coverage requires a compatible llvm-cov. "
+              "Install it or set BOILERPLATE_COVERAGE_GCOV_TOOL to '<llvm-cov>;gcov'.")
+          endif()
           set(_gcov_tool "${_dashboard_gcov}" gcov)
         endif()
         list(GET _gcov_tool 0 _dashboard_gcov)

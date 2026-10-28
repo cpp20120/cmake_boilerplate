@@ -42,5 +42,18 @@ jobs:
       - name: Check local CTest dashboard without submission
         run: cmake "-DCHECK_BINARY=${{ runner.temp }}/dashboard-check" -P scripts/test-dashboard.cmake
 
+      # A CTest script-mode failure can otherwise collapse the build output
+      # to "Error(s) when building project" and hide the actual compiler error.
+      - name: Preserve CTest dashboard diagnostics on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: dashboard-diagnostics-${{ matrix.os }}
+          path: |
+            ${{ runner.temp }}/dashboard-check/**/Testing/Temporary/**
+            ${{ runner.temp }}/dashboard-check/**/Testing/*/Build.xml
+            ${{ runner.temp }}/dashboard-check/**/Testing/*/Configure.xml
+          if-no-files-found: ignore
+
       - name: Generate, build and test a renamed project
         run: cmake "-DCHECK_BINARY=${{ runner.temp }}/template-check" -P scripts/test-init.cmake

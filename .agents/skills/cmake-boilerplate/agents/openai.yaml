@@ -1,0 +1,3 @@
+interface:
+  display_name: "CMake Boilerplate"
+  short_description: "Maintain the CMake framework and project template"

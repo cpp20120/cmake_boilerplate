@@ -1,0 +1,48 @@
+diff --git a/tests/cmake/dashboard-fixture/CMakeLists.txt b/tests/cmake/dashboard-fixture/CMakeLists.txt
+new file mode 100644
+--- /dev/null
++++ b/tests/cmake/dashboard-fixture/CMakeLists.txt
+@@ -0,0 +1,27 @@
++cmake_minimum_required(VERSION 3.26)
++project(DashboardFixture LANGUAGES CXX)
++include("${BOILERPLATE_ROOT}/lib/cmake/testing/Dashboard.cmake")
++boilerplate_dashboard_prepare_llvm_coverage()
++include(CTest)
++include("${BOILERPLATE_ROOT}/lib/cmake/project/ProjectCapabilities.cmake")
++if(DASHBOARD_FIXTURE_DISABLED)
++  boilerplate_project(CAPABILITIES testing)
++else()
++  boilerplate_project(CAPABILITIES dashboard)
++endif()
++add_executable(dashboard_fixture main.cpp)
++if(BOILERPLATE_COVERAGE)
++  target_compile_options(dashboard_fixture PRIVATE --coverage -O0 -g)
++  target_link_options(dashboard_fixture PRIVATE --coverage)
++endif()
++if(BOILERPLATE_LLVM_SOURCE_COVERAGE)
++  target_compile_options(dashboard_fixture PRIVATE -fprofile-instr-generate -fcoverage-mapping -O0 -g)
++  target_link_options(dashboard_fixture PRIVATE -fprofile-instr-generate -fcoverage-mapping)
++endif()
++add_test(NAME dashboard_pass COMMAND dashboard_fixture pass)
++set_tests_properties(dashboard_pass PROPERTIES LABELS smoke TIMEOUT 10)
++if(DASHBOARD_FIXTURE_FAIL)
++  add_test(NAME dashboard_fail COMMAND dashboard_fixture fail)
++  set_tests_properties(dashboard_fail PROPERTIES LABELS smoke TIMEOUT 10)
++endif()
++boilerplate_finalize_project()
+diff --git a/tests/cmake/dashboard-fixture/main.cpp b/tests/cmake/dashboard-fixture/main.cpp
+new file mode 100644
+--- /dev/null
++++ b/tests/cmake/dashboard-fixture/main.cpp
+@@ -0,0 +1,11 @@
++#include <iostream>
++#include <string_view>
++
++int main(int argc, char** argv) {
++  if (argc > 1 && std::string_view(argv[1]) == "fail") {
++    std::cerr << "intentional dashboard failure\n";
++    return 2;
++  }
++  std::cout << "dashboard fixture passed\n";
++  return 0;
++}

@@ -10,6 +10,8 @@ else()
   boilerplate_project(CAPABILITIES dashboard)
 endif()
 add_executable(dashboard_fixture main.cpp)
+# The fixture uses std::string_view; MSVC defaults to C++14 without /std.
+target_compile_features(dashboard_fixture PRIVATE cxx_std_17)
 if(BOILERPLATE_COVERAGE)
   target_compile_options(dashboard_fixture PRIVATE --coverage -O0 -g)
   target_link_options(dashboard_fixture PRIVATE --coverage)

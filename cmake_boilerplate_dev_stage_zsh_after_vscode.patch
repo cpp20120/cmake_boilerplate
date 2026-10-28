@@ -1,0 +1,101 @@
+diff --git a/.devcontainer/Dockerfile b/.devcontainer/Dockerfile
+index e5e97ad..435d869 100644
+--- a/.devcontainer/Dockerfile
++++ b/.devcontainer/Dockerfile
+@@ -26,7 +26,10 @@ RUN apt-get update \
+     && rm -rf /var/lib/apt/lists/*
+ # Tools used by the editor extensions. Keep this layer separate from the base toolchain.
+ RUN apt-get update \
+-    && apt-get install -y --no-install-recommends lldb shellcheck \
++    && apt-get install -y --no-install-recommends \
++      lldb shellcheck \
++      zsh zsh-autosuggestions zsh-syntax-highlighting \
++      fzf zoxide ripgrep fd-find \
+     && rm -rf /var/lib/apt/lists/*
+ WORKDIR /workspace
+ 
+@@ -35,13 +38,15 @@ WORKDIR /workspace
+ ARG USER_UID=1000
+ ARG USER_GID=1000
+ RUN groupadd --gid "${USER_GID}" vscode \
+-    && useradd --uid "${USER_UID}" --gid "${USER_GID}" --create-home --shell /bin/bash vscode \
++    && useradd --uid "${USER_UID}" --gid "${USER_GID}" --create-home --shell /bin/zsh vscode \
+     && printf 'vscode ALL=(root) NOPASSWD:ALL\n' > /etc/sudoers.d/vscode \
+     && chmod 0440 /etc/sudoers.d/vscode \
+     && mkdir -p /workspace/out /workspace/build /home/vscode/.cache/ccache \
+     && chown -R vscode:vscode /workspace /home/vscode
+ ENV CC=clang \
+     CXX=clang++ \
+-    CCACHE_DIR=/home/vscode/.cache/ccache
++    CCACHE_DIR=/home/vscode/.cache/ccache \
++    SHELL=/bin/zsh
++COPY --chown=vscode:vscode .devcontainer/zshrc /home/vscode/.zshrc
+ USER vscode
+ CMD ["sleep", "infinity"]
+diff --git a/.devcontainer/zshrc b/.devcontainer/zshrc
+new file mode 100644
+index 0000000..5dc5eae
+--- /dev/null
++++ b/.devcontainer/zshrc
+@@ -0,0 +1,48 @@
++# Minimal Zsh UX for Dev Containers, independent of host dotfiles.
++[[ -o interactive ]] || return
++
++typeset -U path PATH
++path=("$HOME/.local/bin" "$HOME/.cargo/bin" $path)
++
++HISTFILE="$HOME/.zsh_history"
++HISTSIZE=10000
++SAVEHIST=10000
++setopt APPEND_HISTORY SHARE_HISTORY HIST_IGNORE_ALL_DUPS HIST_IGNORE_SPACE
++setopt AUTO_PUSHD PUSHD_IGNORE_DUPS INTERACTIVE_COMMENTS
++
++autoload -Uz compinit
++mkdir -p "${XDG_CACHE_HOME:-$HOME/.cache}/zsh"
++compinit -d "${XDG_CACHE_HOME:-$HOME/.cache}/zsh/zcompdump"
++zstyle ':completion:*' menu select
++zstyle ':completion:*' matcher-list 'm:{a-zA-Z}={A-Za-z}'
++
++bindkey -e
++autoload -Uz up-line-or-beginning-search down-line-or-beginning-search
++zle -N up-line-or-beginning-search
++zle -N down-line-or-beginning-search
++bindkey '^[[A' up-line-or-beginning-search
++bindkey '^[[B' down-line-or-beginning-search
++bindkey '^[[H' beginning-of-line
++bindkey '^[[F' end-of-line
++bindkey '^[[3~' delete-char
++
++alias ..='cd ..'
++alias ...='cd ../..'
++alias ll='ls -lah --color=auto'
++alias gst='git status -sb'
++alias gd='git diff'
++alias gl='git log --oneline --decorate -15'
++(( $+commands[fdfind] )) && alias fd=fdfind
++
++if [[ -t 0 && -t 1 ]] && (( $+commands[fzf] )); then
++  source <(fzf --zsh)
++fi
++(( $+commands[zoxide] )) && eval "$(zoxide init zsh)"
++
++[[ -r /usr/share/zsh-autosuggestions/zsh-autosuggestions.zsh ]] && \
++  source /usr/share/zsh-autosuggestions/zsh-autosuggestions.zsh
++# Load highlighting last, after widgets from other integrations.
++[[ -r /usr/share/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh ]] && \
++  source /usr/share/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh
++
++PROMPT='%F{cyan}%n%f %F{blue}%~%f %(?.%F{green}.%F{red})%#%f '
+diff --git a/scripts/TemplatePolicy.cmake b/scripts/TemplatePolicy.cmake
+index b7f0676..4934bc2 100644
+--- a/scripts/TemplatePolicy.cmake
++++ b/scripts/TemplatePolicy.cmake
+@@ -1,7 +1,7 @@
+ # Repository files must match an explicit include or exclude rule.
+ # Unknown files fail the manifest check.
+ set(TEMPLATE_INCLUDE_PATTERNS
+-  "^\\.devcontainer/(\\.gitattributes|Dockerfile|compose\\.yaml|devcontainer\\.json|post-create\\.sh)$"
++  "^\\.devcontainer/(\\.gitattributes|Dockerfile|compose\\.yaml|devcontainer\\.json|post-create\\.sh|zshrc)$"
+   "^\\.vscode/(README\\.md|extensions\\.json|settings\\.json|tasks\\.json)$"
+   "^\\.(clang-format|clang-format-ignore|clang-tidy|cmake-format\\.yaml|dockerignore|gitignore)$"
+   "^\\.github/workflows/[^/]+\\.ya?ml$"
