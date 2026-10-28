@@ -95,3 +95,7 @@ doxygen_output/
 # Personal shell configuration
 /.zshrc
 /.zshenv
+
+# Personal shell configuration
+/.zshrc
+/.zshenv
