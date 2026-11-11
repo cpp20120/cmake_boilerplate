@@ -16,6 +16,35 @@ project capability. C++-only projects do not require Rust tools.
 
 ## Targets
 
+For C++20/23 named modules, supply module interface units separately from
+ordinary `SOURCES` (implementation units remain in `SOURCES`). CMake 3.28+ and
+Ninja 1.11+ or a supported Visual Studio generator are required when modules
+are used; traditional projects retain the CMake 3.26 minimum.
+
+```cmake
+boilerplate_add_library(math
+  SOURCES src/math.cpp
+  PUBLIC_MODULES src/math.cppm
+  PRIVATE_MODULES src/math.detail.cppm
+  INCLUDE_DIR include)
+boilerplate_add_executable(app SOURCES src/main.cpp LIBRARIES math::math)
+```
+
+The module sets are attached to both shared/static variants, publicly exported
+interface units are installed for `find_package()` consumers, and direct consumers
+have dependency scanning enabled. If a target imports modules indirectly or links
+its provider only **after** creation, use `boilerplate_target_modules(app SCAN)` or
+`boilerplate_add_executable(... SCAN_MODULES)`; for raw existing targets call
+`boilerplate_target_modules(target PUBLIC ... PRIVATE ... SCAN)`. Private module
+sources are compiled but are not installed/exported. Header units are unsupported.
+Module interfaces are not precompiled with the package: consumers rebuild BMIs
+using their own compiler/toolchain, as portable binary BMIs do not exist.
+For shared libraries, this boilerplate defaults to hidden symbol visibility: exported
+module declarations must use the library's generated export macro, e.g.
+`module;` / `#include "math_export.h"` / `export module math;` /
+`export MATH_EXPORT int twice(int);`. This matters even when `export` is present
+in C++ source: C++ module export is not ELF/PE symbol visibility.
+
 ```cmake
 boilerplate_add_library(my_math
   VERSION 1.2.0

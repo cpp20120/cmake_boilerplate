@@ -22,7 +22,7 @@ option(BOILERPLATE_BUILD_BENCHMARKS "Build sample benchmarks (does not run them)
 # which prefers shared if both variants are enabled. All include paths are scoped.
 function(boilerplate_add_library name)
   cmake_parse_arguments(PARSE_ARGV 1 ARG "" "VERSION;INCLUDE_DIR;PACKAGE_CONFIG"
-    "SOURCES;PUBLIC_LIBRARIES;PRIVATE_LIBRARIES;POLICIES;POLICY_OPTIONS;SHARED_POLICIES;STATIC_POLICIES;SHARED_POLICY_OPTIONS;STATIC_POLICY_OPTIONS")
+    "SOURCES;PUBLIC_MODULES;PRIVATE_MODULES;PUBLIC_LIBRARIES;PRIVATE_LIBRARIES;POLICIES;POLICY_OPTIONS;SHARED_POLICIES;STATIC_POLICIES;SHARED_POLICY_OPTIONS;STATIC_POLICY_OPTIONS")
   if(ARG_UNPARSED_ARGUMENTS OR ARG_KEYWORDS_MISSING_VALUES OR NOT ARG_SOURCES OR NOT ARG_INCLUDE_DIR)
     message(FATAL_ERROR "boilerplate_add_library(${name}) requires SOURCES and INCLUDE_DIR; unknown/missing arguments: ${ARG_UNPARSED_ARGUMENTS};${ARG_KEYWORDS_MISSING_VALUES}")
   endif()
@@ -75,6 +75,19 @@ function(boilerplate_add_library name)
       list(APPEND _policy_args ${_target_policy_options})
     endif()
     boilerplate_apply_optimization(${_target} ${_policy_args})
+    if(ARG_PUBLIC_MODULES OR ARG_PRIVATE_MODULES)
+      set(_module_args)
+      if(ARG_PUBLIC_MODULES)
+        list(APPEND _module_args PUBLIC ${ARG_PUBLIC_MODULES})
+      endif()
+      if(ARG_PRIVATE_MODULES)
+        list(APPEND _module_args PRIVATE ${ARG_PRIVATE_MODULES})
+      endif()
+      boilerplate_target_modules(${_target} ${_module_args})
+    else()
+      _boilerplate_scan_linked_modules(${_target}
+        ${ARG_PUBLIC_LIBRARIES} ${ARG_PRIVATE_LIBRARIES})
+    endif()
     boilerplate_set_output_name(${_target} "${name}_${_kind}")
     if(_kind STREQUAL "static")
       target_compile_definitions(${_target} PUBLIC ${_prefix}_STATIC_DEFINE)
@@ -91,13 +104,23 @@ function(boilerplate_add_library name)
 
   if(BOILERPLATE_INSTALL)
     set(_package_dir "${CMAKE_INSTALL_LIBDIR}/cmake/${name}")
+    set(_module_install_args)
+    set(_module_export_args)
+    if(ARG_PUBLIC_MODULES)
+      list(APPEND _module_install_args
+        FILE_SET public_cxx_modules
+          DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}/${name}/modules" COMPONENT Development)
+      list(APPEND _module_export_args CXX_MODULES_DIRECTORY cxx-modules)
+    endif()
     install(TARGETS ${_targets} EXPORT ${name}Targets
       ARCHIVE DESTINATION "${CMAKE_INSTALL_LIBDIR}" COMPONENT Development
       LIBRARY DESTINATION "${CMAKE_INSTALL_LIBDIR}" COMPONENT Runtime NAMELINK_COMPONENT Development
-      RUNTIME DESTINATION "${CMAKE_INSTALL_BINDIR}" COMPONENT Runtime)
+      RUNTIME DESTINATION "${CMAKE_INSTALL_BINDIR}" COMPONENT Runtime
+      ${_module_install_args})
     install(DIRECTORY "${_include}/" DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}/${name}" COMPONENT Development)
     install(FILES "${_generated}/${name}_export.h" DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}/${name}" COMPONENT Development)
-    install(EXPORT ${name}Targets NAMESPACE "${name}::" DESTINATION "${_package_dir}" COMPONENT Development)
+    install(EXPORT ${name}Targets NAMESPACE "${name}::" DESTINATION "${_package_dir}"
+      ${_module_export_args} COMPONENT Development)
     set(BOILERPLATE_PACKAGE_NAME "${name}")
     get_target_property(BOILERPLATE_PACKAGE_PREFERRED ${_preferred} EXPORT_NAME)
     if(NOT ARG_PACKAGE_CONFIG)
