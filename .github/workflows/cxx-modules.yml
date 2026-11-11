@@ -1,0 +1,58 @@
+name: C++ modules regression
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+    branches: [main, master]
+
+permissions:
+  contents: read
+
+jobs:
+  modules-linux:
+    runs-on: ubuntu-24.04
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - compiler: g++-14
+            packages: g++-14
+          - compiler: clang++-18
+            packages: clang-18 clang-tools-18
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install compiler and Ninja
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y ninja-build ${{ matrix.packages }}
+      - uses: lukka/get-cmake@latest
+        with:
+          cmakeVersion: '~3.31.0'
+      - name: Configure standalone library core
+        run: >-
+          cmake -S lib -B out/build/modules -G Ninja
+          -DCMAKE_CXX_COMPILER=${{ matrix.compiler }}
+          -DBOILERPLATE_REQUIRE_CXX_MODULES_TESTS=ON
+      - name: Run module regression (no unsupported-toolchain skips)
+        run: cmake --build out/build/modules --target boilerplate_check_modules
+
+  modules-msvc:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ilammy/msvc-dev-cmd@v1
+        with:
+          arch: x64
+      - uses: lukka/get-cmake@latest
+        with:
+          cmakeVersion: '~3.31.0'
+      - name: Configure standalone library core
+        shell: pwsh
+        run: >-
+          cmake -S lib -B out/build/modules -G Ninja
+          -DCMAKE_CXX_COMPILER=cl
+          -DBOILERPLATE_REQUIRE_CXX_MODULES_TESTS=ON
+      - name: Run module regression (no unsupported-toolchain skips)
+        shell: pwsh
+        run: cmake --build out/build/modules --target boilerplate_check_modules

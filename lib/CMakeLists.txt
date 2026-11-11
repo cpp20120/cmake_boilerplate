@@ -144,6 +144,18 @@ if(_boilerplate_ninja)
       -P "${CMAKE_CURRENT_SOURCE_DIR}/tests/cmake/verify_examples.cmake"
     USES_TERMINAL VERBATIM)
 
+  # Dedicated C++ modules regression. The runner performs a real compile probe;
+  # unsupported compiler/scanner combinations are reported as SKIP by default.
+  option(BOILERPLATE_REQUIRE_CXX_MODULES_TESTS
+    "Fail modules regression when the active C++ toolchain lacks modules support" OFF)
+  add_custom_target(boilerplate_check_modules
+    COMMAND ${CMAKE_COMMAND} "-DCHECK_BINARY=${CMAKE_BINARY_DIR}/modules-check"
+      "-DCHECK_COMPILER=${CMAKE_CXX_COMPILER}"
+      "-DCHECK_REQUIRE_MODULES=${BOILERPLATE_REQUIRE_CXX_MODULES_TESTS}"
+      -P "${CMAKE_CURRENT_SOURCE_DIR}/tests/cmake/verify_modules.cmake"
+    USES_TERMINAL VERBATIM)
+  add_dependencies(boilerplate_check_cmake boilerplate_check_modules)
+
   if(_boilerplate_clang)
     add_custom_target(boilerplate_check_fuzz
       COMMAND ${CMAKE_COMMAND} "-DCHECK_BINARY=${CMAKE_BINARY_DIR}/fuzz-check"

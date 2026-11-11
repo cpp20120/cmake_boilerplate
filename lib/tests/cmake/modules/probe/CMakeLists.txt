@@ -1,0 +1,6 @@
+cmake_minimum_required(VERSION 3.28)
+project(ModulesCompilerProbe LANGUAGES CXX)
+add_executable(modules_probe main.cpp)
+target_compile_features(modules_probe PRIVATE cxx_std_23)
+set_target_properties(modules_probe PROPERTIES CXX_SCAN_FOR_MODULES ON)
+target_sources(modules_probe PRIVATE FILE_SET CXX_MODULES FILES probe.cppm)

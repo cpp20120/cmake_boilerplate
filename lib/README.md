@@ -544,6 +544,26 @@ lib/tests/cmake/verify_fuzz.cmake` from the repository root. It checks that UB i
 a linked fuzz archive fails, ordinary libraries stay uninstrumented, seed inputs
 are preserved and incompatible settings are rejected.
 
+### C++ modules regression
+
+`boilerplate_check_modules` exercises both library variants with named module
+interfaces, a private partition, private module imports and direct executable
+consumers. It then changes an exported interface and an `import` edge to verify
+incremental dependency scanning, installs and relocates both packages, rebuilds
+separate `find_package()` consumers, checks C++17 rejection, and checks C++20
+Ninja Multi-Config Debug/Release.
+An additional fixture enables PCH and unity for ordinary `.cpp` units while
+marking module interface and implementation units with
+`SKIP_PRECOMPILE_HEADERS` and `SKIP_UNITY_BUILD_INCLUSION`: injecting a PCH
+before `export module` is invalid on toolchains such as GCC.
+
+Run `cmake --build --preset lib-release --target boilerplate_check_modules`.
+It requires CMake 3.28+ and Ninja. The runner probes the selected compiler and
+its module scanner, reporting `SKIP` when the toolchain is incompatible. For CI
+jobs where support is mandatory, configure with
+`-DBOILERPLATE_REQUIRE_CXX_MODULES_TESTS=ON` so an unsupported toolchain fails.
+The target is also a dependency of `boilerplate_check_cmake`.
+
 ## File map
 
 The stable entry points are `cmake/Bootstrap.cmake` and `cmake/Boilerplate.cmake`.
