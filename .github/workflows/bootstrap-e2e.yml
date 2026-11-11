@@ -76,7 +76,7 @@ jobs:
         run: dnf install -y git tar gzip
       - name: Ensure checkout prerequisites (Arch)
         if: matrix.format == 'ARCH'
-        run: pacman -Sy --noconfirm --needed git sudo
+        run: pacman -Syu --noconfirm --needed git sudo
       - uses: actions/checkout@v4
       - name: Set up unprivileged Arch package builder
         if: matrix.format == 'ARCH'

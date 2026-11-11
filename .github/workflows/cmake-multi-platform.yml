@@ -181,8 +181,8 @@ jobs:
 
       - name: Install dependencies
         run: |
-          sudo apt-get update
-          sudo apt-get install -y ninja-build clang cmake
+          sudo apt-get -o Acquire::Retries=5 update
+          sudo apt-get -o Acquire::Retries=5 install -y ninja-build clang cmake
 
       - name: Configure with sanitizer
         run: >-

@@ -24,8 +24,8 @@ jobs:
       - uses: actions/checkout@v4
       - name: Install compiler and Ninja
         run: |
-          sudo apt-get update
-          sudo apt-get install -y ninja-build ${{ matrix.packages }}
+          sudo apt-get -o Acquire::Retries=5 update
+          sudo apt-get -o Acquire::Retries=5 install -y ninja-build ${{ matrix.packages }}
       - uses: lukka/get-cmake@latest
         with:
           cmakeVersion: '~3.31.0'
