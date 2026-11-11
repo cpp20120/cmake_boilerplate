@@ -81,6 +81,7 @@ lib/cmake/build/BuildMatrix.cmake
 lib/cmake/build/BuildProfiles.cmake
 lib/cmake/build/CompilerCapabilities.cmake
 lib/cmake/build/ControlFlow.cmake
+lib/cmake/build/CxxModules.cmake
 lib/cmake/build/LibraryPresets.json
 lib/cmake/build/ProjectOptions.cmake
 lib/cmake/build/TargetOptions.cmake
@@ -147,6 +148,7 @@ lib/library2/cmake/Library2Config.cmake.in
 lib/library2/cmake/Policies.cmake
 lib/library2/include/library2.hpp
 lib/library2/src/lib.cpp
+lib/tests/cmake/check_cxx_modules.sh
 lib/tests/cmake/components/CMakeLists.txt
 lib/tests/cmake/components/app/CMakeLists.txt
 lib/tests/cmake/components/app/main.cpp
