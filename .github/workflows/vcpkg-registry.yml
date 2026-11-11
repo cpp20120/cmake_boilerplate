@@ -26,8 +26,8 @@ jobs:
           - { os: ubuntu-24.04, triplet: x64-linux-boilerplate-shared, linkage: SHARED }
           - { os: windows-latest, triplet: x64-windows-static, linkage: STATIC }
           - { os: windows-latest, triplet: x64-windows, linkage: SHARED }
-          - { os: macos-14, triplet: arm64-osx, linkage: STATIC }
-          - { os: macos-14, triplet: arm64-osx-boilerplate-shared, linkage: SHARED }
+          - { os: macos-15, triplet: arm64-osx, linkage: STATIC }
+          - { os: macos-15, triplet: arm64-osx-boilerplate-shared, linkage: SHARED }
     defaults:
       run:
         shell: bash
