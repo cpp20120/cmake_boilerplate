@@ -64,6 +64,16 @@ Project defaults live in CMake/presets; per-target policies compose owned-target
 Google Benchmark, GoogleTest and libFuzzer integrations coexist with a small
 independent process harness and dependency-free correctness tests.
 
+## Reproduce the Vulkan example with CMakeWorkflow
+
+The [headless Vulkan example](examples/vulkan/README.md) has its own vcpkg manifest
+and workflow. On Linux x86-64, review and run it from a clean checkout with:
+
+```sh
+bash examples/vulkan/reproduce.sh --plan
+bash examples/vulkan/reproduce.sh --yes
+```
+
 ## Start
 
 Cross compilation is selected by toolchain presets: `linux-arm64`,

@@ -1,0 +1,10 @@
+#version 450
+layout(local_size_x = 4) in;
+layout(set = 0, binding = 0, std430) writeonly buffer Result {
+  uint values[4];
+} result;
+
+void main() {
+  uint index = gl_LocalInvocationIndex;
+  result.values[index] = 17u + 3u * index;
+}

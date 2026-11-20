@@ -1,0 +1,10 @@
+{
+  "name": "boilerplate-vulkan-smoke",
+  "version-string": "1.0",
+  "builtin-baseline": "84bab45d415d22042bd0b9081aea57f362da3f35",
+  "dependencies": [
+    "vulkan-headers",
+    { "name": "vulkan-loader", "default-features": false },
+    { "name": "glslang", "default-features": false, "features": ["tools"], "host": true }
+  ]
+}

@@ -52,6 +52,13 @@ examples/qt/main.cpp
 examples/qt/message.txt
 examples/qt/resources.qrc
 examples/qt/window.ui
+examples/vulkan/CMakeLists.txt
+examples/vulkan/README.md
+examples/vulkan/reproduce.sh
+examples/vulkan/smoke.cpp
+examples/vulkan/vcpkg.json
+examples/vulkan/verify.comp
+examples/vulkan/workflow.json
 format_cmake.ps1
 format_cmake.sh
 format_parallel.ps1

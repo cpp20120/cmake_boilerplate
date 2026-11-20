@@ -1,0 +1,16 @@
+{
+  "schemaVersion": 2,
+  "contexts": {
+    "vulkan": {
+      "sourceDirectory": ".",
+      "buildDirectory": "../../out/vulkan/build",
+      "mode": "managed",
+      "toolchain": { "environmentProfileId": "linux-managed-clang" }
+    }
+  },
+  "nodes": [
+    { "id": "configure", "kind": "configure", "context": "vulkan" },
+    { "id": "build", "kind": "build", "context": "vulkan", "target": "vulkan_smoke", "dependsOn": ["configure"] },
+    { "id": "check-and-dispatch", "kind": "ctest", "context": "vulkan", "dependsOn": ["build"] }
+  ]
+}
